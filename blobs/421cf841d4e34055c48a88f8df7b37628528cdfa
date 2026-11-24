@@ -1,0 +1,215 @@
+// Accès privé : l'application ne s'ouvre que pour les personnes acceptées par le propriétaire (Zaid Amallah).
+// Chaque appareil a un code (TC-XXXX-XXXX). L'élève l'envoie au propriétaire, qui l'accepte depuis son PC ;
+// la liste publique (access.json sur GitHub) ne contient que des empreintes SHA-256 des codes, pas de noms.
+(() => {
+  const T = window.tcsf || {};
+  if (!T.accessList) return; // aperçu navigateur : pas de verrou
+  const KEY = 'tcsf:access';
+  const ADMIN_KEY = 'tcsf:admin-name';
+  let OWNER_NAME = 'Zaid Amallah'; // remplacé par le nom d'utilisateur choisi par l'administrateur (access.json)
+  const AB = 'ABCDEFGHJKLMNPQRSUVWXYZ23456789'; // sans T, I, O, 0, 1 (pas de confusion)
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
+  const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const newCode = () => { const r = crypto.getRandomValues(new Uint8Array(8)); const s = [...r].map((b) => AB[b % AB.length]).join(''); return `TC-${s.slice(0, 4)}-${s.slice(4)}`; };
+  async function hash(code) {
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('tcsf:' + code));
+    return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  let st = load();
+  if (!st.code) { st.code = newCode(); save(st); }
+  if (!st.ok) document.documentElement.classList.add('acc-locked'); // rien n'est visible avant la vérification
+
+  // ---- vérification auprès du serveur : true / false / null (pas d'Internet) ----
+  async function accepted() {
+    const l = await T.accessList().catch(() => ({ error: 'offline' }));
+    if (!l || l.error || !Array.isArray(l.hashes)) return null;
+    if (l.admin && l.admin.name) OWNER_NAME = String(l.admin.name).slice(0, 40);
+    return l.hashes.includes(await hash(st.code));
+  }
+
+  // ---- écran verrouillé ----
+  let lockEl = null, timer = 0;
+  function lock(reason) {
+    document.documentElement.classList.add('acc-locked');
+    if (!lockEl) { lockEl = document.createElement('div'); lockEl.className = 'acc-lock'; document.body.appendChild(lockEl); }
+    const M = window.TCSF_MASCOT;
+    const msg = `Salut ${OWNER_NAME} ! Je voudrais accéder à l’application Tronc Commun Scientifique Français.\nMon nom : ${st.name || ''}\nMon code : ${st.code}`;
+    lockEl.innerHTML = `<div class="acc-card">
+      <div class="acc-ic">${M ? M.svg(86) : '🔒'}</div>
+      <h2>Invitation requise 🔒</h2>
+      ${reason === 'revoked' ? '<p class="acc-warn">Ton accès a été retiré par l’administrateur.</p>' : ''}
+      <p>Cette application est privée. Pour y entrer comme <b>invité</b>, demande l’accès à l’administrateur <b>${esc(OWNER_NAME)}</b>. Dès qu’il t’accepte, l’application s’ouvre.</p>
+      <p class="acc-ar" dir="rtl" lang="ar">تطبيق خاص: أرسل رمزك إلى المسؤول <b>${esc(OWNER_NAME)}</b> ليقبلك كمدعو، ثم يُفتح التطبيق.</p>
+      ${!st.name ? `<form class="acc-form"><label>Ton prénom et ton nom<input class="lv-input" name="n" maxlength="50" required placeholder="ex. Yassine B." autocomplete="name"></label><button class="btn primary" type="submit">Créer ma demande →</button></form>`
+      : `<div class="acc-code-box"><span class="w-small">Ton code d’accès</span><div class="acc-code">${esc(st.code)}</div><span class="w-small">${esc(st.name)} · <a href="#" class="acc-rename">changer le nom</a></span></div>
+        <ol class="acc-steps"><li>Envoie ce code à ${OWNER_NAME} (WhatsApp ou autre).</li><li>Attends qu’il t’accepte.</li><li>Appuie sur « Vérifier » (ou attends : je vérifie tout seul).</li></ol>
+        <div class="acc-btns"><button type="button" class="btn primary acc-wa">💬 Envoyer sur WhatsApp</button><button type="button" class="btn acc-copy">📋 Copier</button><button type="button" class="btn acc-check">🔄 Vérifier</button></div>
+        <p class="acc-status w-small" role="status"></p>`}
+    </div>`;
+    const f = lockEl.querySelector('.acc-form');
+    if (f) f.addEventListener('submit', (e) => { e.preventDefault(); const n = f.n.value.trim(); if (n.length < 2) return; st.name = n; save(st); lock(); });
+    const status = lockEl.querySelector('.acc-status');
+    lockEl.querySelector('.acc-rename')?.addEventListener('click', (e) => { e.preventDefault(); st.name = ''; save(st); lock(); });
+    lockEl.querySelector('.acc-copy')?.addEventListener('click', async () => { try { await navigator.clipboard.writeText(msg); status.textContent = '✅ Code copié. Colle-le dans un message à ' + OWNER_NAME + '.'; } catch { status.textContent = 'Recopie ce code : ' + st.code; } });
+    lockEl.querySelector('.acc-wa')?.addEventListener('click', () => { const a = document.createElement('a'); a.href = 'https://wa.me/?text=' + encodeURIComponent(msg); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); });
+    lockEl.querySelector('.acc-check')?.addEventListener('click', () => check(true));
+    clearInterval(timer);
+    if (st.name) timer = setInterval(() => check(false), 90000);
+    async function check(manual) {
+      if (status && manual) status.textContent = 'Vérification…';
+      const ok = await accepted();
+      if (ok) return unlock(true);
+      if (!status) return;
+      status.textContent = ok === null ? '📶 Pas de connexion au serveur. Vérifie ton Internet puis réessaie.' : manual ? '⏳ Pas encore accepté. Après l’acceptation, il faut parfois attendre 1 à 2 minutes.' : status.textContent;
+    }
+  }
+  function unlock(celebrate) {
+    clearInterval(timer);
+    st.ok = true; st.at = new Date().toISOString(); save(st);
+    document.documentElement.classList.remove('acc-locked');
+    if (!lockEl) return;
+    if (celebrate) {
+      lockEl.querySelector('.acc-card').innerHTML = `<div class="acc-ic">${window.TCSF_MASCOT ? window.TCSF_MASCOT.svg(90) : '🎉'}</div><h2>Bienvenue ${esc(st.name)} ! 🎉</h2><p>${OWNER_NAME} t’a accepté. Bonnes révisions !</p>`;
+      try { if (window.TCSF_SFX) window.TCSF_SFX.fanfare(); if (window.TCSF_Q) window.TCSF_Q.burst(lockEl.querySelector('.acc-card')); } catch {}
+      setTimeout(() => { lockEl.classList.add('out'); setTimeout(() => { lockEl.remove(); lockEl = null; }, 400); }, 2200);
+    } else { lockEl.remove(); lockEl = null; }
+  }
+
+  // ---- fenêtre du propriétaire : accepter / retirer des accès ----
+  async function adminModal() {
+    document.querySelector('.acc-admin')?.remove();
+    const o = document.createElement('div'); o.className = 'live-modal acc-admin';
+    o.innerHTML = `<div class="live-card acc-admin-card"><h3>👥 Gérer les accès</h3>
+      <p class="w-small">Colle le code reçu (TC-XXXX-XXXX) et le nom de la personne, puis « Accepter ». Son application s’ouvre en 1 à 2 minutes.</p>
+      <form class="acc-add"><input class="lv-input" name="c" placeholder="TC-XXXX-XXXX" required><input class="lv-input" name="n" placeholder="Nom" required><button class="btn primary" type="submit">✅ Accepter</button></form>
+      <p class="acc-amsg w-small" role="status"></p><div class="acc-list"><p class="muted">Chargement…</p></div>
+      <div class="live-btns"><button type="button" class="btn ghost acc-close">Fermer</button></div></div>`;
+    document.body.appendChild(o);
+    const msg = o.querySelector('.acc-amsg'), listEl = o.querySelector('.acc-list');
+    o.querySelector('.acc-close').addEventListener('click', () => o.remove());
+    // invités supprimés : on les retire de GitHub et on ne les affiche plus
+    const DEL = 'tcsf:admin-deleted';
+    const deleted = () => { try { return new Set(JSON.parse(localStorage.getItem(DEL)) || []); } catch { return new Set(); } };
+    const setDeleted = (s) => { try { localStorage.setItem(DEL, JSON.stringify([...s])); } catch {} };
+    const row = (x, actions) => `<tr><td><b>${esc(x.name)}</b><br><small class="muted">depuis le ${esc(String(x.date || '').slice(0, 10))}</small></td><td><code>${esc(x.code)}</code></td><td class="acc-acts">${actions}</td></tr>`;
+    const refresh = async () => {
+      const r = await T.adminList();
+      if (r.error) { listEl.innerHTML = `<p class="acc-warn">${esc(r.error)}</p><p class="w-small">Vérifie ta connexion Internet, que le dépôt « tcsf-updates » existe (public) et que le jeton est valide.</p>`; return; }
+      const del = deleted();
+      const items = r.items.filter((x) => x.code !== 'TC-TEST-2PXA' && !(del.has(x.code) && !x.active));
+      const on = items.filter((x) => x.active), off = items.filter((x) => !x.active);
+      listEl.innerHTML = `<h4 class="acc-h">✅ Invités dans l’application <span class="tag">${on.length}</span></h4>
+        ${on.length ? `<table class="acc-table">${on.map((x) => row(x, `<button type="button" class="chip-btn" data-c="${esc(x.code)}" data-a="rev">⛔ Retirer</button><button type="button" class="chip-btn danger" data-c="${esc(x.code)}" data-a="del">🗑 Supprimer</button>`)).join('')}</table>` : '<p class="muted">Aucun invité pour le moment.</p>'}
+        ${off.length ? `<details class="acc-off"><summary>⛔ Accès retirés (${off.length})</summary><table class="acc-table">${off.map((x) => row(x, `<button type="button" class="chip-btn" data-c="${esc(x.code)}" data-n="${esc(x.name)}" data-a="app">↩ Remettre</button><button type="button" class="chip-btn danger" data-c="${esc(x.code)}" data-a="del">🗑 Supprimer</button>`)).join('')}</table></details>` : ''}`;
+      listEl.querySelectorAll('[data-c]').forEach((b) => b.addEventListener('click', async () => {
+        const c = b.dataset.c, a = b.dataset.a;
+        if (a === 'del' && !confirm(`Supprimer définitivement ${c} ? Son application sera bloquée.`)) return;
+        b.disabled = true; msg.textContent = 'Envoi à GitHub…';
+        const res = a === 'app' ? await T.adminApprove(c, b.dataset.n) : await T.adminRevoke(c);
+        if (!res.error) { const s = deleted(); if (a === 'del') s.add(c); else s.delete(c); setDeleted(s); }
+        msg.textContent = res.error ? '❌ ' + res.error : a === 'del' ? '🗑 Invité supprimé.' : a === 'rev' ? '⛔ Accès retiré.' : '↩ Accès remis.'; refresh();
+      }));
+    };
+    o.querySelector('.acc-add').addEventListener('submit', async (e) => {
+      e.preventDefault(); const f = e.target; const b = f.querySelector('button'); b.disabled = true; msg.textContent = 'Envoi à GitHub…';
+      const res = await T.adminApprove(f.c.value, f.n.value);
+      b.disabled = false; msg.textContent = res.error ? '❌ ' + res.error : `✅ ${res.code} accepté.`;
+      if (!res.error) { const s = deleted(); s.delete(res.code); setDeleted(s); f.reset(); refresh(); }
+    });
+    refresh();
+  }
+
+  // ---- mot de passe administrateur (gardé sur ce PC seulement, sous forme d'empreinte PBKDF2) ----
+  const PASS_KEY = 'tcsf:admin-pass';
+  const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
+  async function derive(pass, saltHex) {
+    const salt = new Uint8Array(saltHex.match(/../g).map((h) => parseInt(h, 16)));
+    const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+    return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, k, 256));
+  }
+  async function setPass(pass) { const salt = hex(crypto.getRandomValues(new Uint8Array(16))); try { localStorage.setItem(PASS_KEY, JSON.stringify({ salt, hash: await derive(pass, salt) })); } catch {} }
+  async function checkPass(pass) { try { const p = JSON.parse(localStorage.getItem(PASS_KEY)); return !!p && (await derive(pass, p.salt)) === p.hash; } catch { return false; } }
+  const hasPass = () => { try { return !!localStorage.getItem(PASS_KEY); } catch { return false; } };
+  let unlockedAt = 0; // le mot de passe reste valable 10 minutes
+  function askPass(then) {
+    if (Date.now() - unlockedAt < 10 * 60 * 1000) return then();
+    if (!hasPass()) return adminSetup(then);
+    document.querySelector('.acc-pass')?.remove();
+    const o = document.createElement('div'); o.className = 'live-modal acc-pass';
+    o.innerHTML = `<div class="live-card"><h3>🔐 Espace administrateur</h3><form class="acc-form"><label>Mot de passe<input class="lv-input" name="p" type="password" required autocomplete="current-password"></label><button class="btn primary" type="submit">Entrer</button></form><p class="acc-status w-small" role="status"></p><div class="live-btns"><button type="button" class="btn ghost">Annuler</button></div></div>`;
+    document.body.appendChild(o);
+    const f = o.querySelector('form'); setTimeout(() => f.p.focus(), 50);
+    o.querySelector('.btn.ghost').addEventListener('click', () => o.remove());
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (await checkPass(f.p.value)) { unlockedAt = Date.now(); o.remove(); then(); }
+      else { o.querySelector('.acc-status').textContent = '❌ Mot de passe incorrect.'; f.p.value = ''; f.p.focus(); }
+    });
+  }
+
+  // ---- première ouverture sur le PC du propriétaire : il choisit son nom d'utilisateur et devient l'administrateur ----
+  function showAdmin(name) {
+    const vl = document.getElementById('versionLine');
+    if (vl) setTimeout(() => { if (!/Admin/.test(vl.textContent)) vl.textContent += ` · 👑 Admin : ${name}`; }, 800);
+  }
+  // publier le nom sur GitHub pour que les invités le voient (si l'application installée le permet)
+  async function syncAdmin(name) {
+    if (!T.adminSetName || !T.adminGet) return { local: true };
+    try { const g = await T.adminGet(); if (g && g.admin && g.admin.name === name) return { ok: true }; return await T.adminSetName(name); } catch (e) { return { error: String(e) }; }
+  }
+  function adminSetup(after) {
+    const o = document.createElement('div');
+    o.className = 'acc-lock';
+    const M = window.TCSF_MASCOT;
+    o.innerHTML = `<div class="acc-card"><div class="acc-ic">${M ? M.svg(86) : '👑'}</div>
+      <h2>Bienvenue ! 👑</h2>
+      <p>C’est la <b>première ouverture</b> de l’application sur ce PC : tu en es l’<b>administrateur</b>. Choisis ton nom d’utilisateur.</p>
+      <p class="acc-ar" dir="rtl" lang="ar">أنت المسؤول عن التطبيق. اختر اسم المستخدم الخاص بك. كل من يأتي بعدك سيكون مدعوا ويحتاج إلى موافقتك.</p>
+      <form class="acc-form"><label>Ton nom d’utilisateur (administrateur)<input class="lv-input" name="n" maxlength="40" required placeholder="ex. Zaid Amallah" value="${esc(localStorage.getItem(ADMIN_KEY) || 'Zaid Amallah')}"></label>
+        <label>Ton mot de passe administrateur (6 caractères minimum)<input class="lv-input" name="p" type="password" minlength="6" required autocomplete="new-password"></label>
+        <label>Répète le mot de passe<input class="lv-input" name="p2" type="password" minlength="6" required autocomplete="new-password"></label>
+        <button class="btn primary" type="submit">Devenir administrateur →</button></form>
+      <p class="w-small">Les personnes qui ouvriront l’application après toi seront des <b>invités</b> : elles t’enverront un code, et tu les acceptes dans ⋮ › « 👥 Gérer les accès ».</p>
+      <p class="acc-status w-small" role="status"></p></div>`;
+    document.body.appendChild(o);
+    const f = o.querySelector('form'), status = o.querySelector('.acc-status');
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = f.n.value.trim(); if (name.length < 2) return;
+      if (f.p.value.length < 6) { status.textContent = 'Le mot de passe doit avoir au moins 6 caractères.'; return; }
+      if (f.p.value !== f.p2.value) { status.textContent = 'Les deux mots de passe ne sont pas identiques.'; f.p2.focus(); return; }
+      f.querySelector('button').disabled = true; status.textContent = 'Enregistrement…';
+      await setPass(f.p.value);
+      try { localStorage.setItem(ADMIN_KEY, name); } catch {}
+      await syncAdmin(name);
+      showAdmin(name);
+      o.querySelector('.acc-card').innerHTML = `<div class="acc-ic">${M ? M.svg(90) : '🎉'}</div><h2>Bonjour ${esc(name)} ! 🎉</h2><p>Tu es l’administrateur. Pour accepter un invité : ⋮ › « 👥 Gérer les accès ».</p>`;
+      try { if (window.TCSF_SFX) window.TCSF_SFX.fanfare(); if (window.TCSF_Q) window.TCSF_Q.burst(o.querySelector('.acc-card')); } catch {}
+      unlockedAt = Date.now();
+      setTimeout(() => { o.classList.add('out'); setTimeout(() => { o.remove(); if (after) after(); }, 400); }, 2400);
+    });
+  }
+
+  // ---- démarrage ----
+  (async () => {
+    const askOwner = () => (T.accessOwner ? T.accessOwner().catch(() => false) : Promise.resolve(false));
+    let owner = await askOwner();
+    if (!owner && T.adminList) { await new Promise((r) => setTimeout(r, 1500)); owner = await askOwner(); } // 2ᵉ essai (démarrage lent)
+    const vl = document.getElementById('versionLine');
+    if (owner) {
+      document.documentElement.classList.remove('acc-locked');
+      const actions = document.querySelector('#menu .menu-actions');
+      if (actions && T.adminList) { const b = document.createElement('button'); b.className = 'btn'; b.id = 'accessBtn'; b.textContent = '👥 Gérer les accès'; b.addEventListener('click', () => { document.getElementById('closeMenu')?.click(); askPass(adminModal); }); actions.appendChild(b); }
+      let name = ''; try { name = localStorage.getItem(ADMIN_KEY) || ''; } catch {}
+      if (!name || !hasPass()) adminSetup(); else { showAdmin(name); syncAdmin(name); }
+      return;
+    }
+    if (vl) setTimeout(() => { vl.textContent += ` · Code d’accès ${st.code}`; }, 800);
+    if (!st.ok) { lock(); const ok = await accepted(); if (ok) unlock(true); else lock(); return; }
+    // déjà accepté : on vérifie en arrière-plan (si l'accès a été retiré → verrou)
+    const ok = await accepted();
+    if (ok === false) { st.ok = false; save(st); lock('revoked'); }
+  })();
+  window.TCSF_ACCESS = { code: () => st.code, adminModal };
+})();
