@@ -1,0 +1,58 @@
+// Mises à jour en ligne : quand une nouvelle version a été téléchargée, on prévient l'élève
+// (notification + fenêtre « Quoi de neuf ») et on l'applique sans réinstaller.
+(() => {
+  const T = window.tcsf || {};
+  const SEEN = 'tcsf:live-seen';
+  const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const notesHTML = (n) => {
+    const lines = String(n || '').split(/\n+/).map((x) => x.trim()).filter(Boolean);
+    if (!lines.length) return '<p>Améliorations et nouveaux contenus.</p>';
+    return lines.length === 1 ? `<p>${esc(lines[0])}</p>` : `<ul>${lines.map((l) => `<li>${esc(l.replace(/^[-•*]\s*/, ''))}</li>`).join('')}</ul>`;
+  };
+  function notify(title, body) {
+    try {
+      if (window.TCSF_NATIVE && window.TCSF_NATIVE.notify && window.TCSF_NATIVE.notify.now) { window.TCSF_NATIVE.notify.now(title, body); return; }
+      if ('Notification' in window) {
+        const go = () => { try { new Notification(title, { body, icon: 'icon.png' }); } catch {} };
+        if (Notification.permission === 'granted') go(); else if (Notification.permission !== 'denied') Notification.requestPermission().then((p) => p === 'granted' && go());
+      }
+    } catch {}
+  }
+  function modal({ title, notes, buttons }) {
+    document.querySelector('.live-modal')?.remove();
+    const o = document.createElement('div');
+    o.className = 'live-modal';
+    o.innerHTML = `<div class="live-card" role="dialog" aria-modal="true"><div class="live-ic">${window.TCSF_MASCOT ? window.TCSF_MASCOT.svg(70) : '🎉'}</div><h3>${title}</h3><div class="live-notes">${notesHTML(notes)}</div><div class="live-btns"></div></div>`;
+    const row = o.querySelector('.live-btns');
+    for (const [label, cls, fn] of buttons) { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ' + cls; b.textContent = label; b.addEventListener('click', () => { o.remove(); fn && fn(); }); row.appendChild(b); }
+    document.body.appendChild(o);
+    try { if (window.TCSF_SFX) window.TCSF_SFX.fanfare(); } catch {}
+  }
+  // progression du téléchargement (téléphone)
+  let bar = null;
+  window.addEventListener('tcsf:live-progress', (e) => {
+    const p = e.detail && e.detail.pct;
+    if (p == null) return;
+    if (!bar) { bar = document.createElement('div'); bar.className = 'live-bar'; bar.innerHTML = '<span>⬇️ Mise à jour <b>0 %</b> — garde l’application ouverte</span><i><u></u></i>'; document.body.appendChild(bar); }
+    bar.querySelector('b').textContent = p + ' %';
+    bar.querySelector('u').style.width = p + '%';
+    if (p >= 100) setTimeout(() => { bar && bar.remove(); bar = null; }, 1500);
+  });
+  // nouvelle version téléchargée en arrière-plan
+  if (T.onLiveReady) T.onLiveReady((d) => {
+    notify('🎉 Nouvelle mise à jour de l’application', String(d.notes || 'Nouveaux contenus disponibles.').split('\n')[0]);
+    modal({ title: `🎉 Nouvelle version ${d.build >= 8 ? '2.2.' + d.build : ''} !`, notes: d.notes, buttons: [['Mettre à jour maintenant', 'primary', () => { try { localStorage.setItem(SEEN, String(d.build)); } catch {} T.liveApply && T.liveApply(); }], ['Plus tard', 'ghost', null]] });
+  });
+  // après la mise à jour : « Quoi de neuf » une seule fois
+  setTimeout(async () => {
+    try {
+      const i = T.info ? await T.info() : null;
+      if (!i || !i.build || !i.notes) return;
+      const seen = +(localStorage.getItem(SEEN) || 0);
+      if (seen >= i.build) return;
+      localStorage.setItem(SEEN, String(i.build));
+      modal({ title: `✨ Version ${window.TCSF_VER ? window.TCSF_VER(i) : ''} : quoi de neuf`, notes: i.notes, buttons: [['Super !', 'primary', null]] });
+    } catch {}
+  }, 1500);
+  window.TCSF_LIVE = { check: () => (T.liveCheck ? T.liveCheck() : Promise.resolve({ ok: false })), modal };
+})();
