@@ -1,0 +1,129 @@
+// « Avec le prof » pour la programmation : une méthode propre au code.
+// Pour chaque étape : 1) le prof explique avec une image de la vie courante, 2) l'élève EXÉCUTE l'exemple
+// (et peut le modifier), 3) il PRÉDIT ce qu'affiche un autre programme, 4) il ÉCRIT son propre code,
+// corrigé automatiquement (indice, puis solution après plusieurs essais). Fin : récap + Mode développeur.
+(() => {
+  const W = window.TCSF_WIDGETS || (window.TCSF_WIDGETS = {});
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const btn = (label, cls, fn) => { const b = el('button', 'btn ' + (cls || ''), label); b.type = 'button'; b.addEventListener('click', fn); return b; };
+
+  W.profcode = async (root, api) => {
+    const d = (await api.readJSON(root.dataset.src)) || {};
+    const steps = d.steps || [];
+    const Q = window.TCSF_Q, PY = window.TCSF_PY, M = window.TCSF_MASCOT, VO = window.TCSF_VOICE;
+    const QS = (Q && Q.STR.fr) || {};
+    const key = 'profcode:' + root.dataset.src;
+    let st = {}; try { st = JSON.parse(localStorage.getItem(key)) || {}; } catch {}
+    st = Object.assign({ i: 0, done: {}, fails: {} }, st);
+    const save = () => { try { localStorage.setItem(key, JSON.stringify(st)); } catch {} };
+    root.classList.add('w-prof', 'w-profcode');
+    root.innerHTML = `<div class="w-head"><span class="w-badge">Tico, le prof</span><b>Apprends à coder en pratiquant</b></div>
+      <ol class="pc-road">${steps.map((s, k) => `<li data-k="${k}"><span>${k + 1}</span>${s.t}</li>`).join('')}<li data-k="end"><span>🏁</span>Bilan</li></ol>
+      <div class="prof-chat pc-chat"></div>`;
+    const chat = root.querySelector('.prof-chat');
+    const road = () => root.querySelectorAll('.pc-road li').forEach((li) => { const k = li.dataset.k; li.className = k === 'end' ? (st.finished ? 'ok' : '') : st.done[k] ? 'ok' : +k === st.i ? 'cur' : ''; });
+    const scroll = (n) => { try { n.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch {} };
+    function say(html, cls = '') {
+      const b = el('div', 'prof-msg prof ' + cls, `<span class="prof-av mascot" aria-hidden="true">${M ? M.svg(46) : '👨‍🏫'}</span><div class="prof-bubble">${html}</div>`);
+      chat.appendChild(b); scroll(b);
+      if (M) { const c = b.querySelector('.prof-bubble').cloneNode(true); c.querySelectorAll('.pc-phase, pre, .py-play').forEach((x) => x.remove()); const t = c.textContent.replace(/\s+/g, ' ').trim(); M.say((t.match(/^[^.!?]{4,}[.!?]?/) || [t])[0]); }
+      if (VO && VO.enabled) VO.speak(html, 'fr');
+      return b.querySelector('.prof-bubble');
+    }
+    function me(t) { const b = el('div', 'prof-msg me', `<div class="prof-bubble">${t}</div><span class="prof-av" aria-hidden="true">🧑‍💻</span>`); chat.appendChild(b); scroll(b); }
+    function actions(...bs) { const a = el('div', 'prof-actions'); bs.forEach((x) => a.appendChild(x)); chat.appendChild(a); scroll(a); return a; }
+    const phase = (n, label) => `<span class="pc-phase pc-${n}">${label}</span>`;
+
+    function hello() {
+      chat.innerHTML = '';
+      say(`<p>Salut ! Moi c’est <b>Tico</b> 👋 En programmation, on apprend en <b>tapant du code</b>, pas seulement en lisant. Pour chaque notion :</p>
+        <ol class="pc-method"><li>${phase(1, '💡 Comprendre')} une idée avec un exemple de la vie</li><li>${phase(2, '▶ Exécuter')} un programme (et le modifier)</li><li>${phase(3, '🔮 Prédire')} ce qu’un code va afficher</li><li>${phase(4, '⌨️ Coder')} ton propre programme, corrigé tout de suite</li></ol>
+        <p>Aujourd’hui : <b>${root.dataset.title || ''}</b>.</p>`, 'first');
+      const bs = [btn(st.i > 0 && !st.finished ? `Reprendre à l’étape ${st.i + 1}` : 'On commence ! 🚀', 'primary', () => { a.remove(); stepAt(st.finished ? 0 : st.i); })];
+      if (st.i > 0 || st.finished) bs.push(btn('↺ Recommencer', 'ghost', () => { st = { i: 0, done: {}, fails: {} }; save(); road(); hello(); }));
+      const a = actions(...bs);
+      road();
+    }
+
+    function stepAt(k) {
+      const s = steps[k];
+      if (!s) return finish();
+      st.i = k; save(); road();
+      chat.appendChild(el('div', 'prof-sep', `<span>Étape ${k + 1}/${steps.length} · ${s.t}</span>`));
+      // 1) comprendre
+      say(`${phase(1, '💡 Comprendre')}${s.explain}`);
+      // 2) exécuter l'exemple (obligatoire avant de continuer)
+      const b2 = say(`${phase(2, '▶ Exécuter')}<p>Voici un exemple. <b>Clique sur ▶ Exécuter</b> pour voir ce qu’il fait. Tu peux le modifier et le relancer autant que tu veux.</p>`, 'board');
+      let ran = false;
+      const next = btn('J’ai vu le résultat, continuer →', 'primary', () => { next.parentNode.remove(); predict(k); });
+      next.disabled = true;
+      PY.playground(b2, s.code, { minRows: 3, maxRows: 14, onRun: () => { if (!ran) { ran = true; next.disabled = false; } } });
+      const a = actions(next);
+      a.appendChild(el('span', 'w-small muted', '← exécute d’abord le programme'));
+    }
+
+    // 3) prédire
+    function predict(k) {
+      const s = steps[k];
+      if (!s.predict || !Q) return task(k);
+      const b = say(`${phase(3, '🔮 Prédire')}<p>Sans l’exécuter, devine : ${s.predict.q.replace(/^Que va afficher ce programme \?/, '<b>que va afficher ce programme ?</b>')}</p>`);
+      const zone = el('div', 'prof-zone'); b.appendChild(zone);
+      Q.askQuestion(zone, Object.assign({}, s.predict, { q: '' }), QS, (ok) => {
+        say(ok ? 'Exactement ! Tu lis le code comme un ordinateur. 🧠' : 'Pas grave : prédire, c’est difficile au début. Regarde l’explication, puis vérifie en l’exécutant ci-dessous.', ok ? 'good' : '');
+        if (!ok) { const bb = say('<p>Vérifie toi-même :</p>', 'board'); PY.playground(bb, (s.predict.q.match(/<code>([\s\S]*?)<\/code>/) || [, ''])[1].replace(/&lt;/g, '<').replace(/&amp;/g, '&'), { minRows: 3, maxRows: 10, noReset: true }); }
+        actions(btn('À moi de coder ⌨️', 'primary', function () { this.parentNode.remove(); task(k); }));
+      });
+    }
+
+    // 4) coder
+    function task(k) {
+      const s = steps[k];
+      if (!s.task) return stepDone(k);
+      const b = say(`${phase(4, '⌨️ Coder')}<p>${s.task.q}</p>`);
+      const zone = el('div', 'prof-zone'); b.appendChild(zone);
+      const fb = el('div', 'w-fb');
+      const t = PY.task(zone, s.task, (ok, why) => {
+        if (ok) {
+          fb.className = 'w-fb ok'; fb.innerHTML = '<b>✅ Ton programme est correct !</b>';
+          if (Q) Q.burst(root);
+          say(['Bravo, ton code marche ! 🎉', 'Excellent, tu programmes déjà ! 💪', 'Parfait ! Tu as tout compris. ⭐'][k % 3], 'good');
+          actions(btn(k + 1 < steps.length ? 'Étape suivante →' : 'Voir le bilan 🏁', 'primary', function () { this.parentNode.remove(); stepDone(k); }));
+        } else {
+          st.fails[k] = (st.fails[k] || 0) + 1; save();
+          fb.className = 'w-fb ko';
+          fb.innerHTML = `<b>Pas encore…</b>${why || ''}${st.fails[k] >= 2 ? `<p>💡 <b>Indice :</b> ${s.task.hint || ''}</p>` : ''}`;
+          if (st.fails[k] === 3) {
+            const sol = el('details', 'py-sol', `<summary>👀 Voir une solution (après 3 essais)</summary>${PY.codeHTML(s.task.solution || '')}`);
+            fb.appendChild(sol);
+            actions(btn('Continuer quand même →', 'ghost', function () { this.parentNode.remove(); stepDone(k); }));
+          }
+        }
+      });
+      zone.appendChild(fb);
+      return t;
+    }
+
+    function stepDone(k) {
+      st.done[k] = 1; st.i = k + 1; save(); road();
+      if (k + 1 >= steps.length) window.dispatchEvent(new CustomEvent('tcsf:activity', { detail: { act: 'prof', src: root.dataset.src } }));
+      if (k + 1 < steps.length) stepAt(k + 1); else finish();
+    }
+
+    function finish() {
+      st.finished = true; st.i = steps.length; save(); road();
+      if (Q) Q.burst(root);
+      const n = Object.keys(st.done).length;
+      say(`<p>🏁 <b>Leçon terminée !</b> Tu as réussi ${n}/${steps.length} défis de code.</p>
+        <div class="prof-key"><b>À retenir :</b> ${d.recap || ''}</div>
+        <p>Pour t’entraîner librement, ouvre le <b>Mode développeur</b> : c’est ton espace pour écrire tes propres programmes.</p>`, 'good');
+      const bs = [];
+      const dev = el('a', 'btn primary', '💻 Ouvrir le Mode développeur'); dev.href = '#/c/informatique/developpeur'; bs.push(dev);
+      if (root.dataset.rev) { const r = el('a', 'btn', '✍️ Exercices de révision'); r.href = root.dataset.rev; bs.push(r); }
+      bs.push(btn('↺ Recommencer', 'ghost', () => { st = { i: 0, done: {}, fails: {} }; save(); hello(); }));
+      actions(...bs);
+    }
+
+    if (!steps.length) { chat.innerHTML = '<p class="muted">Pas encore de parcours pour cette leçon.</p>'; return; }
+    hello();
+  };
+})();

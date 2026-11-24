@@ -1,0 +1,87 @@
+[
+  {
+    "id": "mathematiques", "title": "Mathématiques", "icon": "maths", "color": ["#3b82f6", "#2563eb"], "status": "ready", "lang": "fr", "subtitle": "15 chapitres",
+    "categories": [
+      {"id": "cours", "title": "Cours", "icon": "book", "description": "Les leçons complètes du programme.", "status": "ready", "mode": "cours", "lessons": "mathematiques/index.json"},
+      {"id": "prof", "title": "Avec le prof", "icon": "teacher", "description": "Le prof te guide : tu réfléchis, il explique, tu construis toi-même ta leçon.", "status": "ready", "mode": "prof", "lessons": "mathematiques/index.json"},
+      {"id": "examens", "title": "Examens", "icon": "lesson", "description": "Examens blancs corrigés, tirés de toutes les leçons.", "status": "ready", "mode": "examen", "lessons": "mathematiques/index.json"},
+      {"id": "revisions", "title": "Révisions", "icon": "bulb", "description": "L'essentiel + exercices Facile → Moyen → Difficile.", "status": "ready", "mode": "revision", "lessons": "mathematiques/index.json"},
+      {"id": "experiences", "title": "Expériences", "icon": "lab", "description": "Solides et géométrie de l’espace en 3D, courbes et figures interactives en 2D.", "status": "ready", "mode": "labo", "lessons": "mathematiques/labo.json"}
+    ]
+  },
+  {
+    "id": "physique-chimie", "title": "Physique-Chimie", "icon": "atom", "color": ["#7c3aed", "#a855f7"], "status": "ready", "lang": "fr", "subtitle": "24 leçons · expériences interactives",
+    "categories": [
+      {"id": "cours", "title": "Cours", "icon": "book", "description": "Les 24 leçons du programme, avec leurs expériences interactives.", "status": "ready", "mode": "cours", "lessons": "physique-chimie/index.json"},
+      {"id": "prof", "title": "Avec le prof", "icon": "teacher", "description": "Le prof te guide : tu réfléchis, il explique, tu construis toi-même ta leçon.", "status": "ready", "mode": "prof", "lessons": "physique-chimie/index.json"},
+      {"id": "examens", "title": "Examens", "icon": "lesson", "description": "Examens blancs corrigés, tirés de toutes les leçons.", "status": "ready", "mode": "examen", "lessons": "physique-chimie/index.json"},
+      {"id": "revisions", "title": "Révisions", "icon": "bulb", "description": "L'essentiel + expériences + exercices Facile → Moyen → Difficile.", "status": "ready", "mode": "revision", "lessons": "physique-chimie/index.json"},
+      {"id": "experiences", "title": "Expériences", "icon": "lab", "description": "Toutes les expériences : modèles 3D à faire tourner et simulations 2D, expliquées par le prof.", "status": "ready", "mode": "labo", "lessons": "physique-chimie/labo.json"}
+    ]
+  },
+  {
+    "id": "svt", "title": "SVT", "icon": "dna", "color": ["#16a34a", "#22c55e"], "status": "ready", "lang": "fr", "subtitle": "14 chapitres",
+    "categories": [
+      {"id": "cours", "title": "Cours", "icon": "book", "description": "Géologie externe, écologie et reproduction : toutes les leçons du Tronc Commun.", "status": "ready", "mode": "cours", "lessons": "svt/index.json"},
+      {"id": "prof", "title": "Avec le prof", "icon": "teacher", "description": "Tico te guide : tu réfléchis, il explique (en français, mélangé ou en arabe), tu construis ta leçon.", "status": "ready", "mode": "prof", "lessons": "svt/index.json"},
+      {"id": "examens", "title": "Examens", "icon": "lesson", "description": "Examens blancs corrigés : choisis les unités et les leçons que tu veux.", "status": "ready", "mode": "examen", "lessons": "svt/index.json"},
+      {"id": "revisions", "title": "Révisions", "icon": "bulb", "description": "L'essentiel + exercices Facile → Moyen → Difficile.", "status": "ready", "mode": "revision", "lessons": "svt/index.json"}
+    ]
+  },
+  {"id": "francais", "title": "Français", "icon": "book", "color": ["#2563eb", "#0ea5e9"], "status": "maintenance"},
+  {
+    "id": "arabe", "title": "Arabe · اللغة العربية", "icon": "arabic", "color": ["#0f766e", "#14b8a6"], "status": "ready", "lang": "ar", "subtitle": "مجزوءتان",
+    "categories": [
+      {"id": "cours", "title": "الدروس", "icon": "book", "description": "دروس النصوص والدروس اللغوية والتعبير والإنشاء.", "status": "ready", "mode": "cours", "lessons": "arabe/index.json"},
+      {"id": "prof", "title": "مع الأستاذ", "icon": "teacher", "description": "يرشدك الأستاذ: تفكر، يشرح، وتبني درسك بنفسك.", "status": "ready", "mode": "prof", "lessons": "arabe/index.json"},
+      {"id": "examens", "title": "الامتحانات", "icon": "lesson", "description": "امتحانات تجريبية مصححة من جميع الدروس.", "status": "ready", "mode": "examen", "lessons": "arabe/index.json"},
+      {"id": "revisions", "title": "المراجعة", "icon": "bulb", "description": "الخلاصة + تمارين: سهل ← متوسط ← صعب.", "status": "ready", "mode": "revision", "lessons": "arabe/index.json"}
+    ]
+  },
+  {
+    "id": "anglais", "title": "Anglais · English", "icon": "english", "color": ["#dc2626", "#f43f5e"], "status": "ready", "lang": "en", "subtitle": "10 units",
+    "categories": [
+      {"id": "cours", "title": "Lessons", "icon": "book", "description": "The 10 units of the Common Core programme.", "status": "ready", "mode": "cours", "lessons": "anglais/index.json"},
+      {"id": "prof", "title": "With the teacher", "icon": "teacher", "description": "The teacher guides you: you think, he explains, you build the lesson yourself.", "status": "ready", "mode": "prof", "lessons": "anglais/index.json"},
+      {"id": "examens", "title": "Exams", "icon": "lesson", "description": "Mock exams with corrections, from all the units.", "status": "ready", "mode": "examen", "lessons": "anglais/index.json"},
+      {"id": "revisions", "title": "Revision", "icon": "bulb", "description": "Key points + practice Easy → Medium → Hard.", "status": "ready", "mode": "revision", "lessons": "anglais/index.json"}
+    ]
+  },
+  {
+    "id": "education-islamique", "title": "Éducation islamique · التربية الإسلامية", "icon": "crescent", "color": ["#047857", "#10b981"], "status": "ready", "lang": "ar", "subtitle": "المداخل الخمسة",
+    "categories": [
+      {"id": "cours", "title": "الدروس", "icon": "book", "description": "دروس المداخل: التزكية، الاقتداء، الاستجابة، القسط، الحكمة.", "status": "ready", "mode": "cours", "lessons": "education-islamique/index.json"},
+      {"id": "prof", "title": "مع الأستاذ", "icon": "teacher", "description": "يرشدك الأستاذ: تفكر، يشرح، وتبني درسك بنفسك.", "status": "ready", "mode": "prof", "lessons": "education-islamique/index.json"},
+      {"id": "examens", "title": "الامتحانات", "icon": "lesson", "description": "امتحانات تجريبية مصححة من جميع الدروس.", "status": "ready", "mode": "examen", "lessons": "education-islamique/index.json"},
+      {"id": "revisions", "title": "المراجعة", "icon": "bulb", "description": "الخلاصة + تمارين: سهل ← متوسط ← صعب.", "status": "ready", "mode": "revision", "lessons": "education-islamique/index.json"}
+    ]
+  },
+  {
+    "id": "histoire-geographie", "title": "Histoire-Géographie · الاجتماعيات", "icon": "globe", "color": ["#b45309", "#f59e0b"], "status": "ready", "lang": "ar", "subtitle": "التاريخ والجغرافيا",
+    "categories": [
+      {"id": "cours", "title": "الدروس", "icon": "book", "description": "دروس التاريخ والجغرافيا للجذع المشترك.", "status": "ready", "mode": "cours", "lessons": "histoire-geographie/index.json"},
+      {"id": "prof", "title": "مع الأستاذ", "icon": "teacher", "description": "يرشدك الأستاذ: تفكر، يشرح، وتبني درسك بنفسك.", "status": "ready", "mode": "prof", "lessons": "histoire-geographie/index.json"},
+      {"id": "examens", "title": "الامتحانات", "icon": "lesson", "description": "امتحانات تجريبية مصححة من جميع الدروس.", "status": "ready", "mode": "examen", "lessons": "histoire-geographie/index.json"},
+      {"id": "revisions", "title": "المراجعة", "icon": "bulb", "description": "الخلاصة + تمارين: سهل ← متوسط ← صعب.", "status": "ready", "mode": "revision", "lessons": "histoire-geographie/index.json"}
+    ]
+  },
+  {
+    "id": "philosophie", "title": "Philosophie · الفلسفة", "icon": "bulb", "color": ["#9333ea", "#ec4899"], "status": "ready", "lang": "ar", "subtitle": "16 درسا",
+    "categories": [
+      {"id": "cours", "title": "الدروس", "icon": "book", "description": "مجزوءة الفلسفة ومجزوءة الطبيعة والثقافة.", "status": "ready", "mode": "cours", "lessons": "philosophie/index.json"},
+      {"id": "prof", "title": "مع الأستاذ", "icon": "teacher", "description": "يرشدك الأستاذ: تفكر، يشرح، وتبني درسك بنفسك.", "status": "ready", "mode": "prof", "lessons": "philosophie/index.json"},
+      {"id": "examens", "title": "الامتحانات", "icon": "lesson", "description": "امتحانات تجريبية مصححة من جميع الدروس.", "status": "ready", "mode": "examen", "lessons": "philosophie/index.json"},
+      {"id": "revisions", "title": "المراجعة", "icon": "bulb", "description": "الخلاصة + تمارين: سهل ← متوسط ← صعب.", "status": "ready", "mode": "revision", "lessons": "philosophie/index.json"}
+    ]
+  },
+  {
+    "id": "informatique", "title": "Informatique · Python", "icon": "code", "color": ["#0891b2", "#06b6d4"], "status": "ready", "lang": "fr", "subtitle": "Python pas à pas",
+    "categories": [
+      {"id": "cours", "title": "Cours", "icon": "book", "description": "Python du niveau zéro, avec des exemples que tu peux exécuter et modifier.", "status": "ready", "mode": "cours", "lessons": "informatique/index.json"},
+      {"id": "prof", "title": "Avec le prof", "icon": "teacher", "description": "Tico t’apprend à coder : comprendre, exécuter, prédire, puis écrire ton propre code.", "status": "ready", "mode": "prof", "lessons": "informatique/index.json"},
+      {"id": "developpeur", "title": "Mode développeur", "icon": "code", "description": "Ton espace libre façon VS Code : écris, exécute et enregistre tes programmes Python.", "status": "ready", "mode": "dev", "lessons": "informatique/index.json"},
+      {"id": "examens", "title": "Examens", "icon": "lesson", "description": "Examens blancs : questions et exercices de code corrigés automatiquement.", "status": "ready", "mode": "examen", "lessons": "informatique/index.json"},
+      {"id": "revisions", "title": "Révisions", "icon": "bulb", "description": "L'essentiel + exercices Facile → Moyen → Difficile (avec du vrai code).", "status": "ready", "mode": "revision", "lessons": "informatique/index.json"}
+    ]
+  }
+]

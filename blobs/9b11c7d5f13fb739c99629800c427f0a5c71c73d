@@ -1,0 +1,86 @@
+[
+ {
+  "id": "premiers-pas",
+  "title": "Premiers pas avec Python",
+  "module": "Partie 1 · Les bases",
+  "description": "Algorithme, programme, print() et les commentaires.",
+  "data": "informatique/l/premiers-pas.json"
+ },
+ {
+  "id": "variables",
+  "title": "Variables et types",
+  "module": "Partie 1 · Les bases",
+  "description": "Ranger des valeurs, int, float, str, bool.",
+  "data": "informatique/l/variables.json"
+ },
+ {
+  "id": "entrees-sorties",
+  "title": "Entrées et sorties : input()",
+  "module": "Partie 1 · Les bases",
+  "description": "Demander une valeur à l’utilisateur et la convertir.",
+  "data": "informatique/l/entrees-sorties.json"
+ },
+ {
+  "id": "operateurs",
+  "title": "Calculs et opérateurs",
+  "module": "Partie 1 · Les bases",
+  "description": "Opérations, division entière, modulo, puissance, priorités.",
+  "data": "informatique/l/operateurs.json"
+ },
+ {
+  "id": "conditions",
+  "title": "Les conditions : if, elif, else",
+  "module": "Partie 2 · Décider et répéter",
+  "description": "Faire des choix selon une condition.",
+  "data": "informatique/l/conditions.json"
+ },
+ {
+  "id": "boucle-for",
+  "title": "La boucle for et range()",
+  "module": "Partie 2 · Décider et répéter",
+  "description": "Répéter un nombre connu de fois.",
+  "data": "informatique/l/boucle-for.json"
+ },
+ {
+  "id": "boucle-while",
+  "title": "La boucle while",
+  "module": "Partie 2 · Décider et répéter",
+  "description": "Répéter tant qu’une condition est vraie.",
+  "data": "informatique/l/boucle-while.json"
+ },
+ {
+  "id": "chaines",
+  "title": "Les chaînes de caractères",
+  "module": "Partie 3 · Données et fonctions",
+  "description": "Longueur, indices, tranches, méthodes, parcours.",
+  "data": "informatique/l/chaines.json"
+ },
+ {
+  "id": "listes",
+  "title": "Les listes",
+  "module": "Partie 3 · Données et fonctions",
+  "description": "Ranger plusieurs valeurs, append, parcours, sum, max, sort.",
+  "data": "informatique/l/listes.json"
+ },
+ {
+  "id": "fonctions",
+  "title": "Les fonctions",
+  "module": "Partie 3 · Données et fonctions",
+  "description": "def, paramètres, return.",
+  "data": "informatique/l/fonctions.json"
+ },
+ {
+  "id": "algorithmes",
+  "title": "Algorithmes classiques",
+  "module": "Partie 4 · Algorithmes et projets",
+  "description": "Maximum, recherche, compteur, moyenne, tri simple.",
+  "data": "informatique/l/algorithmes.json"
+ },
+ {
+  "id": "projets",
+  "title": "Mini-projets",
+  "module": "Partie 4 · Algorithmes et projets",
+  "description": "Jeu du nombre mystère, calculatrice, bulletin de notes.",
+  "data": "informatique/l/projets.json"
+ }
+]

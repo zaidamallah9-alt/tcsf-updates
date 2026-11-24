@@ -1,0 +1,57 @@
+// Exécution de Python (Skulpt) dans un « worker » séparé : une boucle infinie ne bloque jamais l'application.
+// Messages reçus : {t:'run', code, inputs?:[...]} · {t:'input', v}
+// Messages envoyés : {t:'out', v} · {t:'input', p} · {t:'done'} · {t:'err', v:{type, msg, line}}
+importScripts('vendor/skulpt/skulpt.min.js', 'vendor/skulpt/skulpt-stdlib.js');
+
+let waitInput = null;
+let queued = null; // entrées fournies d'avance (correction automatique)
+
+onmessage = (e) => {
+  const m = e.data || {};
+  if (m.t === 'input' && waitInput) { const f = waitInput; waitInput = null; f(String(m.v ?? '')); return; }
+  if (m.t === 'run') run(String(m.code || ''), m.inputs);
+};
+
+function errInfo(err) {
+  let type = 'Erreur', msg = String(err), line = null;
+  try {
+    if (err && err.tp$name) {
+      type = err.tp$name;
+      const a = err.args && err.args.v && err.args.v[0];
+      msg = a ? (a.v !== undefined ? String(a.v) : String(a)) : '';
+      if (err.traceback && err.traceback.length) line = err.traceback[err.traceback.length - 1].lineno;
+    } else {
+      const s = String(err);
+      const mm = s.match(/^(\w+(?:Error|Exception)?):\s*([\s\S]*?)(?: on line (\d+))?$/);
+      if (mm) { type = mm[1]; msg = mm[2]; line = mm[3] ? +mm[3] : null; }
+    }
+  } catch (_) {}
+  return { type, msg, line };
+}
+
+function run(code, inputs) {
+  queued = Array.isArray(inputs) ? inputs.slice() : null;
+  Sk.configure({
+    output: (t) => postMessage({ t: 'out', v: t }),
+    read: (x) => {
+      if (Sk.builtinFiles === undefined || Sk.builtinFiles.files[x] === undefined) throw "Module introuvable : '" + x + "'";
+      return Sk.builtinFiles.files[x];
+    },
+    inputfun: (prompt) => {
+      if (queued) {
+        // correction automatique : on compare seulement ce que print() affiche
+        return queued.length ? String(queued.shift()) : '';
+      }
+      return new Promise((res) => { waitInput = res; postMessage({ t: 'input', p: String(prompt || '') }); });
+    },
+    inputfunTakesPrompt: true,
+    __future__: Sk.python3,
+    execLimit: null,
+    yieldLimit: 200,
+    killableWhile: true,
+    killableFor: true
+  });
+  Sk.misceval
+    .asyncToPromise(() => Sk.importMainWithBody('<stdin>', false, code, true))
+    .then(() => postMessage({ t: 'done' }), (err) => postMessage({ t: 'err', v: errInfo(err) }));
+}

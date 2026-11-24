@@ -1,0 +1,275 @@
+// Python dans l'application (hors ligne) : éditeur de code, console, exercices corrigés automatiquement,
+// « Mode développeur » (bac à sable façon VS Code) et mode « Avec le prof » spécial programmation.
+(() => {
+  const W = window.TCSF_WIDGETS || (window.TCSF_WIDGETS = {});
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+
+  // ---------------- Exécution (worker) ----------------
+  // run(code, {onOut, onInput(prompt) → Promise<string>, inputs, timeout}) → Promise<{ok, out, err}>
+  function run(code, o = {}) {
+    return new Promise((resolve) => {
+      let w;
+      try { w = new Worker('py-worker.js'); } catch (e) { resolve({ ok: false, out: '', err: { type: 'Erreur', msg: 'Python indisponible : ' + e.message } }); return; }
+      let out = '', done = false, waiting = false, last = Date.now();
+      const limit = o.timeout || 8000;
+      const finish = (r) => { if (done) return; done = true; clearInterval(tick); try { w.terminate(); } catch {} resolve(Object.assign({ out }, r)); };
+      // arrêt si le programme calcule trop longtemps sans attendre l'élève (boucle infinie)
+      const tick = setInterval(() => { if (!waiting && Date.now() - last > limit) finish({ ok: false, err: { type: 'Temps dépassé', msg: 'Le programme tourne depuis trop longtemps (boucle infinie ?).', line: null }, timeout: true }); }, 250);
+      w.onmessage = async (e) => {
+        const m = e.data || {};
+        if (m.t === 'out') { out += m.v; o.onOut && o.onOut(m.v); }
+        else if (m.t === 'input') {
+          waiting = true;
+          const v = o.onInput ? await o.onInput(m.p) : '';
+          waiting = false; last = Date.now();
+          if (!done) w.postMessage({ t: 'input', v });
+        } else if (m.t === 'done') finish({ ok: true });
+        else if (m.t === 'err') finish({ ok: false, err: m.v });
+      };
+      w.onerror = (e) => finish({ ok: false, err: { type: 'Erreur', msg: e.message || 'Erreur interne', line: null } });
+      w.postMessage({ t: 'run', code, inputs: o.inputs });
+      o.stop && o.stop(() => finish({ ok: false, err: { type: 'Arrêt', msg: 'Programme arrêté.', line: null }, stopped: true }));
+    });
+  }
+
+  // Erreurs Python expliquées simplement
+  const ERR = {
+    SyntaxError: 'Erreur de syntaxe : Python ne comprend pas la ligne. Vérifie les « : », les parenthèses et les guillemets.',
+    IndentationError: 'Erreur d’indentation : les lignes d’un bloc (après if, for, while, def…) doivent être décalées de 4 espaces.',
+    NameError: 'Nom inconnu : tu utilises une variable ou une fonction qui n’existe pas (faute de frappe ? variable pas encore créée ?).',
+    TypeError: 'Erreur de type : tu mélanges des types incompatibles (par exemple un texte + un nombre). Pense à int(), float() ou str().',
+    ValueError: 'Valeur incorrecte : par exemple int("bonjour") est impossible.',
+    ZeroDivisionError: 'Division par zéro : impossible en mathématiques comme en Python.',
+    IndexError: 'Indice hors limites : la liste ou le texte n’a pas autant d’éléments (on compte à partir de 0).',
+    KeyError: 'Clé inconnue dans le dictionnaire.',
+    AttributeError: 'Cette méthode n’existe pas pour ce type de valeur.',
+    'Temps dépassé': 'Le programme ne s’arrête pas : vérifie la condition de ta boucle while.'
+  };
+  const errHTML = (err) => `<div class="py-err"><b>❌ ${esc(err.type)}${err.line ? ` (ligne ${err.line})` : ''}</b>${err.msg ? ` : <code>${esc(err.msg)}</code>` : ''}<br><span>${esc(ERR[err.type] || '')}</span></div>`;
+
+  // ---------------- Coloration syntaxique ----------------
+  const KW = new Set('False None True and as assert break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield'.split(' '));
+  const BI = new Set('print input int float str bool len range list dict set tuple abs min max sum round sorted type enumerate zip map filter open'.split(' '));
+  function highlight(src) {
+    const re = /(#[^\n]*)|("""[\s\S]*?"""|'''[\s\S]*?'''|f?"(?:\\.|[^"\\\n])*"?|f?'(?:\\.|[^'\\\n])*'?)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)|([\s\S])/g;
+    let out = '', m;
+    while ((m = re.exec(src))) {
+      if (m[1]) out += `<span class="t-com">${esc(m[1])}</span>`;
+      else if (m[2]) out += `<span class="t-str">${esc(m[2])}</span>`;
+      else if (m[3]) out += `<span class="t-num">${m[3]}</span>`;
+      else if (m[4]) out += KW.has(m[4]) ? `<span class="t-kw">${m[4]}</span>` : BI.has(m[4]) ? `<span class="t-bi">${m[4]}</span>` : src[re.lastIndex] === '(' ? `<span class="t-fn">${m[4]}</span>` : m[4];
+      else out += esc(m[5]);
+    }
+    return out + '\n';
+  }
+  // Code affiché (lecture seule) dans les leçons
+  const codeHTML = (src) => `<pre class="py-code"><code>${highlight(String(src).replace(/\n$/, ''))}</code></pre>`;
+
+  // ---------------- Éditeur (textarea + coloration superposée + numéros de ligne) ----------------
+  function editor(host, value, opts = {}) {
+    const box = el('div', 'py-ed' + (opts.dark ? ' dark' : ''));
+    box.innerHTML = `<div class="py-gutter" aria-hidden="true"></div><div class="py-area"><pre class="py-hl" aria-hidden="true"></pre><textarea class="py-ta" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off"></textarea></div>`;
+    const ta = box.querySelector('textarea'), hl = box.querySelector('.py-hl'), gut = box.querySelector('.py-gutter');
+    ta.value = value || '';
+    ta.setAttribute('aria-label', 'Éditeur de code Python');
+    const paint = () => {
+      hl.innerHTML = highlight(ta.value);
+      const n = ta.value.split('\n').length;
+      gut.innerHTML = Array.from({ length: n }, (_, i) => `<span>${i + 1}</span>`).join('');
+      box.style.setProperty('--rows', Math.max(opts.minRows || 6, Math.min(opts.maxRows || 22, n + 1)));
+      opts.onChange && opts.onChange(ta.value);
+    };
+    const sync = () => { hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; gut.scrollTop = ta.scrollTop; };
+    ta.addEventListener('input', paint);
+    ta.addEventListener('scroll', sync);
+    ta.addEventListener('keydown', (e) => {
+      const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+      if (e.key === 'Tab') { // 4 espaces (ou retrait avec Maj)
+        e.preventDefault();
+        const ls = v.lastIndexOf('\n', s - 1) + 1;
+        if (e.shiftKey) { if (v.slice(ls, ls + 4) === '    ') { ta.value = v.slice(0, ls) + v.slice(ls + 4); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - 4); } }
+        else { ta.value = v.slice(0, s) + '    ' + v.slice(en); ta.selectionStart = ta.selectionEnd = s + 4; }
+        paint(); return;
+      }
+      if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { // indentation automatique (et +4 après « : »)
+        e.preventDefault();
+        const ls = v.lastIndexOf('\n', s - 1) + 1, line = v.slice(ls, s);
+        let ind = (line.match(/^\s*/) || [''])[0];
+        if (/:\s*(#.*)?$/.test(line)) ind += '    ';
+        const ins = '\n' + ind;
+        ta.value = v.slice(0, s) + ins + v.slice(en); ta.selectionStart = ta.selectionEnd = s + ins.length;
+        paint(); return;
+      }
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && opts.onRun) { e.preventDefault(); opts.onRun(); return; }
+      const pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'" };
+      if (pairs[e.key] && s === en && !/\w/.test(v[s] || '')) { e.preventDefault(); ta.value = v.slice(0, s) + e.key + pairs[e.key] + v.slice(en); ta.selectionStart = ta.selectionEnd = s + 1; paint(); return; }
+      if (Object.values(pairs).includes(e.key) && v[s] === e.key && s === en) { e.preventDefault(); ta.selectionStart = ta.selectionEnd = s + 1; }
+    });
+    host.appendChild(box);
+    paint();
+    return { box, get value() { return ta.value; }, set value(x) { ta.value = x; paint(); }, focus: () => ta.focus(), ta };
+  }
+
+  // ---------------- Console (sortie + saisie pour input()) ----------------
+  function consoleBox(host) {
+    const c = el('div', 'py-console', '<div class="py-out" role="log" aria-live="polite"></div>');
+    host.appendChild(c);
+    const out = c.querySelector('.py-out');
+    const api = {
+      clear() { out.innerHTML = ''; },
+      write(t, cls) { const s = el('span', cls || ''); s.textContent = t; out.appendChild(s); out.scrollTop = out.scrollHeight; },
+      html(h) { out.insertAdjacentHTML('beforeend', h); out.scrollTop = out.scrollHeight; },
+      ask(prompt) {
+        if (prompt) api.write(prompt);
+        return new Promise((res) => {
+          const f = el('form', 'py-in');
+          f.innerHTML = `<input class="py-in-field" autocomplete="off" spellcheck="false" placeholder="Tape ta réponse puis Entrée"><button class="btn primary" type="submit">↵</button>`;
+          out.appendChild(f); out.scrollTop = out.scrollHeight;
+          const i = f.querySelector('input'); setTimeout(() => i.focus(), 30);
+          f.addEventListener('submit', (e) => { e.preventDefault(); const v = i.value; f.remove(); api.write(v + '\n', 'py-typed'); res(v); });
+        });
+      }
+    };
+    return api;
+  }
+
+  // Bloc complet : éditeur + boutons + console. Utilisé dans les leçons, les exercices et le mode développeur.
+  function playground(host, code, opts = {}) {
+    const wrap = el('div', 'py-play' + (opts.dark ? ' dark' : ''));
+    host.appendChild(wrap);
+    const bar = el('div', 'py-bar');
+    const runB = el('button', 'btn primary py-run', '▶ Exécuter'); runB.type = 'button';
+    const stopB = el('button', 'btn py-stop', '⏹ Arrêter'); stopB.type = 'button'; stopB.hidden = true;
+    const resetB = el('button', 'btn ghost', '↺ Code de départ'); resetB.type = 'button';
+    bar.append(runB, stopB);
+    if (!opts.noReset) bar.append(resetB);
+    if (opts.extra) opts.extra.forEach((b) => bar.appendChild(b));
+    const tip = el('span', 'py-tip w-small', 'Ctrl + Entrée pour exécuter');
+    bar.appendChild(tip);
+    const ed = editor(wrap, code, { dark: opts.dark, minRows: opts.minRows, maxRows: opts.maxRows, onRun: () => go(), onChange: opts.onChange });
+    wrap.appendChild(bar);
+    const con = consoleBox(wrap);
+    con.write(opts.hello || 'La sortie du programme s’affichera ici.\n', 'py-muted');
+    let stopFn = null;
+    async function go() {
+      if (stopFn) return;
+      con.clear(); runB.disabled = true; stopB.hidden = false;
+      const r = await run(ed.value, { onOut: (t) => con.write(t), onInput: (p) => con.ask(p), stop: (f) => (stopFn = f), timeout: opts.timeout });
+      stopFn = null; runB.disabled = false; stopB.hidden = true;
+      if (!r.ok) con.html(errHTML(r.err));
+      else if (!r.out) con.write('(le programme n’a rien affiché)\n', 'py-muted');
+      else con.write('\n✔ Programme terminé.\n', 'py-ok');
+      opts.onRun && opts.onRun(r, ed.value);
+      return r;
+    }
+    runB.addEventListener('click', go);
+    stopB.addEventListener('click', () => stopFn && stopFn());
+    resetB.addEventListener('click', () => { ed.value = code; });
+    return { ed, con, run: go, wrap };
+  }
+
+  // ---------------- Correction automatique d'un exercice de code ----------------
+  // q = { type:'code', q, starter, tests:[{input:[..], out:'texte attendu' | contains:'…'}], solution, hint }
+  const normOut = (s) => String(s).replace(/\r/g, '').split('\n').map((l) => l.replace(/\s+$/, '')).join('\n').trim();
+  async function check(code, q) {
+    for (const [k, t] of (q.tests || []).entries()) {
+      const r = await run(code, { inputs: t.input || [], timeout: 4000 });
+      if (!r.ok) return { ok: false, why: errHTML(r.err), k };
+      const got = normOut(r.out);
+      if (t.out !== undefined && got !== normOut(t.out)) return { ok: false, k, why: `Avec ${t.input && t.input.length ? 'les entrées <code>' + esc(t.input.join(', ')) + '</code>' : 'ce programme'}, on attend :<pre class="py-exp">${esc(t.out)}</pre>et ton programme affiche :<pre class="py-exp">${esc(r.out || '(rien)')}</pre>` };
+      if (t.contains !== undefined && !got.includes(String(t.contains))) return { ok: false, k, why: `Le résultat doit contenir <code>${esc(t.contains)}</code>. Ton programme affiche :<pre class="py-exp">${esc(r.out || '(rien)')}</pre>` };
+      if (t.code && !new RegExp(t.code).test(code)) return { ok: false, k, why: esc(t.codeMsg || 'Utilise ce qui est demandé dans l’énoncé.') };
+    }
+    return { ok: true };
+  }
+  // Exercice dans askQuestion (révisions, examens, prof)
+  function task(zone, q, verdict) {
+    const p = playground(zone, q.starter || '', { minRows: 5, maxRows: 14, noReset: false });
+    const val = el('button', 'btn primary py-check', '✅ Vérifier mon code'); val.type = 'button';
+    p.wrap.querySelector('.py-bar').prepend(val);
+    if (q.hint) { const hb = el('button', 'btn ghost', '💡 Indice'); hb.type = 'button'; hb.addEventListener('click', () => { hb.replaceWith(el('p', 'py-hint', '💡 ' + q.hint)); }); p.wrap.querySelector('.py-bar').appendChild(hb); }
+    val.addEventListener('click', async () => {
+      val.disabled = true; val.textContent = '⏳ Vérification…';
+      const r = await check(p.ed.value, q);
+      val.disabled = false; val.textContent = '✅ Vérifier mon code';
+      if (r.ok) { val.remove(); p.ed.ta.readOnly = true; }
+      verdict(r.ok, r.ok ? '' : r.why, r);
+    });
+    return p;
+  }
+
+  // ---------------- Widget « py » dans les leçons : <div data-widget="py" data-code="…"> ----------------
+  W.py = (host) => {
+    const code = host.dataset.code ? decodeURIComponent(host.dataset.code) : host.textContent;
+    host.innerHTML = '';
+    host.classList.add('py-widget');
+    if (host.dataset.title) host.appendChild(el('p', 'py-title', '🧪 ' + esc(host.dataset.title)));
+    playground(host, code, { minRows: 3, maxRows: 16 });
+  };
+
+  // ---------------- Mode développeur (bac à sable façon VS Code) ----------------
+  const DEV = 'tcsf:pydev';
+  const EXAMPLES = {
+    'bonjour.py': 'nom = input("Comment tu t’appelles ? ")\nprint("Bonjour", nom, "!")\n',
+    'table.py': 'n = int(input("Table de : "))\nfor i in range(1, 11):\n    print(n, "x", i, "=", n * i)\n',
+    'moyenne.py': 'notes = []\nfor i in range(3):\n    notes.append(float(input("Note " + str(i + 1) + " : ")))\nmoy = sum(notes) / len(notes)\nprint("Moyenne :", round(moy, 2))\nif moy >= 10:\n    print("Admis 🎉")\nelse:\n    print("Courage !")\n',
+    'devine.py': 'import random\nsecret = random.randint(1, 20)\nessais = 0\nwhile True:\n    x = int(input("Devine (1-20) : "))\n    essais += 1\n    if x < secret:\n        print("Plus grand !")\n    elif x > secret:\n        print("Plus petit !")\n    else:\n        print("Bravo, trouvé en", essais, "essais")\n        break\n'
+  };
+  W.pydev = (host) => {
+    let st; try { st = JSON.parse(localStorage.getItem(DEV)); } catch {}
+    if (!st || !st.files || !Object.keys(st.files).length) st = { files: { 'main.py': '# Mon programme Python\nprint("Bonjour le monde !")\n' }, cur: 'main.py' };
+    const save = () => { try { localStorage.setItem(DEV, JSON.stringify(st)); } catch {} };
+    host.innerHTML = '';
+    host.classList.add('py-dev');
+    const top = el('div', 'py-dev-top');
+    const tabs = el('div', 'py-dev-tabs');
+    const tools = el('div', 'py-dev-tools');
+    tools.innerHTML = `<button type="button" class="chip-btn" data-a="new">＋ Nouveau fichier</button><button type="button" class="chip-btn" data-a="ren">✏️ Renommer</button><button type="button" class="chip-btn" data-a="del">🗑 Supprimer</button><select class="lv-input py-ex"><option value="">📚 Exemples…</option>${Object.keys(EXAMPLES).map((k) => `<option>${k}</option>`).join('')}</select>`;
+    top.append(tabs, tools);
+    host.appendChild(top);
+    const area = el('div', 'py-dev-area'); host.appendChild(area);
+    let pg = null;
+    const paintTabs = () => {
+      tabs.innerHTML = Object.keys(st.files).map((f) => `<button type="button" class="py-tab${f === st.cur ? ' on' : ''}" data-f="${esc(f)}">🐍 ${esc(f)}</button>`).join('');
+    };
+    const open = (f) => {
+      st.cur = f; save(); paintTabs();
+      area.innerHTML = '';
+      pg = playground(area, st.files[f], { dark: true, minRows: 16, maxRows: 34, noReset: true, timeout: 15000, hello: 'Console Python — écris ton programme puis ▶ Exécuter (ou Ctrl + Entrée).\n', onChange: (v) => { st.files[st.cur] = v; save(); } });
+    };
+    tabs.addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) open(b.dataset.f); });
+    tools.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-a]'); if (!a) return;
+      if (a.dataset.a === 'new') {
+        let n = 1; while (st.files['programme' + n + '.py']) n++;
+        const name = (prompt('Nom du nouveau fichier :', 'programme' + n + '.py') || '').trim();
+        if (!name) return;
+        const f = /\.py$/.test(name) ? name : name + '.py';
+        if (!st.files[f]) st.files[f] = '';
+        open(f);
+      } else if (a.dataset.a === 'ren') {
+        const name = (prompt('Nouveau nom :', st.cur) || '').trim();
+        if (!name || name === st.cur) return;
+        const f = /\.py$/.test(name) ? name : name + '.py';
+        st.files[f] = st.files[st.cur]; delete st.files[st.cur]; open(f);
+      } else if (a.dataset.a === 'del') {
+        if (Object.keys(st.files).length < 2) { alert('Il faut garder au moins un fichier.'); return; }
+        if (!confirm('Supprimer ' + st.cur + ' ?')) return;
+        delete st.files[st.cur]; open(Object.keys(st.files)[0]);
+      }
+    });
+    tools.querySelector('.py-ex').addEventListener('change', (e) => {
+      const k = e.target.value; e.target.value = ''; if (!k) return;
+      let f = k, n = 2; while (st.files[f] && st.files[f] !== EXAMPLES[k]) f = k.replace('.py', '') + n++ + '.py';
+      st.files[f] = EXAMPLES[k]; open(f);
+    });
+    open(st.files[st.cur] !== undefined ? st.cur : Object.keys(st.files)[0]);
+  };
+
+  // coloration des extraits de code « statiques » (questions, leçons)
+  const paintStatic = (root) => root.querySelectorAll && root.querySelectorAll('pre.py-code.static:not(.hl) code').forEach((c) => { c.innerHTML = highlight(c.textContent.replace(/\n$/, '')); c.parentElement.classList.add('hl'); });
+  new MutationObserver((ms) => ms.forEach((m) => m.addedNodes.forEach((n) => n.nodeType === 1 && paintStatic(n)))).observe(document.documentElement, { childList: true, subtree: true });
+
+  window.TCSF_PY = { run, check, task, playground, editor, codeHTML, highlight, errHTML };
+})();
