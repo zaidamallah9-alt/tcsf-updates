@@ -1,0 +1,77 @@
+<p class="intro">Révision rapide pour te rafraîchir la mémoire : lis le petit rappel, joue avec les animations, puis entraîne-toi. Les exercices de chaque partie vont du niveau <b>🟢 Facile</b> au niveau <b>🔴 Difficile</b>.</p>
+
+<!-- ===================================================== -->
+<h2>Évolution historique du modèle de l'atome</h2>
+<div class="recall"><p>Le modèle de l'atome a changé au fil des <b>expériences</b> : <b>Démocrite</b> (idée d'atome insécable) → <b>Dalton</b> (sphère pleine) → <b>Thomson</b> (électrons dans une sphère positive) → <b>Rutherford</b> (noyau + vide) → <b>Bohr</b> (couches) → <b>modèle actuel</b> (nuage électronique).</p></div>
+
+<div data-widget="atom-history"></div>
+
+<div class="flips">
+  <button class="flip"><span class="f-front">Démocrite<small>~400 av. J.-C.</small></span><span class="f-back"><b>atomos</b> = « insécable ». Une idée philosophique, sans expérience.</span></button>
+  <button class="flip f2"><span class="f-front">Dalton<small>1808</small></span><span class="f-back">L'atome est une <b>sphère pleine indivisible</b>.</span></button>
+  <button class="flip f3"><span class="f-front">Thomson<small>1897 – 1904</small></span><span class="f-back">Découvre l'<b>électron</b> → modèle du « <b>pudding aux raisins</b> ».</span></button>
+  <button class="flip f4"><span class="f-front">Rutherford<small>1911</small></span><span class="f-back">Feuille d'or → un <b>noyau</b> minuscule, positif et massif ; l'atome est surtout du <b>vide</b>.</span></button>
+  <button class="flip f2"><span class="f-front">Bohr<small>1913</small></span><span class="f-back">Les électrons tournent sur des <b>couches</b> bien définies (K, L, M…).</span></button>
+  <button class="flip f3"><span class="f-front">Modèle actuel<small>depuis 1926</small></span><span class="f-back"><b>Nuage électronique</b> : on parle de <b>probabilité</b> de présence de l'électron.</span></button>
+</div>
+
+<div data-widget="levels" data-src="physique-chimie/modele-atome/exercices.json" data-part="1"></div>
+
+<!-- ===================================================== -->
+<h2>Structure de l'atome</h2>
+<div class="recall"><p>L'atome = un <b>noyau</b> positif au centre + des <b>électrons</b> négatifs autour. Il est <b>électriquement neutre</b> : autant d'électrons que de protons. Il est surtout formé de <b>vide</b>.</p></div>
+
+<div data-widget="atom-explorer"></div>
+
+<div class="flips">
+  <button class="flip"><span class="f-front">Charge élémentaire</span><span class="f-back"><span class="m"><i>e</i> = 1,6 × 10<sup>−19</sup> C</span><br>proton : +<i>e</i> · électron : −<i>e</i> · neutron : 0</span></button>
+  <button class="flip f4"><span class="f-front">Électroneutralité</span><span class="f-back">Nombre d'électrons = nombre de protons = <i>Z</i><br><span class="m"><i>Z</i>·<i>e</i> + <i>Z</i>·(−<i>e</i>) = 0</span></span></button>
+  <button class="flip f2"><span class="f-front">Dimensions</span><span class="f-back"><span class="m"><i>r</i><sub>atome</sub> ≈ 10<sup>−10</sup> m</span><br><span class="m"><i>r</i><sub>noyau</sub> ≈ 10<sup>−15</sup> m</span><br>rapport ≈ <b>10<sup>5</sup></b> → structure <b>lacunaire</b></span></button>
+</div>
+
+<div data-widget="atom-scale"></div>
+
+<div data-widget="levels" data-src="physique-chimie/modele-atome/exercices.json" data-part="2"></div>
+
+<!-- ===================================================== -->
+<h2>Le noyau</h2>
+<div class="recall"><p>Le noyau contient des <b>protons</b> (+<i>e</i>) et des <b>neutrons</b> (neutres) : ce sont les <b>nucléons</b>. Avec <i>Z</i> protons, la charge du noyau est <span class="m"><i>Q</i> = <i>Z</i>·<i>e</i></span>.</p></div>
+
+<div class="flips">
+  <button class="flip"><span class="f-front">Nucléons</span><span class="f-back">Protons + neutrons = <b>nucléons</b>. Leur nombre total est <i>A</i>.</span></button>
+  <button class="flip f3"><span class="f-front">Le nombre <i>Z</i></span><span class="f-back"><i>Z</i> = nombre de <b>protons</b> (nombre de charge). C'est lui qui définit l'élément.</span></button>
+  <button class="flip f4"><span class="f-front">Charge du noyau</span><span class="f-back"><span class="m"><i>Q</i> = <i>Z</i> · <i>e</i></span><br>Les neutrons ne comptent pas : ils sont neutres.</span></button>
+</div>
+
+<div data-widget="nucleus-slider" data-mode="charge"></div>
+
+<div data-widget="levels" data-src="physique-chimie/modele-atome/exercices.json" data-part="3"></div>
+
+<!-- ===================================================== -->
+<h2>Symbole du noyau</h2>
+<div class="recall"><p>On écrit le noyau <nuc a="A" z="Z">X</nuc> : <b><i>A</i></b> = nombre de nucléons, <b><i>Z</i></b> = nombre de protons. Nombre de neutrons : <span class="m"><i>N</i> = <i>A</i> − <i>Z</i></span>. <b>Isotopes</b> : même <i>Z</i>, <i>A</i> différents.</p></div>
+
+<div class="flips">
+  <button class="flip"><span class="f-front"><span class="nuc" style="font-size:30px"><span class="az"><span>A</span><span>Z</span></span><span class="x">X</span></span></span><span class="f-back">X : symbole de l'élément<br><i>A</i> : nombre de masse (nucléons)<br><i>Z</i> : nombre de charge (protons)</span></button>
+  <button class="flip f4"><span class="f-front"><span class="m"><i>N</i> = <i>A</i> − <i>Z</i></span></span><span class="f-back">Exemple : <nuc a="23" z="11">Na</nuc> → <i>N</i> = 23 − 11 = <b>12 neutrons</b>, 11 protons, 11 électrons.</span></button>
+  <button class="flip f3"><span class="f-front">Isotopes</span><span class="f-back"><nuc a="12" z="6">C</nuc>, <nuc a="13" z="6">C</nuc>, <nuc a="14" z="6">C</nuc> : même <i>Z</i> = 6, <i>A</i> différents.<br>⚠ <nuc a="14" z="6">C</nuc> et <nuc a="14" z="7">N</nuc> ne sont <b>pas</b> isotopes.</span></button>
+</div>
+
+<div data-widget="atom-builder"></div>
+
+<div data-widget="levels" data-src="physique-chimie/modele-atome/exercices.json" data-part="4"></div>
+
+<!-- ===================================================== -->
+<h2>La masse de l'atome</h2>
+<div class="recall"><p>La masse de l'atome est concentrée dans le <b>noyau</b> : la masse des électrons est <b>négligeable</b>. Donc <span class="m"><i>m</i><sub>atome</sub> ≈ <i>A</i> · <i>m</i><sub>nucléon</sub></span> avec <span class="m"><i>m</i><sub>nucléon</sub> ≈ 1,67 × 10<sup>−27</sup> kg</span>.</p></div>
+
+<div class="flips">
+  <button class="flip"><span class="f-front">Proton &amp; neutron</span><span class="f-back"><span class="m"><i>m</i><sub>p</sub> = 1,673 × 10<sup>−27</sup> kg</span><br><span class="m"><i>m</i><sub>n</sub> = 1,675 × 10<sup>−27</sup> kg</span><br>presque égales</span></button>
+  <button class="flip f2"><span class="f-front">Électron</span><span class="f-back"><span class="m"><i>m</i><sub>e</sub> = 9,11 × 10<sup>−31</sup> kg</span><br>≈ <b>1836 fois</b> plus léger qu'un proton</span></button>
+  <button class="flip f4"><span class="f-front">Formule exacte</span><span class="f-back"><span class="m"><i>m</i> = <i>Z</i>·<i>m</i><sub>p</sub> + <i>N</i>·<i>m</i><sub>n</sub> + <i>Z</i>·<i>m</i><sub>e</sub></span><br>→ on néglige <span class="m"><i>Z</i>·<i>m</i><sub>e</sub></span></span></button>
+  <button class="flip f3"><span class="f-front">Formule approchée</span><span class="f-back"><span class="m"><i>m</i><sub>atome</sub> ≈ <i>A</i> · <i>m</i><sub>nucléon</sub></span><br>Ex. : <nuc a="12" z="6">C</nuc> → 12 × 1,67 × 10<sup>−27</sup> ≈ 2,0 × 10<sup>−26</sup> kg</span></button>
+</div>
+
+<div data-widget="nucleus-slider" data-mode="masse"></div>
+
+<div data-widget="levels" data-src="physique-chimie/modele-atome/exercices.json" data-part="5"></div>

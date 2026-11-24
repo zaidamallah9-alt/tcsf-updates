@@ -1,0 +1,156 @@
+[
+ {
+  "id": "kahf-1",
+  "title": "سورة الكهف (1): الآيات 1 – 26",
+  "module": "مدخل التزكية: القرآن الكريم",
+  "description": "افتتاح السورة وقصة أصحاب الكهف.",
+  "data": "education-islamique/l/kahf-1.json"
+ },
+ {
+  "id": "kahf-2",
+  "title": "سورة الكهف (2): الآيات 27 – 44",
+  "module": "مدخل التزكية: القرآن الكريم",
+  "description": "الصبر مع المؤمنين، حرية الاختيار، قصة صاحب الجنتين.",
+  "data": "education-islamique/l/kahf-2.json"
+ },
+ {
+  "id": "kahf-3",
+  "title": "سورة الكهف (3): الآيات 45 – 59",
+  "module": "مدخل التزكية: القرآن الكريم",
+  "description": "مثل الحياة الدنيا، الباقيات الصالحات، مشاهد القيامة، قصة إبليس.",
+  "data": "education-islamique/l/kahf-3.json"
+ },
+ {
+  "id": "tawhid",
+  "title": "التوحيد وأدلته",
+  "module": "مدخل التزكية: العقيدة",
+  "description": "مفهوم التوحيد، أنواعه وأدلته.",
+  "data": "education-islamique/l/tawhid.json"
+ },
+ {
+  "id": "baath",
+  "title": "البعث والحساب",
+  "module": "مدخل التزكية: العقيدة",
+  "description": "مفهوم البعث، أدلته، مراحل الحساب وأثر الإيمان به.",
+  "data": "education-islamique/l/baath.json"
+ },
+ {
+  "id": "jaza",
+  "title": "الجزاء: الجنة والنار",
+  "module": "مدخل التزكية: العقيدة",
+  "description": "مفهوم الجزاء، صفات الجنة والنار، أثر الإيمان بهما.",
+  "data": "education-islamique/l/jaza.json"
+ },
+ {
+  "id": "ilm-allah",
+  "title": "علم الله المطلق",
+  "module": "مدخل التزكية: العقيدة",
+  "description": "إحاطة علم الله بكل شيء وأثر الإيمان به.",
+  "data": "education-islamique/l/ilm-allah.json"
+ },
+ {
+  "id": "fiqh-sira",
+  "title": "فقه السيرة: الغايات والمقاصد",
+  "module": "مدخل الاقتداء",
+  "description": "مفهوم السيرة النبوية وفقهها وغايات دراستها.",
+  "data": "education-islamique/l/fiqh-sira.json"
+ },
+ {
+  "id": "rasul-qaid",
+  "title": "محمد ﷺ الرسول القائد",
+  "module": "مدخل الاقتداء",
+  "description": "صفات القيادة عند الرسول ﷺ: الشورى، القدوة، الحكمة.",
+  "data": "education-islamique/l/rasul-qaid.json"
+ },
+ {
+  "id": "badr-uhud",
+  "title": "غزوتا بدر وأحد: دروس وعبر",
+  "module": "مدخل الاقتداء",
+  "description": "أحداث غزوتي بدر وأحد ونتائجهما والعبر المستفادة.",
+  "data": "education-islamique/l/badr-uhud.json"
+ },
+ {
+  "id": "omar",
+  "title": "نماذج للتأسي: عمر بن الخطاب وعزة الإسلام",
+  "module": "مدخل الاقتداء",
+  "description": "إسلام عمر، صفاته، إنجازاته في خلافته.",
+  "data": "education-islamique/l/omar.json"
+ },
+ {
+  "id": "ibadat",
+  "title": "فقه العبادات: الصلاة – الزكاة – الصيام",
+  "module": "مدخل الاستجابة",
+  "description": "تعريف العبادات وأحكامها الأساسية ومقاصدها.",
+  "data": "education-islamique/l/ibadat.json"
+ },
+ {
+  "id": "hajj",
+  "title": "الحج: أركانه ومقاصده",
+  "module": "مدخل الاستجابة",
+  "description": "تعريف الحج، شروطه، أركانه ومقاصده.",
+  "data": "education-islamique/l/hajj.json"
+ },
+ {
+  "id": "istithmar",
+  "title": "فقه المعاملات المالية: مبادئ استثمار الأموال في الإسلام",
+  "module": "مدخل الاستجابة",
+  "description": "المال في الإسلام، مبادئ الاستثمار المشروع والمعاملات المحرمة.",
+  "data": "education-islamique/l/istithmar.json"
+ },
+ {
+  "id": "shukr",
+  "title": "حق الله: شكر الله",
+  "module": "مدخل القسط",
+  "description": "مفهوم الشكر، مجالاته وثماره.",
+  "data": "education-islamique/l/shukr.json"
+ },
+ {
+  "id": "istiqama",
+  "title": "حق النفس: الاستقامة",
+  "module": "مدخل القسط",
+  "description": "مفهوم الاستقامة، مجالاتها، ثمارها.",
+  "data": "education-islamique/l/istiqama.json"
+ },
+ {
+  "id": "amal-salih",
+  "title": "حق الغير: العمل الصالح",
+  "module": "مدخل القسط",
+  "description": "مفهوم العمل الصالح، شروطه وأثره على الفرد والمجتمع.",
+  "data": "education-islamique/l/amal-salih.json"
+ },
+ {
+  "id": "bia",
+  "title": "حق البيئة: الإصلاح وعدم الإفساد",
+  "module": "مدخل القسط",
+  "description": "مفهوم البيئة، الإفساد فيها، توجيهات الإسلام لحمايتها.",
+  "data": "education-islamique/l/bia.json"
+ },
+ {
+  "id": "qanaa",
+  "title": "القناعة والرضا",
+  "module": "مدخل الحكمة",
+  "description": "مفهوم القناعة والرضا، الفرق بينهما وبين التواكل، ثمارهما.",
+  "data": "education-islamique/l/qanaa.json"
+ },
+ {
+  "id": "nasiha",
+  "title": "الدين النصيحة",
+  "module": "مدخل الحكمة",
+  "description": "مفهوم النصيحة، مجالاتها وآدابها.",
+  "data": "education-islamique/l/nasiha.json"
+ },
+ {
+  "id": "rufqa",
+  "title": "الرفقة الصالحة",
+  "module": "مدخل الحكمة",
+  "description": "أثر الصحبة، معايير اختيار الصديق.",
+  "data": "education-islamique/l/rufqa.json"
+ },
+ {
+  "id": "wasaya",
+  "title": "الوصايا التسع: ﴿قل تعالوا أتل ما حرم ربكم عليكم﴾",
+  "module": "مدخل الحكمة",
+  "description": "وصايا سورة الأنعام (الآيات 151 – 153) وقيمها.",
+  "data": "education-islamique/l/wasaya.json"
+ }
+]

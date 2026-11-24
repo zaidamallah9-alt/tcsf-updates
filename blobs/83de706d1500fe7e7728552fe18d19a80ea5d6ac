@@ -1,0 +1,170 @@
+[
+ {
+  "id": "gravitation",
+  "title": "La gravitation universelle",
+  "module": "Physique · Mécanique",
+  "description": "Le système solaire, la loi de Newton, le poids d’un corps et l’intensité de la pesanteur.",
+  "data": "physique-chimie/l/gravitation.json"
+ },
+ {
+  "id": "actions-mecaniques",
+  "title": "Exemples d’actions mécaniques",
+  "module": "Physique · Mécanique",
+  "description": "Effets d’une action, actions de contact et à distance, force et vecteur force, principe des actions réciproques.",
+  "data": "physique-chimie/l/actions-mecaniques.json"
+ },
+ {
+  "id": "mouvement",
+  "title": "Le mouvement",
+  "module": "Physique · Mécanique",
+  "description": "Relativité du mouvement, référentiel, trajectoire, vitesse moyenne et instantanée, mouvements rectiligne uniforme et circulaire uniforme.",
+  "data": "physique-chimie/l/mouvement.json"
+ },
+ {
+  "id": "inertie",
+  "title": "Le principe d’inertie",
+  "module": "Physique · Mécanique",
+  "description": "Effet d’une force sur le mouvement, systèmes isolés et pseudo-isolés, centre d’inertie et relation barycentrique.",
+  "data": "physique-chimie/l/inertie.json"
+ },
+ {
+  "id": "equilibre-2-forces",
+  "title": "Équilibre d’un corps solide soumis à deux forces",
+  "module": "Physique · Mécanique",
+  "description": "Condition d’équilibre, tension d’un ressort (loi de Hooke), poussée d’Archimède, réaction d’un plan.",
+  "data": "physique-chimie/l/equilibre-2-forces.json"
+ },
+ {
+  "id": "equilibre-3-forces",
+  "title": "Équilibre d’un corps solide soumis à trois forces",
+  "module": "Physique · Mécanique",
+  "description": "Conditions d’équilibre, méthode graphique et méthode analytique, frottement et angle de frottement.",
+  "data": "physique-chimie/l/equilibre-3-forces.json"
+ },
+ {
+  "id": "equilibre-rotation",
+  "title": "Équilibre d’un corps solide susceptible de tourner autour d’un axe fixe",
+  "module": "Physique · Mécanique",
+  "description": "Effet de rotation d’une force, moment d’une force, théorème des moments, couple de forces.",
+  "data": "physique-chimie/l/equilibre-rotation.json"
+ },
+ {
+  "id": "courant-continu",
+  "title": "Le courant électrique continu",
+  "module": "Physique · Électricité",
+  "description": "Nature et sens du courant, quantité d’électricité, intensité, ampèremètre, loi des nœuds.",
+  "data": "physique-chimie/l/courant-continu.json"
+ },
+ {
+  "id": "tension",
+  "title": "La tension électrique",
+  "module": "Physique · Électricité",
+  "description": "Tension et différence de potentiel, voltmètre, oscilloscope, additivité des tensions, tension alternative sinusoïdale.",
+  "data": "physique-chimie/l/tension.json"
+ },
+ {
+  "id": "conducteurs-ohmiques",
+  "title": "Association des conducteurs ohmiques",
+  "module": "Physique · Électricité",
+  "description": "Conducteur ohmique et loi d’Ohm, résistance, association en série et en dérivation, code des couleurs.",
+  "data": "physique-chimie/l/conducteurs-ohmiques.json"
+ },
+ {
+  "id": "dipoles-passifs",
+  "title": "Caractéristiques de quelques dipôles passifs",
+  "module": "Physique · Électricité",
+  "description": "Dipôle passif, caractéristique I = f(U), lampe, diode, diode Zener, thermistance, photorésistance, montage potentiométrique.",
+  "data": "physique-chimie/l/dipoles-passifs.json"
+ },
+ {
+  "id": "dipole-actif",
+  "title": "Caractéristique d’un dipôle actif",
+  "module": "Physique · Électricité",
+  "description": "Générateur, force électromotrice et résistance interne, loi d’Ohm d’un générateur, point de fonctionnement, association de piles.",
+  "data": "physique-chimie/l/dipole-actif.json"
+ },
+ {
+  "id": "transistor",
+  "title": "Le transistor",
+  "module": "Physique · Électricité",
+  "description": "Le transistor NPN, ses courants, régimes bloqué, linéaire et saturé, amplification de courant, transistor interrupteur.",
+  "data": "physique-chimie/l/transistor.json"
+ },
+ {
+  "id": "ampli-op",
+  "title": "L’amplificateur opérationnel",
+  "module": "Physique · Électricité",
+  "description": "Présentation de l’AO, AO idéal, régimes linéaire et saturé, montages inverseur, non inverseur, suiveur, comparateur.",
+  "data": "physique-chimie/l/ampli-op.json"
+ },
+ {
+  "id": "especes-chimiques",
+  "title": "Les espèces chimiques",
+  "module": "Chimie · Les espèces chimiques",
+  "description": "Espèces naturelles et synthétiques, corps purs et mélanges, identification par tests chimiques et par caractéristiques physiques.",
+  "data": "physique-chimie/l/especes-chimiques.json"
+ },
+ {
+  "id": "extraction",
+  "title": "Extraction, séparation et identification d’espèces chimiques",
+  "module": "Chimie · Les espèces chimiques",
+  "description": "Techniques d’extraction anciennes, hydrodistillation, extraction par solvant, ampoule à décanter, chromatographie sur couche mince.",
+  "data": "physique-chimie/l/extraction.json"
+ },
+ {
+  "id": "synthese",
+  "title": "Synthèse des espèces chimiques",
+  "module": "Chimie · Les espèces chimiques",
+  "description": "Intérêt de la synthèse, protocole, chauffage à reflux, isolement et identification du produit synthétisé.",
+  "data": "physique-chimie/l/synthese.json"
+ },
+ {
+  "id": "modele-atome",
+  "title": "Le modèle de l’atome",
+  "module": "Chimie · Constitution de la matière",
+  "description": "Historique, constituants de l’atome, noyau et symbole, isotopes, ions, dimensions, masse et répartition électronique.",
+  "data": "physique-chimie/l/modele-atome.json"
+ },
+ {
+  "id": "geometrie-molecules",
+  "title": "La géométrie de quelques molécules",
+  "module": "Chimie · Constitution de la matière",
+  "description": "Règles du duet et de l’octet, liaison covalente, représentation de Lewis, isomérie, géométrie des molécules et représentation de Cram.",
+  "data": "physique-chimie/l/geometrie-molecules.json"
+ },
+ {
+  "id": "classification",
+  "title": "La classification périodique des éléments chimiques",
+  "module": "Chimie · Constitution de la matière",
+  "description": "Historique, principe de la classification actuelle, périodes et groupes, familles chimiques, utilisation du tableau.",
+  "data": "physique-chimie/l/classification.json"
+ },
+ {
+  "id": "mole",
+  "title": "La mole, unité de quantité de matière",
+  "module": "Chimie · Transformations de la matière",
+  "description": "La mole et la constante d’Avogadro, masse molaire, relations n = m/M et n = V/V<sub>m</sub>, cas des liquides.",
+  "data": "physique-chimie/l/mole.json"
+ },
+ {
+  "id": "concentration",
+  "title": "La concentration molaire des espèces chimiques en solution",
+  "module": "Chimie · Transformations de la matière",
+  "description": "Solution, soluté et solvant, concentrations massique et molaire, préparation par dissolution et par dilution.",
+  "data": "physique-chimie/l/concentration.json"
+ },
+ {
+  "id": "transformation",
+  "title": "Transformation chimique d’un système",
+  "module": "Chimie · Transformations de la matière",
+  "description": "Système chimique, état initial et état final, transformation et réaction chimique, équation de réaction, conservation.",
+  "data": "physique-chimie/l/transformation.json"
+ },
+ {
+  "id": "bilan-matiere",
+  "title": "Bilan de la matière",
+  "module": "Chimie · Transformations de la matière",
+  "description": "Avancement d’une réaction, tableau d’avancement, avancement maximal, réactif limitant, mélange stœchiométrique.",
+  "data": "physique-chimie/l/bilan-matiere.json"
+ }
+]

@@ -1,0 +1,386 @@
+// Expériences interactives — Chimie
+(() => {
+  const { SIMS, frame, slider, seg, btn, loop, arrow, T, L, plot, fr, ft, n2, COL } = window.TCSF_SIM;
+  const tube = (x, y, color, lab, extra = '') => `<path d="M${x - 16},${y} L${x - 16},${y + 120} A16,16 0 0 0 ${x + 16},${y + 120} L${x + 16},${y}" class="glass"/>` +
+    `<path d="M${x - 14},${y + 60} L${x - 14},${y + 120} A14,14 0 0 0 ${x + 14},${y + 120} L${x + 14},${y + 60} Z" fill="${color}"/>${extra}` + (lab ? T(x, y + 160, lab, 'middle', 'small') : '');
+
+  // 15. Tests d'identification d'espèces chimiques
+  SIMS.tests = (el) => {
+    const S = frame(el, 'Tests d’identification', 'Choisis un réactif puis un échantillon', '0 0 640 260');
+    const R = {
+      cuso4: { n: 'Sulfate de cuivre anhydre', c0: '#f1f5f9', t: 'eau', pos: '#3b82f6', msg: 'Le sulfate de cuivre anhydre (blanc) devient <b>bleu</b> : l’échantillon contient de l’<b>eau</b>.' },
+      chaux: { n: 'Eau de chaux', c0: '#e0f2fe', t: 'co2', pos: '#e5e7eb', msg: 'L’eau de chaux se <b>trouble</b> (précipité blanc) : le gaz est du <b>dioxyde de carbone</b>.' },
+      fehling: { n: 'Liqueur de Fehling (chauffée)', c0: '#38bdf8', t: 'glucose', pos: '#c2410c', msg: 'Il se forme un <b>précipité rouge brique</b> : l’échantillon contient du <b>glucose</b>.' },
+      iode: { n: 'Eau iodée', c0: '#f59e0b', t: 'amidon', pos: '#1e1b4b', msg: 'Coloration <b>bleu foncé</b> : l’échantillon contient de l’<b>amidon</b>.' },
+      agno3: { n: 'Nitrate d’argent', c0: '#f8fafc', t: 'sel', pos: '#f8fafc', cloudy: true, msg: 'Précipité <b>blanc qui noircit à la lumière</b> : présence d’ions <b>chlorure</b> Cl⁻.' }
+    };
+    const E = [['eau', 'Eau du robinet'], ['co2', 'Gaz expiré (souffle)'], ['glucose', 'Jus de raisin'], ['amidon', 'Mie de pain / pomme de terre'], ['sel', 'Eau salée'], ['huile', 'Huile']];
+    let r = R.cuso4, e = null;
+    seg(S.ctrls, 'Réactif', Object.entries(R).map(([k, v]) => [k, v.n]), 'cuso4', (k) => { r = R[k]; e = null; draw(); });
+    seg(S.ctrls, 'Échantillon', E, null, (k) => { e = k; draw(); });
+    function draw() {
+      // l'eau est présente dans la plupart des échantillons aqueux
+      const has = (k) => k === r.t || (r.t === 'eau' && ['eau', 'glucose', 'sel', 'co2'].includes(k)) || (r.t === 'sel' && k === 'eau' && false);
+      const pos = e && has(e);
+      const col = pos ? r.pos : r.c0;
+      let s = tube(200, 40, col, r.n, pos && (r.t === 'co2' || r.cloudy) ? `<g opacity=".8">${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<circle cx="${190 + (i * 7) % 22}" cy="${120 + (i * 13) % 50}" r="3" fill="#fff"/>`).join('')}</g>` : '');
+      if (e) s += arrow(300, 110, 250, 110, 'currentColor', '', 0, 0, 2) + `<rect x="310" y="90" width="230" height="40" rx="10" class="lcd"/>` + T(425, 115, E.find((x) => x[0] === e)[1], 'middle', 'lcdt');
+      S.draw(s);
+      S.note(!e ? 'Ajoute un échantillon dans le tube.' : pos ? r.msg : 'Pas de changement : le test est <b>négatif</b>, l’espèce recherchée est absente.', e ? (pos ? 'ok' : 'bad') : '');
+      S.stats([['Réactif', r.n], ['Espèce mise en évidence', { eau: 'eau', co2: 'dioxyde de carbone', glucose: 'glucose', amidon: 'amidon', sel: 'ions chlorure' }[r.t]], ['Résultat', !e ? '—' : pos ? 'positif ✔' : 'négatif ✘']]);
+    }
+    draw();
+  };
+
+  // 16. Extraction liquide-liquide : choix du solvant
+  SIMS.decantation = (el) => {
+    const S = frame(el, 'Extraction par solvant : l’ampoule à décanter', 'Choisis le solvant pour extraire le diiode de l’eau', '0 0 640 340');
+    const SV = {
+      cyclo: { n: 'Cyclohexane', d: 0.78, misc: false, sol: 'très grande' },
+      dcm: { n: 'Dichlorométhane', d: 1.33, misc: false, sol: 'très grande' },
+      ethanol: { n: 'Éthanol', d: 0.79, misc: true, sol: 'grande' },
+      eau: { n: 'Eau', d: 1, misc: true, sol: 'faible' }
+    };
+    let sv = SV.cyclo, shaken = 0, stop = null;
+    seg(S.ctrls, 'Solvant', Object.entries(SV).map(([k, v]) => [k, v.n]), 'cyclo', (k) => { sv = SV[k]; shaken = 0; draw(); });
+    btn(S.ctrls, '⟳ Agiter puis laisser décanter', () => {
+      if (stop) stop();
+      let t = 0;
+      stop = loop(el, (dt) => { t += dt; shaken = Math.min(1, t / 1.6); draw(t < 0.8 ? Math.sin(t * 40) * 6 : 0); return t < 1.6; });
+    }, true);
+    function draw(shake = 0) {
+      const cx = 230, top = 40;
+      const ok = !sv.misc;
+      const orgTop = ok && sv.d < 1;
+      const brown = '#b45309', violet = '#a21caf', water = '#93c5fd';
+      let s = `<g transform="rotate(${n2(shake)} ${cx} 170)">`;
+      s += `<path d="M${cx - 18},${top} L${cx - 18},${top + 20} L${cx - 70},${top + 120} Q${cx - 80},${top + 200} ${cx},${top + 230} Q${cx + 80},${top + 200} ${cx + 70},${top + 120} L${cx + 18},${top + 20} L${cx + 18},${top} Z" class="glass" fill="none"/>`;
+      s += `<rect x="${cx - 8}" y="${top + 230}" width="16" height="50" class="glass"/>` + L(cx - 20, top + 255, cx + 20, top + 255, 'stroke', 'stroke-width="5"');
+      const yMid = top + 165, yTop = top + 100, yBot = top + 225;
+      if (!ok || shaken < 1) {
+        const c = shaken > 0 && !ok ? (sv === SV.eau ? brown : '#d97706') : brown;
+        s += `<path d="M${cx - 62},${yTop} L${cx + 62},${yTop} L${cx + 70},${top + 120} Q${cx + 80},${top + 200} ${cx},${yBot} Q${cx - 80},${top + 200} ${cx - 70},${top + 120} Z" fill="${shaken > 0 && ok ? '#c084fc' : c}" opacity=".7"/>`;
+        if (ok && !shaken) s += `<path d="M${cx - 50},${top + 75} L${cx + 50},${top + 75} L${cx + 62},${yTop} L${cx - 62},${yTop} Z" fill="#f1f5f9" opacity=".9"/>`;
+      } else {
+        const up = orgTop ? violet : water, down = orgTop ? water : violet;
+        s += `<path d="M${cx - 62},${yTop} L${cx + 62},${yTop} L${cx + 72},${yMid} L${cx - 72},${yMid} Z" fill="${up}" opacity=".85"/>`;
+        s += `<path d="M${cx - 72},${yMid} L${cx + 72},${yMid} Q${cx + 80},${top + 200} ${cx},${yBot} Q${cx - 80},${top + 200} ${cx - 72},${yMid} Z" fill="${down}" opacity=".85"/>`;
+        s += T(cx + 90, yTop + 30, orgTop ? 'phase organique (solvant + diiode)' : 'phase aqueuse', 'start', 'small') + T(cx + 90, yMid + 30, orgTop ? 'phase aqueuse' : 'phase organique (solvant + diiode)', 'start', 'small');
+      }
+      s += '</g>';
+      S.draw(s);
+      S.stats([['Densité du solvant', fr(sv.d)], ['Miscible à l’eau ?', sv.misc ? 'oui' : 'non'], ['Solubilité du diiode', sv.solv || sv.sol]]);
+      S.note(sv === SV.eau ? 'On ne peut pas extraire avec de l’eau une espèce déjà dans l’eau, et le diiode y est peu soluble.' : sv.misc ? `L’${sv.n.toLowerCase()} est <b>miscible</b> à l’eau : on n’obtient qu’une seule phase, il est impossible de séparer. Ce solvant ne convient pas.` : shaken < 1 ? 'Agite l’ampoule pour mettre le diiode en contact avec le solvant.' : `Deux phases ! Le diiode est passé dans le ${sv.n.toLowerCase()} (couleur violette). Le solvant ${sv.d < 1 ? 'moins dense que l’eau est en <b>haut</b>' : 'plus dense que l’eau est en <b>bas</b>'}.`, sv.misc ? 'bad' : shaken >= 1 ? 'ok' : '');
+    }
+    draw();
+  };
+
+  // 16-2 / 17-2. Chromatographie sur couche mince (CCM)
+  SIMS.ccm = (el) => {
+    const SETS = {
+      menthe: { title: 'CCM : analyser une huile essentielle de menthe', spots: [['M', 'Menthol pur', [0.38]], ['H', 'Huile essentielle', [0.38, 0.62, 0.86]], ['C', 'Menthone pure', [0.62]]], q: 'L’huile essentielle contient du menthol et de la menthone, et au moins une autre espèce.' },
+      synthese: { title: 'CCM : contrôler un produit de synthèse', spots: [['N', 'Arôme naturel de banane', [0.72, 0.31]], ['S', 'Produit synthétisé', [0.72, 0.15]], ['R', 'Acétate d’isoamyle pur', [0.72]]], q: 'Le produit synthétisé contient l’acétate d’isoamyle (même hauteur que la référence), mais aussi une impureté (reste d’un réactif).' },
+      colorants: { title: 'CCM : colorants d’un sirop', spots: [['E', 'Sirop vert', [0.25, 0.7]], ['J', 'Colorant jaune E102', [0.25]], ['B', 'Colorant bleu E131', [0.7]]], q: 'Le colorant vert est un mélange de jaune et de bleu.' }
+    };
+    const D = SETS[el.dataset.set] || SETS.menthe;
+    const S = frame(el, D.title, 'Développe puis clique sur une tache', '0 0 640 330');
+    let front = 0, sel = null, stop = null;
+    btn(S.ctrls, '▶ Développer le chromatogramme', () => {
+      if (stop) stop();
+      front = 0; sel = null;
+      stop = loop(el, (dt) => { front = Math.min(1, front + dt / 3); draw(); return front < 1; });
+    }, true);
+    btn(S.ctrls, '👁 Révéler aux UV', () => { front = 1; draw(); });
+    const x0 = 140, y0 = 280, H = 230, colors = ['#7c3aed', '#16a34a', '#2563eb', '#ea580c'];
+    function draw() {
+      let s = `<rect x="${x0 - 20}" y="20" width="300" height="290" rx="4" class="plate"/>`;
+      s += `<rect x="${x0 - 20}" y="${y0 + 10}" width="300" height="20" fill="#93c5fd" opacity=".5"/>`;
+      s += `<rect x="${x0 - 20}" y="${n2(y0 - front * H)}" width="300" height="${n2(front * H)}" fill="#bfdbfe" opacity=".35"/>`;
+      s += L(x0 - 20, y0, x0 + 280, y0, 'dash') + T(x0 + 284, y0 + 4, 'ligne de dépôt', 'start', 'small');
+      if (front > 0.02) s += L(x0 - 20, y0 - front * H, x0 + 280, y0 - front * H, '', `stroke="${COL.b}" stroke-width="2"`) + T(x0 + 284, y0 - front * H + 4, 'front du solvant', 'start', 'small');
+      D.spots.forEach(([k, , rfs], i) => {
+        const x = x0 + 40 + i * 90;
+        rfs.forEach((rf, j) => {
+          const y = y0 - Math.min(rf, 1) * front * H, on = sel && sel[0] === i && sel[1] === j;
+          s += `<ellipse data-i="${i}" data-j="${j}" cx="${x}" cy="${n2(y)}" rx="${on ? 13 : 10}" ry="${on ? 9 : 7}" fill="${colors[Math.round(rf * 10) % 4]}" opacity="${front < 1 && front > 0 ? 0.55 : 0.9}" class="spot"/>`;
+        });
+        s += T(x, y0 + 26, k, 'middle', 'lab');
+      });
+      if (sel && front >= 1) {
+        const [i, j] = sel, rf = D.spots[i][2][j], x = x0 + 40 + i * 90 + 22;
+        s += L(x, y0, x, y0 - rf * H, '', `stroke="${COL.a}" stroke-width="2"`) + T(x + 4, y0 - (rf * H) / 2, 'h', 'start', 'lab') + L(x0 + 270, y0, x0 + 270, y0 - H, '', `stroke="${COL.b}" stroke-width="2"`) + T(x0 + 264, y0 - H / 2, 'H', 'end', 'lab');
+      }
+      S.draw(s);
+      S.svg.querySelectorAll('.spot').forEach((e) => e.addEventListener('click', () => { if (front < 1) return; sel = [+e.dataset.i, +e.dataset.j]; draw(); }));
+      if (sel && front >= 1) {
+        const rf = D.spots[sel[0]][2][sel[1]];
+        S.stats([['Tache choisie', D.spots[sel[0]][1]], ['h (tache)', fr(rf * 9), 'cm'], ['H (front)', '9', 'cm'], ['R<sub>f</sub> = h / H', fr(rf, 2)]]);
+      } else S.stats([['Dépôts', D.spots.map((x) => x[0] + ' : ' + x[1]).join(' · ')]]);
+      S.note(front < 1 ? 'L’éluant monte par capillarité et entraîne chaque espèce plus ou moins loin.' : D.q + ' Deux taches à la même hauteur (même R<sub>f</sub>) correspondent à la même espèce.', front >= 1 ? 'ok' : '');
+    }
+    draw();
+  };
+
+  // 17. Chauffage à reflux
+  SIMS.reflux = (el) => {
+    const S = frame(el, 'Synthèse au chauffage à reflux', 'Allume le chauffage et le réfrigérant', '0 0 640 340');
+    let water = true, heat = 60, temp = 20, prog = 0, lost = 0, t = 0;
+    const H = slider(S.ctrls, { label: 'Puissance du chauffe-ballon', min: 0, max: 100, step: 10, value: 60, unit: '%' }, (v) => { heat = v; });
+    seg(S.ctrls, 'Eau dans le réfrigérant', [[1, 'Ouverte'], [0, 'Fermée']], 1, (v) => { water = !!v; });
+    btn(S.ctrls, '↺ Recommencer', () => { temp = 20; prog = 0; lost = 0; t = 0; });
+    const Teb = 100;
+    loop(el, (dt) => {
+      t += dt;
+      const target = 20 + heat * 1.1;
+      temp += (Math.min(target, Teb) - temp) * dt * 0.6;
+      const boil = temp >= Teb - 1 && heat > 0;
+      prog = Math.min(100, prog + dt * Math.max(0, temp - 40) * 0.08);
+      if (boil && !water) lost = Math.min(100, lost + dt * 6);
+      draw(boil);
+      return true;
+    });
+    function draw(boil) {
+      const cx = 200;
+      let s = `<rect x="${cx - 70}" y="250" width="140" height="60" rx="10" fill="${heat ? '#f97316' : '#64748b'}" opacity="${0.4 + heat / 200}"/>` + T(cx, 290, 'chauffe-ballon', 'middle', 'small');
+      s += `<circle cx="${cx}" cy="215" r="48" class="glass"/><path d="M${cx - 46},225 A48,48 0 0 0 ${cx + 46},225 Z" fill="#fde68a" opacity="${0.9 - lost / 140}"/>`;
+      s += `<rect x="${cx - 12}" y="40" width="24" height="130" class="glass"/><rect x="${cx - 22}" y="60" width="44" height="100" rx="8" fill="${water ? '#93c5fd' : 'none'}" opacity=".5" class="glass"/>`;
+      s += T(cx + 30, 70, water ? '← sortie d’eau' : '', 'start', 'small') + T(cx + 30, 155, water ? '← entrée d’eau' : '', 'start', 'small') + T(cx + 30, 110, 'réfrigérant', 'start', 'small');
+      if (boil) {
+        for (let i = 0; i < 6; i++) { const ph = (t * 1.6 + i / 6) % 1, y = 200 - ph * (water ? 70 : 170); s += `<circle cx="${cx - 6 + (i % 3) * 6}" cy="${n2(y)}" r="3" fill="#e2e8f0" opacity="${water && y < 160 ? 0 : 0.85}"/>`; }
+        if (water) for (let i = 0; i < 3; i++) { const ph = (t + i / 3) % 1; s += `<circle cx="${cx}" cy="${n2(150 + ph * 50)}" r="2.5" fill="#60a5fa"/>`; }
+        else s += T(cx, 30, 'vapeurs perdues !', 'middle', 'lab');
+      }
+      s += `<rect x="420" y="40" width="30" height="220" rx="15" class="glass"/><rect x="426" y="${n2(254 - (temp / 120) * 210)}" width="18" height="${n2((temp / 120) * 210)}" rx="9" fill="${COL.a}"/>` + T(470, 60, Math.round(temp) + ' °C', 'start', 'lab');
+      S.draw(s);
+      S.stats([['Température du mélange', Math.round(temp), '°C'], ['Avancement de la synthèse', Math.round(prog), '%'], ['Matière perdue', Math.round(lost), '%']]);
+      S.note(!water && boil ? 'Sans eau dans le réfrigérant, les vapeurs s’échappent : on perd des réactifs et des produits. Il faut toujours ouvrir l’eau !' : boil ? 'Les vapeurs se condensent dans le réfrigérant et retombent dans le ballon : on chauffe longtemps <b>sans perte de matière</b>. La chaleur accélère la transformation.' : 'La température augmente : la transformation est plus rapide à chaud.', !water && boil ? 'bad' : boil ? 'ok' : '');
+    }
+  };
+
+  // 19. Représentation de Lewis et géométrie (Cram / 3D)
+  SIMS.lewis = (el) => {
+    const t = 109.5 * Math.PI / 180;
+    const tet = [[0, 0, 1], [Math.sin(t), 0, Math.cos(t)], [Math.sin(t) * Math.cos(2.094), Math.sin(t) * Math.sin(2.094), Math.cos(t)], [Math.sin(t) * Math.cos(4.189), Math.sin(t) * Math.sin(4.189), Math.cos(t)]];
+    // a : atomes [symbole, x2D, y2D, [x3D,y3D,z3D], doublets non liants (angles 2D)] ; b : liaisons [i, j, ordre]
+    const M = {
+      H2: { f: 'H₂', a: [['H', -0.6, 0, [-0.6, 0, 0], []], ['H', 0.6, 0, [0.6, 0, 0], []]], b: [[0, 1, 1]], g: 'linéaire', ang: '180°' },
+      Cl2: { f: 'Cl₂', a: [['Cl', -0.7, 0, [-0.8, 0, 0], [90, 180, 270]], ['Cl', 0.7, 0, [0.8, 0, 0], [90, 0, 270]]], b: [[0, 1, 1]], g: 'linéaire', ang: '180°' },
+      HCl: { f: 'HCl', a: [['H', -0.7, 0, [-0.7, 0, 0], []], ['Cl', 0.7, 0, [0.7, 0, 0], [90, 0, 270]]], b: [[0, 1, 1]], g: 'linéaire', ang: '180°' },
+      H2O: { f: 'H₂O', a: [['O', 0, 0, [0, 0, 0], [45, 135]], ['H', -0.9, 0.7, tet[1], []], ['H', 0.9, 0.7, tet[2], []]], b: [[0, 1, 1], [0, 2, 1]], g: 'coudée', ang: '≈ 104,5°' },
+      NH3: { f: 'NH₃', a: [['N', 0, 0, [0, 0, 0], [90]], ['H', -1, 0.3, tet[1], []], ['H', 1, 0.3, tet[2], []], ['H', 0, 1.05, tet[3], []]], b: [[0, 1, 1], [0, 2, 1], [0, 3, 1]], g: 'pyramidale', ang: '≈ 107°' },
+      CH4: { f: 'CH₄', a: [['C', 0, 0, [0, 0, 0], []], ['H', 0, -1.05, tet[0], []], ['H', -1.05, 0, tet[1], []], ['H', 1.05, 0, tet[2], []], ['H', 0, 1.05, tet[3], []]], b: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]], g: 'tétraédrique', ang: '109,5°' },
+      CO2: { f: 'CO₂', a: [['C', 0, 0, [0, 0, 0], []], ['O', -1.2, 0, [-1.1, 0, 0], [135, 225]], ['O', 1.2, 0, [1.1, 0, 0], [45, 315]]], b: [[0, 1, 2], [0, 2, 2]], g: 'linéaire', ang: '180°' },
+      O2: { f: 'O₂', a: [['O', -0.65, 0, [-0.6, 0, 0], [135, 225]], ['O', 0.65, 0, [0.6, 0, 0], [45, 315]]], b: [[0, 1, 2]], g: 'linéaire', ang: '180°' },
+      N2: { f: 'N₂', a: [['N', -0.6, 0, [-0.55, 0, 0], [180]], ['N', 0.6, 0, [0.55, 0, 0], [0]]], b: [[0, 1, 3]], g: 'linéaire', ang: '180°' },
+      C2H4: { f: 'C₂H₄', a: [['C', -0.65, 0, [-0.65, 0, 0], []], ['C', 0.65, 0, [0.65, 0, 0], []], ['H', -1.3, -0.8, [-1.2, 0.9, 0], []], ['H', -1.3, 0.8, [-1.2, -0.9, 0], []], ['H', 1.3, -0.8, [1.2, 0.9, 0], []], ['H', 1.3, 0.8, [1.2, -0.9, 0], []]], b: [[0, 1, 2], [0, 2, 1], [0, 3, 1], [1, 4, 1], [1, 5, 1]], g: 'plane', ang: '≈ 120°' }
+    };
+    const VAL = { H: 1, C: 4, N: 5, O: 6, Cl: 7 };
+    const CPK = { H: '#e5e7eb', C: '#374151', N: '#3b82f6', O: '#ef4444', Cl: '#22c55e' };
+    const S = frame(el, 'Représentation de Lewis et géométrie des molécules', 'Choisis une molécule ; la vue 3D tourne', '0 0 640 300');
+    let m = M.H2O, rot = 0.6;
+    seg(S.ctrls, 'Molécule', Object.entries(M).map(([k, v]) => [k, v.f]), 'H2O', (k) => { m = M[k]; info(); });
+    const sp = slider(S.ctrls, { label: 'Rotation 3D', min: 0, max: 360, step: 5, value: 35, unit: '°' }, (v) => { rot = (v * Math.PI) / 180; });
+    let auto = true;
+    btn(S.ctrls, '⏯ Rotation automatique', () => { auto = !auto; });
+    loop(el, (dt) => { if (auto) { rot += dt * 0.8; sp.v = Math.round(((rot * 180) / Math.PI) % 360); } render(); return true; });
+    function render() {
+      const cx = 170, cy = 150, u = 62;
+      let s = T(170, 24, 'Représentation de Lewis', 'middle', 'muted') + T(480, 24, 'Géométrie (modèle 3D)', 'middle', 'muted') + L(320, 30, 320, 280, 'grid');
+      for (const [i, j, o] of m.b) {
+        const A = m.a[i], B = m.a[j], dx = B[1] - A[1], dy = B[2] - A[2], dl = Math.hypot(dx, dy), nx = -dy / dl, ny = dx / dl;
+        for (let k = 0; k < o; k++) {
+          const off = (k - (o - 1) / 2) * 7;
+          const sx = cx + A[1] * u + dx / dl * 16, sy = cy + A[2] * u + dy / dl * 16, ex = cx + B[1] * u - dx / dl * 16, ey = cy + B[2] * u - dy / dl * 16;
+          s += L(sx + nx * off, sy + ny * off, ex + nx * off, ey + ny * off, 'stroke', 'stroke-width="2.5"');
+        }
+      }
+      for (const A of m.a) {
+        const x = cx + A[1] * u, y = cy + A[2] * u;
+        s += T(x, y + 7, A[0], 'middle', 'atom');
+        for (const d of A[4]) { const a = (d * Math.PI) / 180, px = x + Math.cos(a) * 24, py = y - Math.sin(a) * 24; s += L(px - Math.sin(a) * 8, py - Math.cos(a) * 8, px + Math.sin(a) * 8, py + Math.cos(a) * 8, '', `stroke="${COL.a}" stroke-width="2.5"`); }
+      }
+      // 3D
+      const c = Math.cos(rot), sn = Math.sin(rot), tilt = 0.35, ct = Math.cos(tilt), st = Math.sin(tilt);
+      const P = m.a.map((A) => { const [x, y, z] = A[3]; const x1 = x * c + z * sn, z1 = -x * sn + z * c; const y1 = y * ct - z1 * st, z2 = y * st + z1 * ct; return { x: 480 + x1 * 80, y: 150 - y1 * 80, z: z2, e: A[0] }; });
+      const items = [];
+      for (const [i, j] of m.b) items.push({ z: Math.min(P[i].z, P[j].z) - 0.01, s: L(P[i].x, P[i].y, P[j].x, P[j].y, '', 'stroke="#94a3b8" stroke-width="7" stroke-linecap="round"') });
+      P.forEach((p) => items.push({ z: p.z, s: `<circle cx="${n2(p.x)}" cy="${n2(p.y)}" r="${n2((p.e === 'H' ? 15 : 22) * (1 + p.z * 0.12))}" fill="${CPK[p.e]}" stroke="rgba(0,0,0,.25)"/>` + T(p.x, p.y + 5, p.e, 'middle', p.e === 'H' ? 'atomd' : 'atomw') }));
+      items.sort((a, b) => a.z - b.z);
+      S.draw(s + items.map((x) => x.s).join(''));
+    }
+    function info() {
+      const nb = m.b.reduce((t, b) => t + b[2], 0), nl = m.a.reduce((t, a) => t + a[4].length, 0), ve = m.a.reduce((t, a) => t + VAL[a[0]], 0);
+      S.stats([['Électrons de valence (total)', ve], ['Doublets liants', nb], ['Doublets non liants', nl], ['Géométrie', m.g], ['Angle entre liaisons', m.ang]]);
+      S.note(`Nombre total de doublets = ${ve} / 2 = ${ve / 2} = ${nb} liants + ${nl} non liants. Chaque atome respecte la règle du ${m.a.every((a) => a[0] === 'H') ? 'duet' : 'duet (H) ou de l’octet (autres atomes)'}. Les doublets se repoussent et s’éloignent le plus possible : c’est ce qui fixe la géométrie.`);
+    }
+    info(); render();
+  };
+
+  // 20. Classification périodique (Z = 1 à 18)
+  SIMS.periodique = (el) => {
+    const E = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar'];
+    const NOM = ['Hydrogène', 'Hélium', 'Lithium', 'Béryllium', 'Bore', 'Carbone', 'Azote', 'Oxygène', 'Fluor', 'Néon', 'Sodium', 'Magnésium', 'Aluminium', 'Silicium', 'Phosphore', 'Soufre', 'Chlore', 'Argon'];
+    const S = frame(el, 'Le tableau périodique simplifié (Z = 1 à 18)', 'Clique sur un élément', '0 0 640 260');
+    let z = 11, fam = '';
+    seg(S.ctrls, 'Colorer une famille', [['', 'Aucune'], ['alc', 'Alcalins'], ['ter', 'Alcalino-terreux'], ['hal', 'Halogènes'], ['gaz', 'Gaz rares']], '', (v) => { fam = v; draw(); });
+    const conf = (Z) => { const c = [Math.min(Z, 2), Math.min(Math.max(Z - 2, 0), 8), Math.max(Z - 10, 0)]; return c.filter((x, i) => x > 0 || i === 0); };
+    const pos = (Z) => { if (Z === 1) return [1, 1]; if (Z === 2) return [1, 8]; const c = conf(Z); const p = c.length, v = c[p - 1]; return [p, v]; };
+    const family = (Z) => { const [p, g] = pos(Z); if (Z === 1) return ''; if (g === 1) return 'alc'; if (g === 2 && Z !== 2) return 'ter'; if (g === 7) return 'hal'; if (g === 8) return 'gaz'; return ''; };
+    const FN = { alc: 'alcalins', ter: 'alcalino-terreux', hal: 'halogènes', gaz: 'gaz rares (nobles)' };
+    const ion = (Z) => { const [, g] = pos(Z); const e = E[Z - 1]; if (Z === 1) return 'H⁺'; if (g === 8) return 'aucun (stable)'; if (g <= 3) return e + (g === 1 ? '⁺' : g === 2 ? '²⁺' : '³⁺'); if (g >= 5) return e + (g === 7 ? '⁻' : g === 6 ? '²⁻' : '³⁻'); return '— (forme plutôt des liaisons)'; };
+    function draw() {
+      let s = '';
+      for (let g = 1; g <= 8; g++) s += T(40 + (g - 1) * 72 + 32, 22, ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][g - 1], 'middle', 'tick');
+      for (let p = 1; p <= 3; p++) s += T(22, 30 + (p - 1) * 72 + 42, p, 'middle', 'tick');
+      for (let Z = 1; Z <= 18; Z++) {
+        const [p, g] = pos(Z), x = 40 + (g - 1) * 72, y = 30 + (p - 1) * 72, f = family(Z), hi = fam && f === fam, on = Z === z;
+        s += `<g class="pt-el" data-z="${Z}"><rect x="${x}" y="${y}" width="64" height="64" rx="10" class="${on ? 'el on' : hi ? 'el hi' : 'el'}"/>` + T(x + 6, y + 15, Z, 'start', 'tick') + T(x + 32, y + 43, E[Z - 1], 'middle', 'elsym') + '</g>';
+      }
+      S.draw(s);
+      S.svg.querySelectorAll('.pt-el').forEach((g) => g.addEventListener('click', () => { z = +g.dataset.z; draw(); }));
+      const c = conf(z), [p, g] = pos(z);
+      S.stats([['Élément', `${NOM[z - 1]} (${E[z - 1]}), Z = ${z}`], ['Structure électronique', c.map((n, i) => '(' + 'KLM'[i] + ')<sup>' + n + '</sup>').join('')], ['Période (ligne)', p + ' — couches occupées'], ['Groupe (colonne)', ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][g - 1] + ' — ' + (z === 2 ? '2 électrons (duet)' : g + ' électron(s) de valence')], ['Ion monoatomique usuel', ion(z)], ['Famille', FN[family(z)] || '—']]);
+      S.note('Les éléments d’une même colonne ont le même nombre d’électrons sur la couche externe : ils ont des <b>propriétés chimiques semblables</b> (même famille).');
+    }
+    draw();
+  };
+
+  // 21. La mole
+  SIMS.mole = (el) => {
+    const S = frame(el, 'Masse, quantité de matière et nombre d’entités', 'Choisis l’espèce et la masse prélevée', '0 0 640 200');
+    const MA = { H: 1, C: 12, N: 14, O: 16, Na: 23, Cl: 35.5, Fe: 56, S: 32, Cu: 63.5 };
+    const SP = {
+      h2o: { n: 'Eau H₂O', c: { H: 2, O: 1 } }, co2: { n: 'Dioxyde de carbone CO₂', c: { C: 1, O: 2 } }, nacl: { n: 'Chlorure de sodium NaCl', c: { Na: 1, Cl: 1 } },
+      gluc: { n: 'Glucose C₆H₁₂O₆', c: { C: 6, H: 12, O: 6 } }, eth: { n: 'Éthanol C₂H₆O', c: { C: 2, H: 6, O: 1 } }, fe: { n: 'Fer Fe', c: { Fe: 1 } }
+    };
+    let sp = SP.h2o;
+    seg(S.ctrls, 'Espèce', Object.entries(SP).map(([k, v]) => [k, v.n]), 'h2o', (k) => { sp = SP[k]; draw(); });
+    const m = slider(S.ctrls, { label: 'Masse prélevée m', min: 1, max: 360, step: 1, value: 18, unit: 'g' }, draw);
+    const gas = seg(S.ctrls, 'Volume molaire (gaz)', [[22.4, '22,4 L/mol (0 °C)'], [24, '24 L/mol (20 °C)']], 24, draw);
+    function draw() {
+      const M = Object.entries(sp.c).reduce((t, [e, k]) => t + MA[e] * k, 0), n = m.v / M, N = n * 6.02e23;
+      const pile = Math.min(40, Math.round(n * 4));
+      let s = T(20, 30, 'M(' + sp.n.split(' ').pop() + ') = ' + Object.entries(sp.c).map(([e, k]) => (k > 1 ? k + '×' : '') + 'M(' + e + ')').join(' + ') + ' = ' + ft(M) + ' g/mol', 'start', 'lab');
+      for (let i = 0; i < pile; i++) s += `<rect x="${20 + (i % 20) * 30}" y="${150 - Math.floor(i / 20) * 34}" width="26" height="30" rx="5" fill="${COL.e}" opacity=".8"/>`;
+      s += T(20, 70, pile ? 'Chaque bloc = 0,25 mol' : 'Moins de 0,25 mol', 'start', 'small');
+      S.draw(s);
+      S.stats([['Masse molaire M', fr(M), 'g/mol'], ['n = m / M', fr(n), 'mol'], ['N = n × N<sub>A</sub>', fr(N), 'entités'], ['Si c’était un gaz : V = n·V<sub>m</sub>', fr(n * gas.v), 'L']]);
+      S.note('N<sub>A</sub> = 6,02 × 10<sup>23</sup> mol<sup>−1</sup> (constante d’Avogadro). Une mole contient N<sub>A</sub> entités identiques.');
+    }
+    draw();
+  };
+
+  // 22. Dissolution et dilution
+  SIMS.dilution = (el) => {
+    const S = frame(el, 'Préparer une solution : dissolution et dilution', 'Choisis la méthode', '0 0 640 280');
+    const SO = { cuso4: { n: 'Sulfate de cuivre', M: 159.6, c: [37, 99, 235] }, kmno4: { n: 'Permanganate de potassium', M: 158, c: [126, 34, 206] }, gluc: { n: 'Glucose', M: 180, c: [250, 250, 250] } };
+    let so = SO.cuso4;
+    const mode = seg(S.ctrls, 'Méthode', [['dis', 'Dissolution d’un solide'], ['dil', 'Dilution d’une solution mère']], 'dis', draw);
+    seg(S.ctrls, 'Soluté', Object.entries(SO).map(([k, v]) => [k, v.n]), 'cuso4', (k) => { so = SO[k]; draw(); });
+    const m = slider(S.ctrls, { label: 'Masse de soluté', min: 0.5, max: 20, step: 0.5, value: 4, unit: 'g' }, draw);
+    const V = seg(S.ctrls, 'Fiole jaugée', [[0.05, '50 mL'], [0.1, '100 mL'], [0.2, '200 mL'], [0.25, '250 mL']], 0.1, draw);
+    const C0 = slider(S.ctrls, { label: 'Concentration de la solution mère C₀', min: 0.05, max: 1, step: 0.05, value: 0.5, unit: 'mol/L' }, draw);
+    const V0 = seg(S.ctrls, 'Pipette jaugée (prélèvement V₀)', [[0.005, '5 mL'], [0.01, '10 mL'], [0.02, '20 mL']], 0.01, draw);
+    const flask = (x, C, lab, vol) => {
+      const a = Math.min(0.95, C * 2.2 + 0.05);
+      return `<path d="M${x - 10},40 L${x - 10},130 L${x - 60},230 Q${x - 64},250 ${x - 44},250 L${x + 44},250 Q${x + 64},250 ${x + 60},230 L${x + 10},130 L${x + 10},40" class="glass"/>` +
+        `<path d="M${x - 10},120 L${x - 10},130 L${x - 60},230 Q${x - 64},250 ${x - 44},250 L${x + 44},250 Q${x + 64},250 ${x + 60},230 L${x + 10},130 L${x + 10},120 Z" fill="rgba(${so.c.join(',')},${n2(a * 100) / 100})" stroke="none"/>` +
+        L(x - 14, 80, x + 14, 80, 'stroke') + T(x, 270, lab, 'middle', 'small') + T(x + 20, 84, vol, 'start', 'tick');
+    };
+    function draw() {
+      const dis = mode.v === 'dis';
+      m.el.hidden = !dis; C0.el.hidden = V0.el.hidden = dis;
+      let s, st;
+      if (dis) {
+        const n = m.v / so.M, C = n / V.v;
+        s = `<ellipse cx="120" cy="230" rx="50" ry="10" class="obj"/>` + T(120, 205, m.v + ' g', 'middle', 'lab') + arrow(190, 160, 300, 160, 'currentColor', '', 0, 0, 2) + flask(400, C, 'solution obtenue', V.v * 1000 + ' mL');
+        st = [['n = m / M', fr(n), 'mol'], ['C = n / V', fr(C), 'mol/L'], ['C<sub>m</sub> = m / V', fr(m.v / V.v), 'g/L']];
+        S.note('Concentration molaire <b>C = n / V</b> (mol/L) ; concentration massique <b>C<sub>m</sub> = m / V</b> (g/L) ; et C<sub>m</sub> = C · M.');
+      } else {
+        const C1 = (C0.v * V0.v) / V.v, F = V.v / V0.v;
+        s = flask(150, C0.v, 'solution mère', '') + arrow(230, 160, 330, 160, 'currentColor', V0.v * 1000 + ' mL', 250, 150, 2) + flask(430, C1, 'solution fille', V.v * 1000 + ' mL');
+        st = [['C₁ = C₀·V₀ / V₁', fr(C1), 'mol/L'], ['Facteur de dilution F = V₁/V₀', fr(F)], ['Quantité de soluté prélevée', fr(C0.v * V0.v * 1000), 'mmol']];
+        S.note('Au cours d’une dilution, la quantité de soluté se conserve : <b>C₀·V₀ = C₁·V₁</b>. La solution fille est moins concentrée (couleur plus claire).');
+      }
+      S.draw(s); S.stats(st);
+    }
+    draw();
+  };
+
+  // 23. Équilibrer une équation chimique
+  SIMS.equilibrer = (el) => {
+    const R = [
+      { r: [['CH₄', { C: 1, H: 4 }], ['O₂', { O: 2 }]], p: [['CO₂', { C: 1, O: 2 }], ['H₂O', { H: 2, O: 1 }]], s: [1, 2, 1, 2] },
+      { r: [['H₂', { H: 2 }], ['O₂', { O: 2 }]], p: [['H₂O', { H: 2, O: 1 }]], s: [2, 1, 2] },
+      { r: [['Fe', { Fe: 1 }], ['O₂', { O: 2 }]], p: [['Fe₃O₄', { Fe: 3, O: 4 }]], s: [3, 2, 1] },
+      { r: [['C₃H₈', { C: 3, H: 8 }], ['O₂', { O: 2 }]], p: [['CO₂', { C: 1, O: 2 }], ['H₂O', { H: 2, O: 1 }]], s: [1, 5, 3, 4] },
+      { r: [['Al', { Al: 1 }], ['S', { S: 1 }]], p: [['Al₂S₃', { Al: 2, S: 3 }]], s: [2, 3, 1] },
+      { r: [['Cu²⁺', { Cu: 1, '+': 2 }], ['HO⁻', { O: 1, H: 1, '+': -1 }]], p: [['Cu(OH)₂', { Cu: 1, O: 2, H: 2 }]], s: [1, 2, 1] }
+    ];
+    const S = frame(el, 'Équilibrer une équation chimique', 'Ajuste les coefficients stœchiométriques', '0 0 640 120');
+    let ri = 0, k = [];
+    seg(S.ctrls, 'Réaction', R.map((x, i) => [i, x.r.map((y) => y[0]).join(' + ') + ' → ' + x.p.map((y) => y[0]).join(' + ')]), 0, (i) => { ri = i; reset(); });
+    const box = document.createElement('div'); box.className = 'sim-coefs'; S.top.appendChild(box);
+    function reset() { k = R[ri].r.concat(R[ri].p).map(() => 1); build(); }
+    function build() {
+      const re = R[ri], all = re.r.concat(re.p);
+      box.innerHTML = all.map((sp, i) => `${i === re.r.length ? '<span class="sim-eq-arrow">→</span>' : i ? '<span class="sim-eq-plus">+</span>' : ''}<span class="sim-coef"><button type="button" class="w-round" data-i="${i}" data-d="-1">−</button><b>${k[i]}</b><button type="button" class="w-round" data-i="${i}" data-d="1">+</button><span class="sim-sp">${sp[0]}</span></span>`).join('');
+      box.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.i; k[i] = Math.max(1, Math.min(9, k[i] + +b.dataset.d)); build(); }));
+      check();
+    }
+    function check() {
+      const re = R[ri], nr = re.r.length, els = new Set();
+      re.r.concat(re.p).forEach((x) => Object.keys(x[1]).forEach((e) => els.add(e)));
+      const cnt = (side) => { const o = {}; side.forEach(([, c], i0) => { const i = side === re.r ? i0 : i0 + nr; for (const [e, n] of Object.entries(c)) o[e] = (o[e] || 0) + n * k[i]; }); return o; };
+      const L1 = cnt(re.r), R1 = cnt(re.p);
+      let ok = true;
+      const rows = [...els].map((e) => { const a = L1[e] || 0, b = R1[e] || 0; if (a !== b) ok = false; return [e === '+' ? 'Charges' : e, `${a} | ${b} ${a === b ? '✔' : '✘'}`, 'réactifs | produits']; });
+      S.stats(rows);
+      const g = k.reduce((a, b) => { while (b) [a, b] = [b, a % b]; return a; });
+      S.note(ok ? (g > 1 ? 'Équilibrée, mais on peut simplifier : on choisit les plus petits coefficients entiers.' : '<b>Bravo !</b> Il y a conservation des éléments chimiques (et des charges) : l’équation est équilibrée.') : 'Pas encore : chaque élément doit apparaître le même nombre de fois à gauche et à droite.', ok && g === 1 ? 'ok' : '');
+      let s = '';
+      [...els].filter((e) => e !== '+').forEach((e, i) => { const a = L1[e] || 0, b = R1[e] || 0; s += T(20, 24 + i * 26, e, 'start', 'lab') + `<rect x="60" y="${12 + i * 26}" width="${a * 12}" height="16" rx="4" fill="${COL.b}"/><rect x="340" y="${12 + i * 26}" width="${b * 12}" height="16" rx="4" fill="${COL.c}"/>`; });
+      S.svg.setAttribute('viewBox', `0 0 640 ${Math.max(60, els.size * 26 + 10)}`);
+      S.draw(s);
+    }
+    reset();
+  };
+
+  // 24. Tableau d'avancement
+  SIMS.avancement = (el) => {
+    const R = [
+      { e: 'CH₄ + 2 O₂ → CO₂ + 2 H₂O', r: [['CH₄', 1], ['O₂', 2]], p: [['CO₂', 1], ['H₂O', 2]] },
+      { e: '2 H₂ + O₂ → 2 H₂O', r: [['H₂', 2], ['O₂', 1]], p: [['H₂O', 2]] },
+      { e: 'C₃H₈ + 5 O₂ → 3 CO₂ + 4 H₂O', r: [['C₃H₈', 1], ['O₂', 5]], p: [['CO₂', 3], ['H₂O', 4]] },
+      { e: '2 Al + 3 S → Al₂S₃', r: [['Al', 2], ['S', 3]], p: [['Al₂S₃', 1]] }
+    ];
+    const S = frame(el, 'Tableau d’avancement et réactif limitant', 'Fais avancer la réaction', '0 0 640 220');
+    let re = R[0];
+    seg(S.ctrls, 'Réaction', R.map((x, i) => [i, x.e]), 0, (i) => { re = R[i]; draw(); });
+    const ni = () => [n1.v, n2s.v];
+    const xmax = () => Math.min(...re.r.map(([, a], i) => ni()[i] / a));
+    const n1 = slider(S.ctrls, { label: 'Quantité initiale du réactif 1', min: 0.5, max: 6, step: 0.5, value: 2, unit: 'mol' }, draw);
+    const n2s = slider(S.ctrls, { label: 'Quantité initiale du réactif 2', min: 0.5, max: 6, step: 0.5, value: 3, unit: 'mol' }, draw);
+    const xs = slider(S.ctrls, { label: 'Avancement x', min: 0, max: 100, step: 1, value: 0, fmt: (v) => fr(xmax() * v / 100) + ' mol' }, draw);
+    const tab = document.createElement('div'); S.top.appendChild(tab);
+    function draw() {
+      const xm = xmax(), x = (xm * xs.v) / 100, n0 = ni();
+      const lim = re.r.map(([, a], i) => n0[i] / a).map((v) => Math.abs(v - xm) < 1e-9);
+      const qr = re.r.map(([, a], i) => n0[i] - a * x), qp = re.p.map(([, a]) => a * x);
+      const qrMax = re.r.map(([, a], i) => n0[i] - a * xm), qpMax = re.p.map(([, a]) => a * xm);
+      const cell = (v) => fr(Math.abs(v) < 1e-9 ? 0 : v);
+      tab.innerHTML = `<div class="table-wrap"><table class="sim-tab"><tr><th>Équation</th>${re.r.concat(re.p).map(([s, a]) => `<th>${a > 1 ? a + ' ' : ''}${s}</th>`).join('')}</tr>
+        <tr><td>État initial (x = 0)</td>${n0.map(cell).map((v) => `<td>${v}</td>`).join('')}${re.p.map(() => '<td>0</td>').join('')}</tr>
+        <tr class="cur"><td>En cours (x = ${fr(x)})</td>${re.r.map(([, a], i) => `<td>${fr(n0[i])} − ${a > 1 ? a : ''}x = ${cell(qr[i])}</td>`).join('')}${re.p.map(([, a], i) => `<td>${a > 1 ? a : ''}x = ${cell(qp[i])}</td>`).join('')}</tr>
+        <tr><td>État final (x<sub>max</sub> = ${fr(xm)})</td>${qrMax.concat(qpMax).map((v) => `<td>${cell(v)}</td>`).join('')}</tr></table></div>`;
+      const all = re.r.map((r, i) => [r[0], qr[i], COL.b]).concat(re.p.map((p, i) => [p[0], qp[i], COL.c]));
+      let s = '';
+      all.forEach(([nm, q0, c], i) => { const q = Math.max(0, q0), xx = 50 + i * 140; s += `<rect x="${xx}" y="${n2(190 - q * 22)}" width="70" height="${n2(q * 22)}" rx="6" fill="${c}"/>` + T(xx + 35, 210, nm, 'middle', 'lab') + T(xx + 35, 182 - q * 22, ft(q) + ' mol', 'middle', 'small'); });
+      S.draw(s);
+      const stoe = lim.every(Boolean);
+      S.stats([['x<sub>max</sub>', fr(xm), 'mol'], ['Réactif limitant', stoe ? 'les deux (mélange stœchiométrique)' : re.r[lim.indexOf(true)][0]]]);
+      S.note(xs.v === 100 ? 'État final : le réactif limitant est entièrement consommé, la transformation s’arrête.' : 'Les quantités de réactifs diminuent et celles des produits augmentent, proportionnellement à leurs coefficients.', xs.v === 100 ? 'ok' : '');
+    }
+    draw();
+  };
+})();

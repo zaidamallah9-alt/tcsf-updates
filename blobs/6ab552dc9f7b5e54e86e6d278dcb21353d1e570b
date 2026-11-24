@@ -1,0 +1,24 @@
+// Choix de l'article Wikipédia / Vikidia le plus pertinent pour une question (PC : main.js, téléphone : mobile.js).
+// Un article n'est gardé que si son titre correspond vraiment aux mots de la question.
+(function (root) {
+  const STOP = new Set('les des une est que qui quoi comment pourquoi quel quelle dans pour par sur avec cette ces aux elle ils the what how why which does are هو هي ما ماذا كيف لماذا هل في من على الى عن هذا هذه التي الذي'.split(' '));
+  const tok = (t) => new Set(String(t).toLowerCase().normalize('NFD').replace(/[̀-ًͯ-ْ]/g, '').replace(/<[^>]+>/g, ' ')
+    .split(/[^a-z0-9؀-ۿ]+/).map((w) => w.replace(/^(ال|وال|بال)/, '')).filter((w) => w.length >= 3 && !STOP.has(w)));
+  function pick(q, hits) {
+    const qt = tok(q);
+    let best = null, bestS = 1.5;
+    for (const h of hits || []) {
+      const tt = tok(h.title), st = tok(h.snippet || '');
+      const common = [...tt].filter((w) => qt.has(w) || [...qt].some((x) => x.length >= 5 && (w.startsWith(x.slice(0, 5)) || x.startsWith(w.slice(0, 5))))).length;
+      if (!common) continue;
+      const extra = Math.max(0, tt.size - common);
+      const sn = Math.min(2, [...st].filter((w) => qt.has(w)).length * 0.5);
+      const sc = 2 * common - extra + sn;
+      if (sc > bestS) { bestS = sc; best = h; }
+    }
+    return best;
+  }
+  const host = (lang, simple) => (simple && lang === 'fr' ? 'fr.vikidia.org' : simple && lang === 'en' ? 'simple.wikipedia.org' : `${['fr', 'ar', 'en'].includes(lang) ? lang : 'fr'}.wikipedia.org`);
+  const api = { pick, host };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.TCSF_WIKIRANK = api;
+})(typeof window !== 'undefined' ? window : globalThis);

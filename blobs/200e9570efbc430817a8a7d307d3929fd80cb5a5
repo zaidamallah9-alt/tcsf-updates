@@ -1,0 +1,383 @@
+// Expériences en 3D (three.js) : Physique-Chimie et Mathématiques.
+// Faire tourner : glisser avec la souris ou le doigt ; zoomer : molette ou deux doigts.
+(() => {
+  const { SIMS, frame, slider, seg, btn, loop, fr } = window.TCSF_SIM;
+  const T3 = window.THREE;
+
+  // ---------- scène 3D commune ----------
+  function scene3d(S, el, o = {}) {
+    const stage = S.svg.parentElement;
+    S.svg.remove();
+    stage.classList.add('sim-3d-stage');
+    const H = o.h || 380;
+    const canvas = document.createElement('canvas');
+    canvas.className = 'sim-3d';
+    stage.appendChild(canvas);
+    const hint = document.createElement('div');
+    hint.className = 'sim-3d-hint';
+    hint.textContent = '↻ Glisse pour tourner · molette ou 2 doigts pour zoomer';
+    stage.appendChild(hint);
+    let renderer;
+    try { renderer = new T3.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) {
+      stage.innerHTML = '<p class="muted" style="padding:20px">La 3D n’est pas disponible sur cet appareil (WebGL).</p>';
+      return null;
+    }
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    const scene = new T3.Scene();
+    const cam = new T3.PerspectiveCamera(45, 1, 0.1, 500);
+    scene.add(new T3.AmbientLight(0xffffff, 1.1));
+    const dl = new T3.DirectionalLight(0xffffff, 2.2); dl.position.set(6, 10, 8); scene.add(dl);
+    const dl2 = new T3.DirectionalLight(0xffffff, 0.8); dl2.position.set(-8, -4, -6); scene.add(dl2);
+    const orb = { th: o.th ?? 0.7, ph: o.ph ?? 1.1, r: o.r || 12, target: new T3.Vector3(0, 0, 0), min: o.min || 3, max: o.max || 60 };
+    const place = () => {
+      orb.ph = Math.max(0.12, Math.min(Math.PI - 0.12, orb.ph));
+      orb.r = Math.max(orb.min, Math.min(orb.max, orb.r));
+      cam.position.set(orb.target.x + orb.r * Math.sin(orb.ph) * Math.sin(orb.th), orb.target.y + orb.r * Math.cos(orb.ph), orb.target.z + orb.r * Math.sin(orb.ph) * Math.cos(orb.th));
+      cam.lookAt(orb.target);
+    };
+    const resize = () => {
+      const w = Math.max(200, stage.clientWidth - 2);
+      renderer.setSize(w, H, false);
+      canvas.style.width = '100%'; canvas.style.height = H + 'px';
+      cam.aspect = w / H; cam.updateProjectionMatrix();
+    };
+    resize();
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+    // glisser / pincer
+    const pts = new Map(); let pinch = 0, auto = o.auto !== false, idle = 0;
+    canvas.addEventListener('pointerdown', (e) => { canvas.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); auto = false; hint.classList.add('gone'); });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!pts.has(e.pointerId)) return;
+      const [x, y] = pts.get(e.pointerId);
+      if (pts.size === 1) { orb.th -= (e.clientX - x) * 0.008; orb.ph -= (e.clientY - y) * 0.008; }
+      pts.set(e.pointerId, [e.clientX, e.clientY]);
+      if (pts.size === 2) {
+        const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+        if (pinch) orb.r *= pinch / d;
+        pinch = d;
+      }
+      idle = 0;
+    });
+    const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; };
+    canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+    canvas.addEventListener('wheel', (e) => { e.preventDefault(); orb.r *= e.deltaY > 0 ? 1.1 : 0.9; }, { passive: false });
+    canvas.style.touchAction = 'none';
+    const fns = [];
+    loop(el, (dt) => {
+      idle += dt;
+      if (!pts.size && idle > 6) auto = true;
+      if (auto && o.spin !== false) orb.th += dt * 0.25;
+      place();
+      for (const f of fns) f(dt);
+      renderer.render(scene, cam);
+      return true;
+    });
+    return { scene, cam, renderer, orb, onFrame: (f) => fns.push(f) };
+  }
+  const mat = (color, extra = {}) => new T3.MeshPhongMaterial(Object.assign({ color, shininess: 60 }, extra));
+  const sphere = (r, color, extra) => new T3.Mesh(new T3.SphereGeometry(r, 28, 20), mat(color, extra));
+  // cylindre entre deux points
+  function rod(a, b, r, color, extra) {
+    const d = new T3.Vector3().subVectors(b, a), L = d.length();
+    const m = new T3.Mesh(new T3.CylinderGeometry(r, r, L, 16), mat(color, extra));
+    m.position.copy(a).addScaledVector(d, 0.5);
+    m.quaternion.setFromUnitVectors(new T3.Vector3(0, 1, 0), d.clone().normalize());
+    return m;
+  }
+  // étiquette texte toujours face à la caméra
+  function label(text, color = '#111827', size = 0.6, bg = 'rgba(255,255,255,.85)') {
+    const c = document.createElement('canvas'), x = c.getContext('2d');
+    x.font = 'bold 44px Segoe UI, Arial'; const w = Math.ceil(x.measureText(text).width) + 28;
+    c.width = w; c.height = 64;
+    x.font = 'bold 44px Segoe UI, Arial'; x.fillStyle = bg; x.beginPath(); x.roundRect ? x.roundRect(0, 0, w, 64, 14) : x.rect(0, 0, w, 64); x.fill();
+    x.fillStyle = color; x.textBaseline = 'middle'; x.fillText(text, 14, 34);
+    const tex = new T3.CanvasTexture(c); tex.colorSpace = T3.SRGBColorSpace;
+    const s = new T3.Sprite(new T3.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    s.scale.set(size * w / 64, size, 1); s.renderOrder = 10;
+    return s;
+  }
+  function arrow(dir, origin, len, color) {
+    const d = dir.clone().normalize();
+    return new T3.ArrowHelper(d, origin, Math.max(0.05, len), color, Math.min(0.5, len * 0.3), Math.min(0.3, len * 0.18));
+  }
+  const clear = (g) => { while (g.children.length) { const c = g.children.pop(); c.traverse?.((n) => { n.geometry?.dispose?.(); n.material?.dispose?.(); }); } };
+
+  // =================== PHYSIQUE-CHIMIE ===================
+
+  // Atome en 3D (modèle en couches)
+  SIMS.atome3d = (el) => {
+    const S = frame(el, 'L’atome en 3D', 'Choisis le numéro atomique Z');
+    const W = scene3d(S, el, { r: 10.5 }); if (!W) return;
+    const SYM = ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar'];
+    const NOM = ['Hydrogène', 'Hélium', 'Lithium', 'Béryllium', 'Bore', 'Carbone', 'Azote', 'Oxygène', 'Fluor', 'Néon', 'Sodium', 'Magnésium', 'Aluminium', 'Silicium', 'Phosphore', 'Soufre', 'Chlore', 'Argon'];
+    const AA = [1, 4, 7, 9, 11, 12, 14, 16, 19, 20, 23, 24, 27, 28, 31, 32, 35, 40];
+    const g = new T3.Group(); W.scene.add(g);
+    let electrons = [];
+    const Z = slider(S.ctrls, { label: 'Numéro atomique Z', min: 1, max: 18, value: 6, fmt: (v) => `${v} (${SYM[v - 1]})` }, build);
+    function build() {
+      clear(g); electrons = [];
+      const z = Z.v, A = AA[z - 1], N = A - z, R = 0.32 * Math.cbrt(A);
+      // noyau : boules serrées
+      const nuc = new T3.Group(); g.add(nuc);
+      const order = []; for (let i = 0; i < A; i++) order.push(i < z ? 'p' : 'n');
+      order.sort((a, b) => ((a.charCodeAt(0) * 7 + b.charCodeAt(0)) % 3) - 1);
+      for (let i = 0; i < A; i++) {
+        const k = A === 1 ? 0 : Math.cbrt((i + 0.5) / A) * R, phi = Math.acos(1 - 2 * (i + 0.5) / A), th = Math.PI * (1 + Math.sqrt(5)) * i;
+        const s = sphere(0.24, order[i] === 'p' ? 0xef4444 : 0x9ca3af);
+        s.position.set(k * Math.sin(phi) * Math.cos(th), k * Math.cos(phi), k * Math.sin(phi) * Math.sin(th));
+        nuc.add(s);
+      }
+      // couches électroniques
+      const conf = [Math.min(z, 2), Math.min(Math.max(z - 2, 0), 8), Math.max(z - 10, 0)];
+      const radii = [2.4, 3.8, 5.2], tilts = [[0.3, 0], [1.1, 0.6], [-0.7, 1.2]];
+      conf.forEach((n, i) => {
+        if (!n) return;
+        const ring = new T3.Mesh(new T3.TorusGeometry(radii[i], 0.02, 8, 96), new T3.MeshBasicMaterial({ color: 0x60a5fa, transparent: true, opacity: 0.55 }));
+        const holder = new T3.Group(); holder.rotation.set(tilts[i][0], tilts[i][1], 0); holder.add(ring); g.add(holder);
+        const lab = label('KLM'[i] + ' (' + n + ')', '#1d4ed8', 0.45); lab.position.set(radii[i] + 0.4, 0.3, 0); holder.add(lab);
+        for (let k = 0; k < n; k++) { const e = sphere(0.14, 0x2563eb, { emissive: 0x1d4ed8 }); holder.add(e); electrons.push({ e, r: radii[i], a: (k / n) * Math.PI * 2, w: 1.6 / (i + 1) }); }
+      });
+      S.stats([['Élément', `${NOM[z - 1]} (${SYM[z - 1]})`], ['Protons Z', z], ['Neutrons N', N], ['Nombre de masse A', A], ['Électrons', z], ['Structure', conf.filter((x, i) => x || i === 0).map((x, i) => `(${'KLM'[i]})<sup>${x}</sup>`).join('')]]);
+      S.note('Rouge : protons · gris : neutrons · bleu : électrons. <b>Pas à l’échelle :</b> en réalité le noyau est environ 100 000 fois plus petit que l’atome.');
+    }
+    W.onFrame((dt) => { for (const o of electrons) { o.a += dt * o.w; o.e.position.set(o.r * Math.cos(o.a), 0, o.r * Math.sin(o.a)); } });
+    build();
+  };
+
+  // Molécules en 3D (boules et bâtonnets)
+  SIMS.molecule3d = (el) => {
+    const S = frame(el, 'Les molécules en 3D', 'Choisis une molécule et fais-la tourner');
+    const W = scene3d(S, el, { r: 7 }); if (!W) return;
+    const s3 = 1 / Math.sqrt(3), V = (x, y, z) => new T3.Vector3(x, y, z);
+    const ta = V(s3, s3, s3), tb = V(s3, -s3, -s3), tc = V(-s3, s3, -s3), td = V(-s3, -s3, s3);
+    const at = (v, k) => v.clone().multiplyScalar(k);
+    const C2 = at(ta, 1.53), O_e = C2.clone().add(at(tb, -1.43));
+    const M = {
+      H2O: { n: 'Eau H₂O', a: [['O', V(0, 0, 0)], ['H', at(ta, 0.96)], ['H', at(tb, 0.96)]], b: [[0, 1, 1], [0, 2, 1]], lp: [[0, tc], [0, td]], g: 'coudée', ang: '≈ 104,5°' },
+      NH3: { n: 'Ammoniac NH₃', a: [['N', V(0, 0, 0)], ['H', at(ta, 1.01)], ['H', at(tb, 1.01)], ['H', at(tc, 1.01)]], b: [[0, 1, 1], [0, 2, 1], [0, 3, 1]], lp: [[0, td]], g: 'pyramidale', ang: '≈ 107°' },
+      CH4: { n: 'Méthane CH₄', a: [['C', V(0, 0, 0)], ['H', at(ta, 1.09)], ['H', at(tb, 1.09)], ['H', at(tc, 1.09)], ['H', at(td, 1.09)]], b: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]], lp: [], g: 'tétraédrique', ang: '109,5°' },
+      CO2: { n: 'Dioxyde de carbone CO₂', a: [['C', V(0, 0, 0)], ['O', V(-1.16, 0, 0)], ['O', V(1.16, 0, 0)]], b: [[0, 1, 2], [0, 2, 2]], lp: [[1, V(-0.5, 0.86, 0)], [1, V(-0.5, -0.86, 0)], [2, V(0.5, 0.86, 0)], [2, V(0.5, -0.86, 0)]], g: 'linéaire', ang: '180°' },
+      C2H4: { n: 'Éthène C₂H₄', a: [['C', V(-0.67, 0, 0)], ['C', V(0.67, 0, 0)], ['H', V(-1.23, 0.92, 0)], ['H', V(-1.23, -0.92, 0)], ['H', V(1.23, 0.92, 0)], ['H', V(1.23, -0.92, 0)]], b: [[0, 1, 2], [0, 2, 1], [0, 3, 1], [1, 4, 1], [1, 5, 1]], lp: [], g: 'plane', ang: '≈ 120°' },
+      C2H6O: { n: 'Éthanol C₂H₆O', a: [['C', V(0, 0, 0)], ['C', C2], ['O', O_e], ['H', at(tb, 1.09)], ['H', at(tc, 1.09)], ['H', at(td, 1.09)], ['H', C2.clone().add(at(tc, -1.09))], ['H', C2.clone().add(at(td, -1.09))], ['H', O_e.clone().add(at(ta, 0.96))]], b: [[0, 1, 1], [1, 2, 1], [0, 3, 1], [0, 4, 1], [0, 5, 1], [1, 6, 1], [1, 7, 1], [2, 8, 1]], lp: [[2, tc], [2, td]], g: 'tétraédrique autour de chaque C', ang: '≈ 109,5°' },
+      HCl: { n: 'Chlorure d’hydrogène HCl', a: [['H', V(-0.64, 0, 0)], ['Cl', V(0.64, 0, 0)]], b: [[0, 1, 1]], lp: [[1, V(0.5, 0.86, 0)], [1, V(0.5, -0.43, 0.75)], [1, V(0.5, -0.43, -0.75)]], g: 'linéaire', ang: '—' },
+      N2: { n: 'Diazote N₂', a: [['N', V(-0.55, 0, 0)], ['N', V(0.55, 0, 0)]], b: [[0, 1, 3]], lp: [[0, V(-1, 0, 0)], [1, V(1, 0, 0)]], g: 'linéaire', ang: '—' }
+    };
+    const R = { H: 0.26, C: 0.4, N: 0.4, O: 0.38, Cl: 0.5 }, C = { H: 0xf1f5f9, C: 0x374151, N: 0x3b82f6, O: 0xef4444, Cl: 0x22c55e };
+    const g = new T3.Group(); W.scene.add(g);
+    let m = M.H2O, showLp = true;
+    seg(S.ctrls, 'Molécule', Object.entries(M).map(([k, v]) => [k, v.n.split(' ').pop()]), 'H2O', (k) => { m = M[k]; build(); });
+    seg(S.ctrls, 'Doublets non liants', [[1, 'Afficher'], [0, 'Masquer']], 1, (v) => { showLp = !!v; build(); });
+    function build() {
+      clear(g);
+      const k = 1.6, P = m.a.map(([, p]) => p.clone().multiplyScalar(k));
+      m.a.forEach(([e], i) => { const s = sphere(R[e], C[e]); s.position.copy(P[i]); g.add(s); const l = label(e, '#111827', 0.4, 'rgba(255,255,255,0)'); l.position.copy(P[i]).add(new T3.Vector3(0, R[e] + 0.25, 0)); g.add(l); });
+      for (const [i, j, o] of m.b) {
+        const d = new T3.Vector3().subVectors(P[j], P[i]).normalize();
+        const side = Math.abs(d.y) < 0.9 ? new T3.Vector3(0, 1, 0).cross(d).normalize() : new T3.Vector3(1, 0, 0);
+        for (let n = 0; n < o; n++) { const off = side.clone().multiplyScalar((n - (o - 1) / 2) * 0.17); g.add(rod(P[i].clone().add(off), P[j].clone().add(off), 0.07, 0x94a3b8)); }
+      }
+      if (showLp) for (const [i, dir] of m.lp) {
+        const lob = sphere(0.3, 0xf472b6, { transparent: true, opacity: 0.45 });
+        lob.scale.set(0.7, 1.3, 0.7);
+        lob.position.copy(P[i]).addScaledVector(dir.clone().normalize(), 0.75);
+        lob.quaternion.setFromUnitVectors(new T3.Vector3(0, 1, 0), dir.clone().normalize());
+        g.add(lob);
+      }
+      const nb = m.b.reduce((t, b) => t + b[2], 0);
+      S.stats([['Molécule', m.n], ['Géométrie', m.g], ['Angle', m.ang], ['Doublets liants', nb]]);
+      S.note('Gris foncé : carbone · blanc : hydrogène · rouge : oxygène · bleu : azote · vert : chlore. <b>Rose :</b> doublets non liants, qui repoussent les liaisons.');
+    }
+    build();
+  };
+
+  // Cristal de chlorure de sodium
+  SIMS.cristal3d = (el) => {
+    const S = frame(el, 'Le cristal de chlorure de sodium (NaCl) en 3D', 'Fais tourner le cristal');
+    const W = scene3d(S, el, { r: 11 }); if (!W) return;
+    const g = new T3.Group(); W.scene.add(g);
+    const n = slider(S.ctrls, { label: 'Nombre d’ions par arête', min: 2, max: 5, value: 3 }, build);
+    let lines = true;
+    seg(S.ctrls, 'Liaisons', [[1, 'Afficher'], [0, 'Masquer']], 1, (v) => { lines = !!v; build(); });
+    function build() {
+      clear(g);
+      const N = n.v, a = 1.5, o = ((N - 1) * a) / 2;
+      let na = 0, cl = 0;
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) for (let k = 0; k < N; k++) {
+        const isNa = (i + j + k) % 2 === 0;
+        const s = sphere(isNa ? 0.3 : 0.5, isNa ? 0x8b5cf6 : 0x22c55e); s.position.set(i * a - o, j * a - o, k * a - o); g.add(s);
+        isNa ? na++ : cl++;
+        if (lines) for (const [di, dj, dk] of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) if (i + di < N && j + dj < N && k + dk < N) g.add(rod(s.position, new T3.Vector3((i + di) * a - o, (j + dj) * a - o, (k + dk) * a - o), 0.04, 0xcbd5e1));
+      }
+      S.stats([['Ions Na⁺ (violets)', na], ['Ions Cl⁻ (verts)', cl], ['Voisins de chaque ion (cœur du cristal)', 6]]);
+      S.note('Les ions de signes opposés s’attirent et s’empilent régulièrement. Dans le grand cristal, il y a autant d’ions Na⁺ que d’ions Cl⁻ : le cristal est neutre, de formule NaCl.');
+    }
+    build();
+  };
+
+  // Terre – Lune
+  SIMS.terrelune3d = (el) => {
+    const S = frame(el, 'La Terre et la Lune en 3D', 'Observe les deux forces d’attraction');
+    const W = scene3d(S, el, { r: 15, ph: 1.0, spin: false }); if (!W) return;
+    const tex = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#2563eb'; x.fillRect(0, 0, 256, 128); x.fillStyle = '#16a34a'; let s = 7; const r = () => ((s = (s * 9301 + 49297) % 233280) / 233280); for (let i = 0; i < 22; i++) { x.beginPath(); x.ellipse(r() * 256, 20 + r() * 88, 8 + r() * 22, 5 + r() * 14, r() * 3, 0, 7); x.fill(); } x.fillStyle = '#f8fafc'; x.fillRect(0, 0, 256, 8); x.fillRect(0, 120, 256, 8); const t = new T3.CanvasTexture(c); t.colorSpace = T3.SRGBColorSpace; return t; })();
+    const earth = new T3.Mesh(new T3.SphereGeometry(1.6, 40, 30), new T3.MeshPhongMaterial({ map: tex })); W.scene.add(earth);
+    const moon = sphere(0.45, 0xd1d5db); W.scene.add(moon);
+    const orbit = new T3.Mesh(new T3.TorusGeometry(1, 0.015, 6, 128), new T3.MeshBasicMaterial({ color: 0x94a3b8 })); orbit.rotation.x = Math.PI / 2; W.scene.add(orbit);
+    const lE = label('Terre', '#1d4ed8', 0.5); lE.position.set(0, 2.3, 0); W.scene.add(lE);
+    const lM = label('Lune', '#374151', 0.45); W.scene.add(lM);
+    let aMoon = new T3.ArrowHelper(new T3.Vector3(1, 0, 0), new T3.Vector3(), 1, 0xe5484d), aEarth = new T3.ArrowHelper(new T3.Vector3(1, 0, 0), new T3.Vector3(), 1, 0x3b82f6);
+    W.scene.add(aMoon, aEarth);
+    const kd = slider(S.ctrls, { label: 'Distance (× distance réelle)', min: 0.5, max: 2, step: 0.1, value: 1, fmt: (v) => '× ' + fr(v) }, stats);
+    const sp = slider(S.ctrls, { label: 'Vitesse du temps', min: 0, max: 5, step: 0.5, value: 1.5, fmt: (v) => '× ' + fr(v) });
+    let ang = 0;
+    W.onFrame((dt) => {
+      const d = 6 * kd.v;
+      orbit.scale.set(d, d, d);
+      ang += dt * sp.v * 0.5 / Math.pow(kd.v, 1.5);
+      moon.position.set(d * Math.cos(ang), 0, -d * Math.sin(ang));
+      earth.rotation.y += dt * sp.v * 2;
+      lM.position.copy(moon.position).add(new T3.Vector3(0, 0.9, 0));
+      const dir = moon.position.clone().normalize(), L = Math.min(4.2, 3.4 / (kd.v * kd.v));
+      aMoon.position.copy(moon.position); aMoon.setDirection(dir.clone().negate()); aMoon.setLength(L, 0.4, 0.25);
+      aEarth.position.copy(dir.clone().multiplyScalar(1.6)); aEarth.setDirection(dir); aEarth.setLength(L, 0.4, 0.25);
+    });
+    function stats() {
+      const d = 3.84e8 * kd.v, F = (6.67e-11 * 5.97e24 * 7.35e22) / (d * d), Tj = 27.3 * Math.pow(kd.v, 1.5);
+      S.stats([['Distance Terre – Lune', fr(d), 'm'], ['F Terre/Lune = F Lune/Terre', fr(F), 'N'], ['Durée d’un tour de la Lune', fr(Tj), 'jours']]);
+      S.note('Flèche rouge : force exercée par la Terre sur la Lune ; flèche bleue : force exercée par la Lune sur la Terre. Même intensité, sens opposés. Si la distance double, la force est divisée par 4.');
+    }
+    stats();
+  };
+
+  // Plan incliné en 3D
+  SIMS.plan3d = (el) => {
+    const S = frame(el, 'Le plan incliné en 3D', 'Incline le plan et regarde les forces');
+    const W = scene3d(S, el, { r: 14, th: 0.4, ph: 1.25, spin: false }); if (!W) return;
+    const al = slider(S.ctrls, { label: 'Inclinaison α', min: 0, max: 45, value: 20, unit: '°' }, () => { pos = 0; });
+    const ph = slider(S.ctrls, { label: 'Angle de frottement φ', min: 5, max: 40, value: 25, unit: '°' }, () => { pos = 0; });
+    const plane = new T3.Group(); W.scene.add(plane);
+    const board = new T3.Mesh(new T3.BoxGeometry(10, 0.25, 4), mat(0xcbd5e1)); board.position.y = -0.125; plane.add(board);
+    const block = new T3.Mesh(new T3.BoxGeometry(1.6, 1, 1.4), mat(0xf59e0b)); block.position.y = 0.5; plane.add(block);
+    const ground = new T3.Mesh(new T3.BoxGeometry(14, 0.1, 6), mat(0xe2e8f0)); ground.position.y = -3.2; W.scene.add(ground);
+    const aP = new T3.ArrowHelper(new T3.Vector3(0, -1, 0), new T3.Vector3(), 2, 0x16a34a), aN = new T3.ArrowHelper(new T3.Vector3(0, 1, 0), new T3.Vector3(), 2, 0xe5484d), aT = new T3.ArrowHelper(new T3.Vector3(-1, 0, 0), new T3.Vector3(), 1, 0xf87171);
+    W.scene.add(aP, aN, aT);
+    const lP = label('P', '#15803d', 0.5), lN = label('RN', '#b91c1c', 0.5), lT = label('RT', '#b91c1c', 0.5); W.scene.add(lP, lN, lT);
+    let pos = 0;
+    W.onFrame((dt) => {
+      const a = (al.v * Math.PI) / 180, slide = al.v > ph.v;
+      plane.rotation.z = a;
+      if (slide) { pos += dt * 2.5 * Math.sin(a); if (pos > 8) pos = 0; } else pos = 0;
+      block.position.x = 3 - pos;
+      const c = block.getWorldPosition(new T3.Vector3()), P = 2.4;
+      const n = new T3.Vector3(-Math.sin(a), Math.cos(a), 0), t = new T3.Vector3(Math.cos(a), Math.sin(a), 0);
+      const RN = P * Math.cos(a), RT = slide ? RN * Math.tan((ph.v * Math.PI) / 180) : P * Math.sin(a);
+      aP.position.copy(c); aP.setLength(P, 0.35, 0.22);
+      aN.position.copy(c); aN.setDirection(n); aN.setLength(Math.max(0.05, RN), 0.35, 0.22);
+      aT.position.copy(c); aT.setDirection(t); aT.setLength(Math.max(0.05, RT), 0.3, 0.2); aT.visible = RT > 0.05;
+      lP.position.copy(c).add(new T3.Vector3(0.4, -P - 0.3, 0)); lN.position.copy(c).addScaledVector(n, RN + 0.4); lT.position.copy(c).addScaledVector(t, RT + 0.5); lT.visible = aT.visible;
+    });
+    const upd = () => {
+      const a = (al.v * Math.PI) / 180, P = 10;
+      S.stats([['RN = P·cos α', fr(P * Math.cos(a)), 'N (pour P = 10 N)'], ['RT = P·sin α', al.v > ph.v ? 'max ' + fr(P * Math.cos(a) * Math.tan((ph.v * Math.PI) / 180)) : fr(P * Math.sin(a)), 'N'], ['État', al.v > ph.v ? 'le bloc glisse' : 'équilibre']]);
+      S.note(al.v > ph.v ? `α = ${al.v}° > φ = ${ph.v}° : le frottement ne suffit plus, le bloc glisse.` : `α = ${al.v}° ≤ φ = ${ph.v}° : la réaction (RN + RT) compense le poids, le bloc reste immobile.`, al.v > ph.v ? 'bad' : 'ok');
+    };
+    al.inp.addEventListener('input', upd); ph.inp.addEventListener('input', upd); upd();
+  };
+
+  // Circuit électrique en 3D
+  SIMS.circuit3d = (el) => {
+    const S = frame(el, 'Un circuit électrique en 3D', 'Ferme l’interrupteur et regarde les électrons');
+    const W = scene3d(S, el, { r: 15, ph: 0.85, spin: false }); if (!W) return;
+    const path = [[-5, 0, 2.5], [-5, 0, -2.5], [5, 0, -2.5], [5, 0, 2.5], [-5, 0, 2.5]].map((p) => new T3.Vector3(...p));
+    for (let i = 0; i < 4; i++) W.scene.add(rod(path[i], path[i + 1], 0.08, 0xb45309));
+    const board = new T3.Mesh(new T3.BoxGeometry(13, 0.2, 7.5), mat(0x166534)); board.position.y = -0.3; W.scene.add(board);
+    const bat = new T3.Mesh(new T3.CylinderGeometry(0.55, 0.55, 2.2, 24), mat(0x111827)); bat.rotation.x = Math.PI / 2; bat.position.set(-5, 0.4, 0); W.scene.add(bat);
+    const cap = new T3.Mesh(new T3.CylinderGeometry(0.56, 0.56, 0.5, 24), mat(0xdc2626)); cap.rotation.x = Math.PI / 2; cap.position.set(-5, 0.4, -0.9); W.scene.add(cap);
+    const lp = label('+', '#dc2626', 0.6), lm = label('−', '#111827', 0.6); lp.position.set(-5, 1.4, -1.3); lm.position.set(-5, 1.4, 1.3); W.scene.add(lp, lm);
+    const glass = sphere(0.7, 0xfef9c3, { transparent: true, opacity: 0.6, emissive: 0xfacc15, emissiveIntensity: 0 }); glass.position.set(0, 0.9, -2.5); W.scene.add(glass);
+    const glow = new T3.PointLight(0xfacc15, 0, 12); glow.position.copy(glass.position); W.scene.add(glow);
+    const res = new T3.Mesh(new T3.BoxGeometry(0.5, 0.5, 1.6), mat(0x60a5fa)); res.position.set(5, 0.25, 0); W.scene.add(res);
+    const sw = new T3.Mesh(new T3.BoxGeometry(1.4, 0.12, 0.25), mat(0x9ca3af)); sw.position.set(0, 0.2, 2.5); W.scene.add(sw);
+    const lR = label('R', '#1d4ed8', 0.5); lR.position.set(5.9, 0.9, 0); W.scene.add(lR);
+    const lL = label('Lampe', '#a16207', 0.45); lL.position.set(0, 2, -2.5); W.scene.add(lL);
+    const lK = label('Interrupteur', '#374151', 0.4); lK.position.set(0, 0.9, 3.2); W.scene.add(lK);
+    let closed = false;
+    const E = slider(S.ctrls, { label: 'Tension du générateur E', min: 1.5, max: 12, step: 0.5, value: 6, unit: 'V' }, stats);
+    const R = slider(S.ctrls, { label: 'Résistance R du circuit', min: 2, max: 60, step: 1, value: 10, unit: 'Ω' }, stats);
+    const k = btn(S.ctrls, '🔌 Fermer l’interrupteur', () => { closed = !closed; k.innerHTML = closed ? '⛔ Ouvrir l’interrupteur' : '🔌 Fermer l’interrupteur'; stats(); }, true);
+    // électrons
+    const segs = []; let tot = 0; for (let i = 0; i < 4; i++) { const L = path[i].distanceTo(path[i + 1]); segs.push([tot, L, i]); tot += L; }
+    const at = (s) => { s = ((s % tot) + tot) % tot; for (const [a, L, i] of segs) if (s <= a + L) return path[i].clone().lerp(path[i + 1], (s - a) / L); return path[0].clone(); };
+    const els = []; for (let i = 0; i < 26; i++) { const e = sphere(0.12, 0x38bdf8, { emissive: 0x0ea5e9 }); W.scene.add(e); els.push({ e, s: (i / 26) * tot }); }
+    const I = () => (closed ? E.v / (R.v + 1) : 0);
+    W.onFrame((dt) => {
+      const i = I();
+      sw.rotation.y = closed ? 0 : -0.6; sw.position.x = closed ? 0 : -0.3;
+      for (const o of els) { o.s += dt * i * 6; o.e.position.copy(at(o.s)); o.e.position.y = 0.18; }
+      const b = Math.min(1, i / 1.2);
+      glass.material.emissiveIntensity = b * 1.4; glow.intensity = b * 40;
+    });
+    function stats() {
+      const i = I();
+      S.stats([['Interrupteur', closed ? 'fermé' : 'ouvert'], ['Intensité I = E/(R + r)', fr(i), 'A (r = 1 Ω)'], ['Tension aux bornes de R', fr(i * R.v), 'V']]);
+      S.note(closed ? 'Les électrons (bleus) sortent de la borne − et rentrent par la borne + : c’est l’inverse du <b>sens conventionnel</b> du courant (de + vers − à l’extérieur du générateur).' : 'Circuit ouvert : aucun courant ne circule, les électrons sont immobiles et la lampe est éteinte.', closed ? 'ok' : '');
+    }
+    stats();
+  };
+
+  // =================== MATHÉMATIQUES ===================
+
+  // Solides usuels
+  SIMS.solides3d = (el) => {
+    const S = frame(el, 'Les solides de l’espace en 3D', 'Choisis un solide et change ses dimensions');
+    const W = scene3d(S, el, { r: 14, ph: 1.15 }); if (!W) return;
+    const g = new T3.Group(); W.scene.add(g);
+    const D = {
+      cube: { n: 'Cube', p: ['Arête a'] }, pave: { n: 'Pavé droit', p: ['Longueur L', 'Largeur l', 'Hauteur h'] }, cyl: { n: 'Cylindre', p: ['Rayon r', 'Hauteur h'] },
+      cone: { n: 'Cône', p: ['Rayon r', 'Hauteur h'] }, pyr: { n: 'Pyramide (base carrée)', p: ['Côté c', 'Hauteur h'] }, sph: { n: 'Boule / sphère', p: ['Rayon r'] }
+    };
+    let k = 'cube';
+    seg(S.ctrls, 'Solide', Object.entries(D).map(([a, b]) => [a, b.n]), 'cube', (v) => { k = v; build(); });
+    const sl = [0, 1, 2].map((i) => slider(S.ctrls, { label: 'Dimension', min: 1, max: 6, step: 0.5, value: [4, 3, 2][i], unit: 'cm' }, build));
+    function build() {
+      clear(g);
+      const d = D[k];
+      sl.forEach((s, i) => { s.el.hidden = i >= d.p.length; if (d.p[i]) s.el.querySelector('.sim-sl-l').textContent = d.p[i]; });
+      const [a, b, c] = sl.map((s) => s.v);
+      let geo, V, A, fV, fA;
+      if (k === 'cube') { geo = new T3.BoxGeometry(a, a, a); V = a ** 3; A = 6 * a * a; fV = 'V = a³'; fA = 'A = 6a²'; }
+      else if (k === 'pave') { geo = new T3.BoxGeometry(a, c, b); V = a * b * c; A = 2 * (a * b + a * c + b * c); fV = 'V = L × l × h'; fA = 'A = 2(Ll + Lh + lh)'; }
+      else if (k === 'cyl') { geo = new T3.CylinderGeometry(a, a, b, 48); V = Math.PI * a * a * b; A = 2 * Math.PI * a * (a + b); fV = 'V = π r² h'; fA = 'A = 2πr² + 2πrh'; }
+      else if (k === 'cone') { geo = new T3.ConeGeometry(a, b, 48); const g2 = Math.hypot(a, b); V = (Math.PI * a * a * b) / 3; A = Math.PI * a * (a + g2); fV = 'V = (1/3) π r² h'; fA = 'A = πr² + πr·g (g = génératrice)'; }
+      else if (k === 'pyr') { geo = new T3.ConeGeometry(a / Math.SQRT2, b, 4); geo.rotateY(Math.PI / 4); const ap = Math.hypot(a / 2, b); V = (a * a * b) / 3; A = a * a + 2 * a * ap; fV = 'V = (1/3) × base × h'; fA = 'A = c² + 4 × (c × apothème / 2)'; }
+      else { geo = new T3.SphereGeometry(a, 48, 32); V = (4 / 3) * Math.PI * a ** 3; A = 4 * Math.PI * a * a; fV = 'V = (4/3) π r³'; fA = 'A = 4πr²'; }
+      const m = new T3.Mesh(geo, mat(0x6366f1, { transparent: true, opacity: 0.55, side: T3.DoubleSide })); g.add(m);
+      if (k !== 'sph') g.add(new T3.LineSegments(new T3.EdgesGeometry(geo, 20), new T3.LineBasicMaterial({ color: 0x1e1b4b })));
+      S.stats([['Solide', d.n], ['Volume ' + fV, fr(V), 'cm³'], ['Aire totale ' + fA, fr(A), 'cm²']]);
+      S.note('Fais tourner le solide : les arêtes cachées apparaissent par transparence. Pour un cône ou une pyramide, le volume est le tiers de celui du cylindre ou du prisme de même base et même hauteur.');
+    }
+    build();
+  };
+
+  // Positions relatives dans l'espace
+  SIMS.espace3d = (el) => {
+    const S = frame(el, 'Droites et plans dans l’espace', 'Choisis une situation et fais tourner la scène');
+    const W = scene3d(S, el, { r: 16, ph: 1.05 }); if (!W) return;
+    const g = new T3.Group(); W.scene.add(g);
+    const V = (x, y, z) => new T3.Vector3(x, y, z);
+    const line = (a, b, color) => { const d = new T3.Vector3().subVectors(b, a).normalize(); g.add(rod(a.clone().addScaledVector(d, -3), b.clone().addScaledVector(d, 3), 0.06, color)); };
+    const plane = (pos, rot, color) => { const p = new T3.Mesh(new T3.PlaneGeometry(9, 7), new T3.MeshPhongMaterial({ color, transparent: true, opacity: 0.35, side: T3.DoubleSide, depthWrite: false })); p.position.copy(pos); p.rotation.set(...rot); g.add(p); const e = new T3.LineSegments(new T3.EdgesGeometry(p.geometry), new T3.LineBasicMaterial({ color })); e.position.copy(pos); e.rotation.copy(p.rotation); g.add(e); };
+    const dot = (p) => { const s = sphere(0.18, 0xef4444); s.position.copy(p); g.add(s); };
+    const C = {
+      dsec: ['Droites sécantes', () => { line(V(-3, -1, 0), V(3, 1, 0), 0x2563eb); line(V(-2, 2, 0), V(2, -2, 0), 0x16a34a); dot(V(0, 0, 0)); }, 'Deux droites sécantes ont un seul point commun ; elles sont coplanaires.'],
+      dpar: ['Droites parallèles', () => { line(V(-3, 0, -1), V(3, 0, -1), 0x2563eb); line(V(-3, 1, 1), V(3, 1, 1), 0x16a34a); }, 'Deux droites parallèles sont coplanaires et n’ont aucun point commun (ou sont confondues).'],
+      dnc: ['Droites non coplanaires', () => { line(V(-3, 0, 0), V(3, 0, 0), 0x2563eb); line(V(0, 2, -3), V(0, 2, 3), 0x16a34a); }, 'Elles ne se coupent pas et ne sont pas parallèles : aucun plan ne les contient toutes les deux.'],
+      dppar: ['Droite parallèle à un plan', () => { plane(V(0, 0, 0), [-Math.PI / 2, 0, 0], 0x6366f1); line(V(-3, 1.5, 0.5), V(3, 1.5, 0.5), 0x16a34a); }, 'Une droite parallèle à un plan est parallèle à une droite de ce plan ; elle ne le coupe pas.'],
+      dpsec: ['Droite sécante à un plan', () => { plane(V(0, 0, 0), [-Math.PI / 2, 0, 0], 0x6366f1); line(V(-1, -2, -1), V(1, 2, 1), 0x16a34a); dot(V(0, 0, 0)); }, 'Une droite sécante à un plan le coupe en un seul point.'],
+      ppar: ['Plans parallèles', () => { plane(V(0, -1.2, 0), [-Math.PI / 2, 0, 0], 0x6366f1); plane(V(0, 1.2, 0), [-Math.PI / 2, 0, 0], 0x0ea5e9); }, 'Deux plans parallèles n’ont aucun point commun (ou sont confondus).'],
+      psec: ['Plans sécants', () => { plane(V(0, 0, 0), [-Math.PI / 2, 0, 0], 0x6366f1); plane(V(0, 0, 0), [0, 0, 0.6], 0x0ea5e9); g.add(rod(V(0, 0, -3.5), V(0, 0, 3.5), 0.07, 0xef4444)); }, 'Deux plans sécants se coupent suivant une droite (en rouge).']
+    };
+    seg(S.ctrls, 'Situation', Object.entries(C).map(([k, v]) => [k, v[0]]), 'dsec', (k) => show(k));
+    function show(k) { clear(g); C[k][1](); S.stats([['Situation', C[k][0]]]); S.note(C[k][2]); }
+    show('dsec');
+  };
+})();

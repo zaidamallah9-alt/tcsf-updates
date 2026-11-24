@@ -1,0 +1,173 @@
+{
+  "1": {
+    "facile": [
+      { "type": "qcm", "q": "Qui a proposé le premier l'idée d'atome, vers 400 av. J.-C. ?", "choices": ["Démocrite", "Dalton", "Bohr", "Rutherford"], "answer": 0,
+        "why": [null, "Dalton (1808) a repris l'idée plus de 2 000 ans plus tard.", "Bohr est arrivé en 1913, bien après.", "Rutherford a découvert le noyau en 1911."],
+        "explain": "Démocrite, philosophe grec, appelle ces grains <i>atomos</i> = « insécable »." },
+      { "type": "direct", "q": "Quelle particule Thomson a-t-il découverte en 1897 ?", "accept": ["électron", "electron", "électrons", "electrons", "e-", "e−"], "display": "l'électron",
+        "explain": "Thomson découvre l'électron, particule négative : l'atome n'est donc pas indivisible." },
+      { "type": "calc", "q": "Combien d'années séparent le modèle de Dalton (1808) et celui de Bohr (1913) ?", "answer": 105, "tol": 0, "unit": "ans", "display": "105",
+        "explain": "1913 − 1808 = 105 ans." }
+    ],
+    "moyen": [
+      { "type": "qcm", "q": "Expérience de Rutherford : la plupart des particules α traversent la feuille d'or sans être déviées. Que peut-on conclure ?", "choices": ["L'atome est formé essentiellement de vide", "Le noyau est très gros", "Les électrons sont positifs", "La feuille d'or est trouée"], "answer": 0,
+        "why": [null, "Si le noyau était gros, beaucoup de particules seraient déviées.", "Les électrons sont négatifs ; cette observation ne concerne pas leur charge.", "La feuille est continue : c'est l'atome lui-même qui est presque vide."],
+        "explain": "Les particules passent sans rien rencontrer : la matière a une structure <b>lacunaire</b>." },
+      { "type": "direct", "q": "Comment appelle-t-on le modèle de Thomson ? (« le pudding … »)", "accept": ["pudding aux raisins", "le pudding aux raisins", "pudding", "plum pudding", "pudding au raisin", "pudding aux raisin"], "display": "le pudding aux raisins",
+        "explain": "Une sphère positive (le pudding) dans laquelle sont incrustés les électrons (les raisins)." },
+      { "type": "calc", "q": "Si environ 1 particule α sur 10 000 rebondit, combien de particules rebondissent sur 3 000 000 envoyées ?", "answer": 300, "tol": 0, "unit": "particules", "display": "300",
+        "explain": "3 000 000 ÷ 10 000 = 300 particules renvoyées." }
+    ],
+    "difficile": [
+      { "type": "qcm", "q": "Quelle observation de Rutherford a prouvé que le modèle de Thomson était faux ?", "choices": ["Quelques particules α sont renvoyées en arrière", "La plupart des particules α traversent la feuille", "Les particules α sont chargées positivement", "La feuille utilisée est en or"], "answer": 0,
+        "why": [null, "Le modèle de Thomson prévoyait justement que les particules traversent : cette observation ne le contredit pas.", "C'est une propriété des particules α, pas une observation qui contredit Thomson.", "Le choix du métal n'est pas une observation sur la structure de l'atome."],
+        "explain": "Thomson prévoyait une charge positive étalée : aucune particule ne devait rebondir. Seul un <b>noyau</b> petit, positif et massif peut renvoyer une particule α." },
+      { "type": "qcm", "q": "Quel est l'ordre chronologique correct ?", "choices": ["Dalton → Thomson → Rutherford → Bohr", "Thomson → Dalton → Bohr → Rutherford", "Dalton → Rutherford → Thomson → Bohr", "Bohr → Rutherford → Thomson → Dalton"], "answer": 0,
+        "why": [null, "Dalton (1808) est avant Thomson (1904), et Rutherford (1911) avant Bohr (1913).", "Thomson (1904) est avant Rutherford (1911).", "C'est l'ordre inverse."],
+        "explain": "Dalton 1808 → Thomson 1904 → Rutherford 1911 → Bohr 1913." },
+      { "type": "direct", "q": "Dans le modèle actuel, on ne parle plus de trajectoire de l'électron mais de … de présence. (un mot)", "accept": ["probabilité", "probabilite", "probabilités", "probabilites"], "display": "probabilité (de présence)",
+        "explain": "Le nuage électronique représente la probabilité de trouver l'électron autour du noyau." },
+      { "type": "calc", "q": "La feuille d'or de Rutherford a une épaisseur d'environ 0,6 µm (6×10⁻⁷ m). Le diamètre d'un atome d'or vaut environ 3×10⁻¹⁰ m. Combien de couches d'atomes la feuille contient-elle environ ?", "answer": 2000, "tol": 0.03, "unit": "couches", "display": "2 000",
+        "whyWrong": "il faut diviser l'épaisseur de la feuille par le diamètre d'un atome, avec les deux longueurs en mètres.",
+        "explain": "6×10⁻⁷ ÷ 3×10⁻¹⁰ = 2×10³ = 2 000 couches d'atomes : la plupart des particules α traversent pourtant toutes ces couches !" }
+    ]
+  },
+  "2": {
+    "facile": [
+      { "type": "qcm", "q": "Quelle est la charge d'un électron ?", "choices": ["−e", "+e", "0", "−2e"], "answer": 0,
+        "why": [null, "+e est la charge du proton.", "0 est la charge du neutron.", "Un électron porte une seule charge élémentaire négative."],
+        "explain": "L'électron porte la charge −e = −1,6×10⁻¹⁹ C." },
+      { "type": "direct", "q": "Comment s'appelle la partie centrale de l'atome ?", "accept": ["noyau", "le noyau"], "display": "le noyau",
+        "explain": "Le noyau est au centre ; les électrons sont autour." },
+      { "type": "calc", "q": "Un atome possède 8 protons. Combien a-t-il d'électrons ?", "answer": 8, "tol": 0, "unit": "électrons", "display": "8",
+        "whyWrong": "l'atome est neutre, donc il a exactement autant d'électrons que de protons.",
+        "explain": "Électroneutralité : nombre d'électrons = nombre de protons = 8." }
+    ],
+    "moyen": [
+      { "type": "qcm", "q": "Pourquoi l'atome est-il électriquement neutre ?", "choices": ["Il a autant d'électrons que de protons", "Il a autant de neutrons que de protons", "Ses neutrons annulent les charges", "Ses électrons n'ont pas de charge"], "answer": 0,
+        "why": [null, "Les neutrons n'ont pas de charge : leur nombre ne joue aucun rôle dans la neutralité.", "Un neutron est neutre : il ne peut rien annuler.", "Les électrons sont chargés négativement (−e)."],
+        "explain": "Z protons (+Z·e) et Z électrons (−Z·e) : la charge totale est nulle." },
+      { "type": "calc", "q": "Calcule la charge totale des électrons d'un atome de sodium (Z = 11). Donne la réponse en coulombs (avec son signe).", "answer": -1.76e-18, "tol": 0.02, "unit": "C",
+        "explain": "Q = 11 × (−1,6×10⁻¹⁹) = −1,76×10⁻¹⁸ C." },
+      { "type": "direct", "q": "L'atome est formé essentiellement de vide. Comment qualifie-t-on cette structure ? (un mot)", "accept": ["lacunaire", "structure lacunaire"], "display": "lacunaire",
+        "explain": "On dit que l'atome (et la matière) a une structure <b>lacunaire</b>." }
+    ],
+    "difficile": [
+      { "type": "calc", "q": "Le rayon d'un atome vaut 1,4×10⁻¹⁰ m et celui de son noyau 3,5×10⁻¹⁵ m. Calcule le rapport r(atome) / r(noyau).", "answer": 40000, "tol": 0.02, "display": "4×10⁴ (40 000)",
+        "explain": "1,4×10⁻¹⁰ ÷ 3,5×10⁻¹⁵ = 0,4×10⁵ = 4×10⁴. L'ordre de grandeur reste 10⁵." },
+      { "type": "qcm", "q": "Si l'on agrandit un noyau jusqu'à 1 cm de rayon, le rayon de l'atome serait environ :", "choices": ["1 km", "1 m", "10 m", "1 000 km"], "answer": 0,
+        "why": [null, "1 m ne correspond qu'à un facteur 100.", "10 m ne correspond qu'à un facteur 1 000.", "1 000 km correspondrait à un facteur 10⁸, beaucoup trop grand."],
+        "explain": "r(atome) ≈ 10⁵ × r(noyau) = 10⁵ cm = 1 000 m = 1 km." },
+      { "type": "calc", "q": "Un atome contient au total 26 particules chargées (protons + électrons). Combien de protons contient-il ?", "answer": 13, "tol": 0, "unit": "protons", "display": "13",
+        "whyWrong": "les particules chargées sont les protons ET les électrons, et un atome neutre en a autant de chaque sorte.",
+        "explain": "Atome neutre : nombre de protons = nombre d'électrons, donc 2Z = 26 → Z = 13 (aluminium)." },
+      { "type": "direct", "q": "Comment s'appelle la propriété d'un atome qui possède autant d'électrons que de protons ? (un mot)", "accept": ["électroneutralité", "electroneutralite", "neutralité électrique", "neutralite electrique", "électriquement neutre", "neutralité"], "display": "l'électroneutralité",
+        "explain": "C'est l'électroneutralité de l'atome." }
+    ]
+  },
+  "3": {
+    "facile": [
+      { "type": "qcm", "q": "Le noyau de l'atome est formé de :", "choices": ["protons et neutrons", "protons et électrons", "électrons et neutrons", "protons seulement"], "answer": 0,
+        "why": [null, "Les électrons sont autour du noyau, pas dedans.", "Les électrons ne sont pas dans le noyau.", "Il y a aussi des neutrons (sauf pour l'hydrogène ¹H)."],
+        "explain": "Le noyau contient les protons et les neutrons." },
+      { "type": "direct", "q": "Comment appelle-t-on les particules du noyau (protons et neutrons) ?", "accept": ["nucléons", "nucleons", "nucléon", "nucleon"], "display": "les nucléons",
+        "explain": "Protons + neutrons = nucléons." },
+      { "type": "calc", "q": "Un noyau contient 6 protons et 6 neutrons. Combien de nucléons contient-il ?", "answer": 12, "tol": 0, "unit": "nucléons", "display": "12",
+        "explain": "A = 6 + 6 = 12 nucléons." }
+    ],
+    "moyen": [
+      { "type": "calc", "q": "Calcule la charge du noyau d'aluminium (Z = 13). (e = 1,6×10⁻¹⁹ C)", "answer": 2.08e-18, "tol": 0.02, "unit": "C",
+        "explain": "Q = Z·e = 13 × 1,6×10⁻¹⁹ = 2,08×10⁻¹⁸ C." },
+      { "type": "qcm", "q": "Quelle est la charge d'un neutron ?", "choices": ["0", "+e", "−e", "+2e"], "answer": 0,
+        "why": [null, "+e est la charge du proton.", "−e est la charge de l'électron.", "Aucune particule de l'atome ne porte +2e."],
+        "explain": "Le neutron est électriquement neutre." },
+      { "type": "direct", "q": "Quelle lettre désigne le nombre de protons du noyau ?", "accept": ["z"], "display": "Z (nombre de charge)",
+        "whyWrong": "A désigne les nucléons et N les neutrons ; le nombre de protons s'appelle le nombre de charge.",
+        "explain": "Z = nombre de charge = nombre de protons." }
+    ],
+    "difficile": [
+      { "type": "calc", "q": "Un noyau porte la charge Q = 4,32×10⁻¹⁸ C. Combien de protons contient-il ? (e = 1,6×10⁻¹⁹ C)", "answer": 27, "tol": 0, "unit": "protons", "display": "27",
+        "whyWrong": "il faut diviser la charge Q par la charge élémentaire e : Z = Q / e.",
+        "explain": "Z = Q / e = 4,32×10⁻¹⁸ / 1,6×10⁻¹⁹ = 27 (c'est le cobalt)." },
+      { "type": "qcm", "q": "Un noyau contient 26 protons et 30 neutrons. Sa charge vaut :", "choices": ["4,16×10⁻¹⁸ C", "8,96×10⁻¹⁸ C", "4,8×10⁻¹⁸ C", "0 C"], "answer": 0,
+        "why": [null, "Tu as compté les 56 nucléons : les neutrons n'ont pas de charge.", "Tu as utilisé les 30 neutrons au lieu des 26 protons.", "Un noyau contient des protons : il est toujours positif."],
+        "explain": "Q = Z·e = 26 × 1,6×10⁻¹⁹ = 4,16×10⁻¹⁸ C : seuls les protons comptent." },
+      { "type": "direct", "q": "Quelle particule du noyau ne change pas sa charge quand on en ajoute une ?", "accept": ["neutron", "neutrons", "le neutron"], "display": "le neutron",
+        "explain": "Le neutron est neutre : ajouter un neutron change la masse mais pas la charge (on obtient un isotope)." },
+      { "type": "calc", "q": "Deux noyaux ont des charges Q₁ = 1,28×10⁻¹⁸ C et Q₂ = 2,72×10⁻¹⁸ C. Combien de protons le noyau 2 a-t-il de plus que le noyau 1 ?", "answer": 9, "tol": 0, "unit": "protons", "display": "9",
+        "explain": "Z₁ = 1,28×10⁻¹⁸ / 1,6×10⁻¹⁹ = 8 (oxygène) ; Z₂ = 2,72×10⁻¹⁸ / 1,6×10⁻¹⁹ = 17 (chlore) ; 17 − 8 = 9." }
+    ]
+  },
+  "4": {
+    "facile": [
+      { "type": "qcm", "q": "Dans le symbole <span class='nuc'><span class='az'><span>A</span><span>Z</span></span><span class='x'>X</span></span>, la lettre A représente :", "choices": ["le nombre de nucléons", "le nombre de protons", "le nombre de neutrons", "le nombre d'électrons"], "answer": 0,
+        "why": [null, "Le nombre de protons est Z.", "Le nombre de neutrons est N = A − Z.", "Dans l'atome, le nombre d'électrons est égal à Z."],
+        "explain": "A = nombre de masse = nombre de nucléons (protons + neutrons)." },
+      { "type": "calc", "q": "Pour le noyau <span class='nuc'><span class='az'><span>23</span><span>11</span></span><span class='x'>Na</span></span>, calcule le nombre de neutrons N.", "answer": 12, "tol": 0, "unit": "neutrons", "display": "12",
+        "whyWrong": "on utilise N = A − Z, avec A = 23 (en haut) et Z = 11 (en bas).",
+        "explain": "N = A − Z = 23 − 11 = 12." },
+      { "type": "direct", "q": "Comment appelle-t-on des atomes qui ont le même Z mais des A différents ?", "accept": ["isotopes", "isotope", "des isotopes"], "display": "des isotopes",
+        "explain": "Même nombre de protons, nombre de neutrons différent : ce sont des isotopes." }
+    ],
+    "moyen": [
+      { "type": "calc", "q": "Combien d'électrons possède l'atome dont le noyau est <span class='nuc'><span class='az'><span>35</span><span>17</span></span><span class='x'>Cl</span></span> ?", "answer": 17, "tol": 0, "unit": "électrons", "display": "17",
+        "whyWrong": "35 est le nombre de nucléons ; dans un atome neutre, le nombre d'électrons est égal au nombre de protons Z.",
+        "explain": "Atome neutre : nombre d'électrons = Z = 17." },
+      { "type": "qcm", "q": "Lequel de ces noyaux est un isotope de <span class='nuc'><span class='az'><span>12</span><span>6</span></span><span class='x'>C</span></span> ?", "choices": ["<span class='nuc'><span class='az'><span>14</span><span>6</span></span><span class='x'>C</span></span>", "<span class='nuc'><span class='az'><span>14</span><span>7</span></span><span class='x'>N</span></span>", "<span class='nuc'><span class='az'><span>12</span><span>5</span></span><span class='x'>B</span></span>", "<span class='nuc'><span class='az'><span>16</span><span>8</span></span><span class='x'>O</span></span>"], "answer": 0,
+        "why": [null, "Z = 7 ≠ 6 : c'est un autre élément (l'azote).", "Z = 5 ≠ 6 : c'est le bore, même si A = 12.", "Z = 8 ≠ 6 : c'est l'oxygène."],
+        "explain": "Un isotope a le même Z = 6 : c'est le carbone 14." },
+      { "type": "direct", "q": "Écris le symbole du noyau d'oxygène (O) qui contient 8 protons et 8 neutrons. Format : A/Z X (exemple : 12/6 C).", "accept": ["16/8 o", "16/8o"], "display": "16/8 O, c'est-à-dire <span class='nuc'><span class='az'><span>16</span><span>8</span></span><span class='x'>O</span></span>",
+        "whyWrong": "en haut on met A = Z + N, en bas Z.",
+        "explain": "A = 8 + 8 = 16 et Z = 8." }
+    ],
+    "difficile": [
+      { "type": "calc", "q": "Un noyau contient 2 neutrons de plus que de protons, et son nombre de masse vaut A = 34. Combien de protons contient-il ?", "answer": 16, "tol": 0, "unit": "protons", "display": "16",
+        "whyWrong": "écris A = Z + N avec N = Z + 2, puis résous l'équation.",
+        "explain": "A = Z + (Z + 2) = 2Z + 2 = 34 → Z = 16 (soufre <span class='nuc'><span class='az'><span>34</span><span>16</span></span><span class='x'>S</span></span>)." },
+      { "type": "qcm", "q": "Parmi <span class='nuc'><span class='az'><span>40</span><span>18</span></span><span class='x'>Ar</span></span>, <span class='nuc'><span class='az'><span>40</span><span>19</span></span><span class='x'>K</span></span>, <span class='nuc'><span class='az'><span>40</span><span>20</span></span><span class='x'>Ca</span></span> et <span class='nuc'><span class='az'><span>39</span><span>19</span></span><span class='x'>K</span></span>, lesquels sont isotopes ?", "choices": ["⁴⁰K et ³⁹K", "⁴⁰Ar et ⁴⁰Ca", "les trois noyaux de A = 40", "aucun"], "answer": 0,
+        "why": [null, "Ils ont le même A mais des Z différents (18 et 20) : ce sont deux éléments différents.", "Même A ne veut pas dire isotopes : leurs Z sont différents.", "⁴⁰K et ³⁹K ont le même Z = 19."],
+        "explain": "Les isotopes ont le même Z : ⁴⁰K et ³⁹K (Z = 19)." },
+      { "type": "direct", "q": "Un isotope du chlore (Z = 17) contient 20 neutrons. Écris son symbole. Format : A/Z X (exemple : 12/6 C).", "accept": ["37/17 cl", "37/17cl"], "display": "37/17 Cl, c'est-à-dire <span class='nuc'><span class='az'><span>37</span><span>17</span></span><span class='x'>Cl</span></span>",
+        "whyWrong": "A = Z + N = 17 + 20 ; Z reste 17 pour tous les isotopes du chlore.",
+        "explain": "A = 17 + 20 = 37 → chlore 37." },
+      { "type": "calc", "q": "Un atome possède 26 électrons et 30 neutrons. Calcule son nombre de masse A.", "answer": 56, "tol": 0, "display": "56",
+        "whyWrong": "le nombre de protons est égal au nombre d'électrons (atome neutre), puis A = Z + N.",
+        "explain": "Z = 26 (atome neutre), A = Z + N = 26 + 30 = 56 → <span class='nuc'><span class='az'><span>56</span><span>26</span></span><span class='x'>Fe</span></span>." }
+    ]
+  },
+  "5": {
+    "facile": [
+      { "type": "qcm", "q": "Où se trouve presque toute la masse de l'atome ?", "choices": ["Dans le noyau", "Dans les électrons", "Dans le vide de l'atome", "Elle est répartie également partout"], "answer": 0,
+        "why": [null, "Les électrons sont très légers : leur masse est négligeable.", "Le vide n'a pas de masse.", "La masse est concentrée dans le noyau, qui est minuscule."],
+        "explain": "Le noyau (protons + neutrons) contient presque toute la masse." },
+      { "type": "direct", "q": "Quelle particule a une masse négligeable dans l'atome ?", "accept": ["électron", "electron", "électrons", "electrons"], "display": "l'électron",
+        "explain": "L'électron est environ 1836 fois plus léger qu'un proton." },
+      { "type": "calc", "q": "Avec m ≈ A·m(nucléon) et m(nucléon) = 1,67×10⁻²⁷ kg, calcule la masse d'un atome d'hélium (A = 4).", "answer": 6.68e-27, "tol": 0.02, "unit": "kg",
+        "explain": "m ≈ 4 × 1,67×10⁻²⁷ = 6,68×10⁻²⁷ kg." }
+    ],
+    "moyen": [
+      { "type": "calc", "q": "Calcule la masse approchée de l'atome <span class='nuc'><span class='az'><span>27</span><span>13</span></span><span class='x'>Al</span></span>. (m(nucléon) = 1,67×10⁻²⁷ kg)", "answer": 4.51e-26, "tol": 0.02, "unit": "kg",
+        "whyWrong": "on multiplie A = 27 (et non Z = 13) par la masse d'un nucléon.",
+        "explain": "m ≈ A·m(nucléon) = 27 × 1,67×10⁻²⁷ ≈ 4,51×10⁻²⁶ kg." },
+      { "type": "qcm", "q": "L'électron est environ combien de fois plus léger que le proton ?", "choices": ["1836", "18", "100", "1 000 000"], "answer": 0,
+        "why": [null, "Beaucoup trop petit.", "Beaucoup trop petit.", "Trop grand."],
+        "explain": "m(p) / m(e) = 1,673×10⁻²⁷ / 9,11×10⁻³¹ ≈ 1836." },
+      { "type": "direct", "q": "Écris la formule approchée de la masse d'un atome, avec A et m(nucléon). Exemple d'écriture : A*m(nucléon)", "formula": true, "accept": ["a*mnucleon", "a*m(nucleon)", "mnucleon*a", "a*mn", "a*mnucleons", "matome=a*mnucleon", "m=a*mnucleon", "m=a*m(nucleon)"], "display": "m(atome) ≈ A · m(nucléon)",
+        "whyWrong": "la masse de l'atome dépend du nombre de nucléons A, pas de Z.",
+        "explain": "On néglige les électrons : m(atome) ≈ A·m(nucléon)." }
+    ],
+    "difficile": [
+      { "type": "calc", "q": "Un clou en fer a une masse de 5,6 g. Combien contient-il d'atomes <span class='nuc'><span class='az'><span>56</span><span>26</span></span><span class='x'>Fe</span></span> ? (m(nucléon) = 1,67×10⁻²⁷ kg)", "answer": 5.99e22, "tol": 0.03, "unit": "atomes", "display": "6,0×10²²",
+        "whyWrong": "convertis d'abord 5,6 g en kg (5,6×10⁻³ kg), calcule m(Fe) = 56 × 1,67×10⁻²⁷ kg, puis divise.",
+        "explain": "m(Fe) ≈ 56 × 1,67×10⁻²⁷ ≈ 9,35×10⁻²⁶ kg ; N = 5,6×10⁻³ / 9,35×10⁻²⁶ ≈ 6,0×10²² atomes." },
+      { "type": "calc", "q": "Pour l'atome <span class='nuc'><span class='az'><span>12</span><span>6</span></span><span class='x'>C</span></span>, calcule en % la part de la masse des électrons dans la masse de l'atome. (m(e) = 9,11×10⁻³¹ kg ; m(nucléon) = 1,67×10⁻²⁷ kg)", "answer": 0.0273, "tol": 0.05, "unit": "%", "display": "≈ 0,027 %",
+        "whyWrong": "masse des 6 électrons ÷ masse de l'atome (≈ 12 × 1,67×10⁻²⁷ kg), puis × 100.",
+        "explain": "6 × 9,11×10⁻³¹ = 5,47×10⁻³⁰ kg ; m ≈ 2,00×10⁻²⁶ kg ; 5,47×10⁻³⁰ / 2,00×10⁻²⁶ × 100 ≈ 0,027 % → négligeable." },
+      { "type": "qcm", "q": "Un atome a une masse m ≈ 3,34×10⁻²⁶ kg. Son nombre de masse A est :", "choices": ["20", "12", "34", "2"], "answer": 0,
+        "why": [null, "12 × 1,67×10⁻²⁷ = 2,0×10⁻²⁶ kg, pas 3,34×10⁻²⁶ kg.", "On ne lit pas A dans les chiffres de la masse : il faut diviser par m(nucléon).", "Erreur de puissance de 10 : refais la division."],
+        "explain": "A ≈ m / m(nucléon) = 3,34×10⁻²⁶ / 1,67×10⁻²⁷ = 20 (le néon ²⁰Ne par exemple)." },
+      { "type": "direct", "q": "Un atome a une masse d'environ 2,0×10⁻²⁶ kg et 6 protons. Quel est le nom de cet élément ?", "accept": ["carbone", "c", "carbone 12"], "display": "le carbone (¹²C)",
+        "explain": "A ≈ 2,0×10⁻²⁶ / 1,67×10⁻²⁷ ≈ 12 et Z = 6 : c'est le carbone 12." }
+    ]
+  }
+}

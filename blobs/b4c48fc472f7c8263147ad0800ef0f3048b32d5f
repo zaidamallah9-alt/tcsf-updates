@@ -1,0 +1,114 @@
+// Expériences interactives — Mathématiques (2D)
+(() => {
+  const { SIMS, frame, slider, seg, arrow, T, L, plot, fr, ft, n2, COL } = window.TCSF_SIM;
+
+  // Courbe d'une fonction
+  SIMS.fonction = (el) => {
+    const S = frame(el, 'La courbe d’une fonction', 'Fais varier les coefficients', '0 0 640 360');
+    const fam = seg(S.ctrls, 'Fonction', [['aff', 'Affine : ax + b'], ['deg2', 'Second degré : ax² + bx + c'], ['hom', 'Homographique : a / x']], 'deg2', draw);
+    const a = slider(S.ctrls, { label: 'a', min: -3, max: 3, step: 0.25, value: 1 }, draw);
+    const b = slider(S.ctrls, { label: 'b', min: -5, max: 5, step: 0.5, value: -2 }, draw);
+    const c = slider(S.ctrls, { label: 'c', min: -5, max: 5, step: 0.5, value: -3 }, draw);
+    function draw() {
+      const k = fam.v, A = a.v, B = b.v, Cc = c.v;
+      b.el.hidden = k === 'hom'; c.el.hidden = k !== 'deg2';
+      const f = (x) => (k === 'aff' ? A * x + B : k === 'deg2' ? A * x * x + B * x + Cc : x === 0 ? NaN : A / x);
+      const line = [];
+      if (k === 'hom') { for (let x = -6; x < -0.04; x += 0.04) line.push([x, f(x)]); }
+      else for (let x = -6; x <= 6.001; x += 0.05) line.push([x, f(x)]);
+      const line2 = []; if (k === 'hom') for (let x = 0.04; x <= 6; x += 0.04) line2.push([x, f(x)]);
+      const dots = [];
+      let st = [];
+      if (k === 'aff') { st = [['f(x) =', `${fr(A)}x ${B < 0 ? '−' : '+'} ${fr(Math.abs(B))}`], ['Pente (coefficient directeur)', fr(A)], ['Ordonnée à l’origine', fr(B)], ['Sens de variation', A > 0 ? 'croissante' : A < 0 ? 'décroissante' : 'constante']]; dots.push([0, B]); if (A) dots.push([-B / A, 0]); }
+      else if (k === 'deg2') {
+        if (A === 0) { st = [['a = 0', 'ce n’est plus du second degré']]; }
+        else {
+          const xs = -B / (2 * A), ys = f(xs), D = B * B - 4 * A * Cc;
+          dots.push([xs, ys]);
+          const roots = D > 0 ? [(-B - Math.sqrt(D)) / (2 * A), (-B + Math.sqrt(D)) / (2 * A)] : D === 0 ? [xs] : [];
+          roots.forEach((r) => dots.push([r, 0]));
+          st = [['Sommet S', `(${fr(xs)} ; ${fr(ys)})`], ['Discriminant Δ = b² − 4ac', fr(D)], ['Racines', roots.length ? roots.map((r) => fr(r)).join(' et ') : 'aucune'], ['Parabole tournée vers', A > 0 ? 'le haut (minimum)' : 'le bas (maximum)']];
+        }
+      } else st = [['Domaine', 'ℝ* (x ≠ 0)'], ['Courbe', 'hyperbole de centre O'], ['Variations', A > 0 ? 'décroissante sur ]−∞ ; 0[ et sur ]0 ; +∞[' : A < 0 ? 'croissante sur chaque intervalle' : 'constante nulle']];
+      const pl = plot({ x: 40, y: 15, w: 580, h: 320, xmin: -6, xmax: 6, ymin: -8, ymax: 8, xl: 'x', yl: 'y', nx: 12, ny: 8, series: [{ line, color: COL.b, w: 3 }, { line: line2, color: COL.b, w: 3 }, { dots, color: COL.a, r: 5 }] });
+      S.draw(pl.svg);
+      S.stats(st);
+      S.note(k === 'aff' ? 'La courbe d’une fonction affine est une droite : a donne l’inclinaison, b l’endroit où elle coupe l’axe des ordonnées.' : k === 'deg2' ? 'Le sommet a pour abscisse −b/2a. Si Δ > 0 : 2 racines, Δ = 0 : 1 racine, Δ < 0 : aucune.' : 'La fonction x ↦ a/x n’est pas définie en 0 ; sa courbe est une hyperbole symétrique par rapport à l’origine.');
+    }
+    draw();
+  };
+
+  // Cercle trigonométrique
+  SIMS.trigo = (el) => {
+    const S = frame(el, 'Le cercle trigonométrique', 'Fais tourner le point M', '0 0 640 340');
+    const x = slider(S.ctrls, { label: 'Angle x', min: 0, max: 360, step: 5, value: 30, unit: '°' }, draw);
+    const NOT = { 0: '0', 30: 'π/6', 45: 'π/4', 60: 'π/3', 90: 'π/2', 120: '2π/3', 135: '3π/4', 150: '5π/6', 180: 'π', 210: '7π/6', 225: '5π/4', 240: '4π/3', 270: '3π/2', 300: '5π/3', 315: '7π/4', 330: '11π/6', 360: '2π' };
+    function draw() {
+      const cx = 220, cy = 170, R = 130, t = (x.v * Math.PI) / 180, co = Math.cos(t), si = Math.sin(t);
+      const mx = cx + R * co, my = cy - R * si;
+      let s = L(cx - 170, cy, cx + 200, cy, 'ax') + L(cx, 10, cx, 330, 'ax') + `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" class="stroke" stroke-width="2"/>`;
+      s += `<path d="M${cx + 30},${cy} A30,30 0 ${x.v > 180 ? 1 : 0} 0 ${n2(cx + 30 * co)},${n2(cy - 30 * si)}" fill="none" stroke="${COL.e}" stroke-width="2.5"/>`;
+      s += L(cx, cy, mx, my, 'stroke', 'stroke-width="2"') + L(mx, my, mx, cy, 'dash') + L(mx, my, cx, my, 'dash');
+      s += L(cx, cy, mx, cy, '', `stroke="${COL.b}" stroke-width="5"`) + L(cx, cy, cx, my, '', `stroke="${COL.a}" stroke-width="5"`);
+      if (Math.abs(co) > 0.08) { const ty = cy - R * (si / co); if (ty > 0 && ty < 340) s += L(cx + R, 10, cx + R, 330, 'grid') + L(cx, cy, cx + R, ty, 'dash') + `<circle cx="${cx + R}" cy="${n2(ty)}" r="5" fill="${COL.c}"/>` + T(cx + R + 8, ty + 4, 'T', 'start', 'lab'); }
+      s += `<circle cx="${n2(mx)}" cy="${n2(my)}" r="7" fill="${COL.e}"/>` + T(mx + 10, my - 8, 'M', 'start', 'lab') + T(cx + R + 6, cy + 16, 'I (1 ; 0)', 'start', 'tick') + T(cx + 4, cy - R - 6, 'J (0 ; 1)', 'start', 'tick');
+      s += T(470, 60, 'cos x', 'start', 'lab').replace('<text', `<text style="fill:${COL.b}"`) + T(470, 90, 'sin x', 'start', 'lab').replace('<text', `<text style="fill:${COL.a}"`) + T(470, 120, 'tan x (point T)', 'start', 'lab').replace('<text', `<text style="fill:${COL.c}"`);
+      S.draw(s);
+      const tan = Math.abs(co) < 1e-9 ? '∞ (non définie)' : fr(si / co);
+      S.stats([['x', `${x.v}° = ${NOT[x.v] || fr(t) + ' rad'}`], ['cos x', fr(Math.abs(co) < 1e-12 ? 0 : co)], ['sin x', fr(Math.abs(si) < 1e-12 ? 0 : si)], ['tan x', tan], ['cos²x + sin²x', '1']]);
+      S.note('M est sur le cercle de rayon 1 : ses coordonnées sont (cos x ; sin x). Comme OM = 1, on a toujours cos²x + sin²x = 1.');
+    }
+    draw();
+  };
+
+  // Vecteurs : somme, différence, produit par un réel
+  SIMS.vecteurs2d = (el) => {
+    const S = frame(el, 'Opérations sur les vecteurs', 'Règle les coordonnées', '0 0 640 360');
+    const op = seg(S.ctrls, 'Opération', [['add', 'u + v'], ['sub', 'u − v'], ['mul', 'k · u']], 'add', draw);
+    const ux = slider(S.ctrls, { label: 'u : x', min: -5, max: 5, value: 3 }, draw), uy = slider(S.ctrls, { label: 'u : y', min: -5, max: 5, value: 1 }, draw);
+    const vx = slider(S.ctrls, { label: 'v : x', min: -5, max: 5, value: 1 }, draw), vy = slider(S.ctrls, { label: 'v : y', min: -5, max: 5, value: 3 }, draw);
+    const k = slider(S.ctrls, { label: 'k', min: -3, max: 3, step: 0.5, value: 2 }, draw);
+    function draw() {
+      const u = 30, ox = 320, oy = 180, X = (a) => ox + a * u, Y = (b) => oy - b * u;
+      vx.el.hidden = vy.el.hidden = op.v === 'mul'; k.el.hidden = op.v !== 'mul';
+      let s = '';
+      for (let i = -10; i <= 10; i++) s += L(X(i), 0, X(i), 360, 'grid');
+      for (let j = -6; j <= 6; j++) s += L(0, Y(j), 640, Y(j), 'grid');
+      s += L(0, oy, 640, oy, 'ax') + L(ox, 0, ox, 360, 'ax') + T(ox - 6, oy + 16, 'O', 'end', 'tick');
+      let rx, ry, name;
+      if (op.v === 'mul') {
+        rx = k.v * ux.v; ry = k.v * uy.v; name = 'k·u';
+        s += arrow(X(0), Y(0), X(rx), Y(ry), COL.e, 'k·u') + arrow(X(0), Y(0), X(ux.v), Y(uy.v), COL.b, 'u', undefined, undefined, 4);
+      } else {
+        const sx = op.v === 'add' ? vx.v : -vx.v, sy = op.v === 'add' ? vy.v : -vy.v;
+        rx = ux.v + sx; ry = uy.v + sy; name = op.v === 'add' ? 'u + v' : 'u − v';
+        s += L(X(sx), Y(sy), X(rx), Y(ry), 'dash') + arrow(X(0), Y(0), X(sx), Y(sy), '#94a3b8', op.v === 'add' ? '' : '−v', undefined, undefined, 2);
+        s += arrow(X(0), Y(0), X(ux.v), Y(uy.v), COL.b, 'u') + arrow(X(ux.v), Y(uy.v), X(rx), Y(ry), COL.c, op.v === 'add' ? 'v' : '−v') + arrow(X(0), Y(0), X(rx), Y(ry), COL.a, name);
+      }
+      S.draw(s);
+      S.stats([['u', `(${ux.v} ; ${uy.v})`], op.v === 'mul' ? ['k', fr(k.v)] : ['v', `(${vx.v} ; ${vy.v})`], [name, `(${fr(rx)} ; ${fr(ry)})`], ['Norme ‖' + name + '‖', fr(Math.hypot(rx, ry))]]);
+      S.note(op.v === 'mul' ? 'k·u a la même direction que u ; même sens si k > 0, sens contraire si k < 0, et sa norme est |k| fois celle de u.' : 'On place les vecteurs bout à bout (relation de Chasles : AB + BC = AC) : les coordonnées s’additionnent.');
+    }
+    draw();
+  };
+
+  // Équation d'une droite
+  SIMS.droite = (el) => {
+    const S = frame(el, 'Équation d’une droite', 'Déplace les points A et B', '0 0 640 360');
+    const xa = slider(S.ctrls, { label: 'A : x', min: -6, max: 6, value: -3 }, draw), ya = slider(S.ctrls, { label: 'A : y', min: -5, max: 5, value: -1 }, draw);
+    const xb = slider(S.ctrls, { label: 'B : x', min: -6, max: 6, value: 3 }, draw), yb = slider(S.ctrls, { label: 'B : y', min: -5, max: 5, value: 2 }, draw);
+    function draw() {
+      const vert = xa.v === xb.v, m = vert ? NaN : (yb.v - ya.v) / (xb.v - xa.v), p = ya.v - m * xa.v;
+      const line = vert ? [] : [[-8, m * -8 + p], [8, m * 8 + p]];
+      const pl = plot({ x: 40, y: 15, w: 580, h: 320, xmin: -8, xmax: 8, ymin: -6, ymax: 6, xl: 'x', yl: 'y', nx: 16, ny: 12, series: [{ line, color: COL.b, w: 3 }, { dots: [[xa.v, ya.v], [xb.v, yb.v]], color: COL.a, r: 6 }] });
+      let s = pl.svg + T(pl.X(xa.v) + 8, pl.Y(ya.v) - 8, 'A', 'start', 'lab') + T(pl.X(xb.v) + 8, pl.Y(yb.v) - 8, 'B', 'start', 'lab');
+      if (vert) s += L(pl.X(xa.v), 15, pl.X(xa.v), 335, '', `stroke="${COL.b}" stroke-width="3"`);
+      else if (xa.v !== xb.v) s += L(pl.X(xa.v), pl.Y(ya.v), pl.X(xb.v), pl.Y(ya.v), 'dash') + L(pl.X(xb.v), pl.Y(ya.v), pl.X(xb.v), pl.Y(yb.v), 'dash');
+      S.draw(s);
+      const eq = vert ? `x = ${xa.v}` : `y = ${fr(m)}x ${p < 0 ? '−' : '+'} ${fr(Math.abs(p))}`;
+      S.stats(vert ? [['Équation', eq], ['Droite', 'parallèle à l’axe des ordonnées']] : [['Pente m = (yB − yA)/(xB − xA)', fr(m)], ['Ordonnée à l’origine p', fr(p)], ['Équation réduite', eq]]);
+      S.note('La pente se lit sur le petit triangle : déplacement vertical ÷ déplacement horizontal. Deux droites sont parallèles si elles ont la même pente.');
+    }
+    draw();
+  };
+})();

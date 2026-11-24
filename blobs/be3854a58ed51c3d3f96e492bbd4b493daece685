@@ -1,0 +1,11 @@
+[
+  {
+    "id": "modele-atome",
+    "title": "Le modèle de l'atome",
+    "partie": "Chimie · La constitution de la matière",
+    "description": "Historique, structure de l'atome, noyau, symbole du noyau et masse de l'atome — avec exercices Facile → Moyen → Difficile.",
+    "sections": [
+      { "id": "revision", "title": "Révision", "file": "physique-chimie/modele-atome/revision.html" }
+    ]
+  }
+]

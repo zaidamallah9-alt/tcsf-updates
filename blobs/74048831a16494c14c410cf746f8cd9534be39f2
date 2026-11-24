@@ -1,0 +1,154 @@
+// Voix du prof (synthèse vocale) et questions à voix haute (reconnaissance vocale).
+// PC : voix Windows (OneCore + SAPI) via le processus principal (window.tcsf.tts*), sinon speechSynthesis.
+// Téléphone : mobile.js fournit window.TCSF_NATIVE (plugins Android) qui prend la priorité.
+(() => {
+  const KEY = 'tcsf:voice';
+  let enabled = true;
+  try { enabled = localStorage.getItem(KEY) !== 'off'; } catch {}
+  const LOC = { fr: 'fr-FR', ar: 'ar-SA', en: 'en-US' };
+  const NAME = { fr: 'française', ar: 'arabe', en: 'anglaise' };
+  const synth = window.speechSynthesis || null;
+  const win = () => window.tcsf && window.tcsf.ttsSpeak ? window.tcsf : null;
+  let voices = [];
+  let winVoices = null; // ['fr-FR|Microsoft Hortense', …] (PC)
+  const loadVoices = () => { try { voices = synth ? synth.getVoices() : []; } catch { voices = []; } };
+  loadVoices();
+  if (synth && 'onvoiceschanged' in synth) synth.onvoiceschanged = loadVoices;
+  const refreshWin = () => { const w = win(); if (!w) return Promise.resolve(); return w.ttsVoices().then((l) => { if (Array.isArray(l)) winVoices = l; }).catch(() => {}); };
+  refreshWin();
+  const voiceFor = (lang) => voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(lang) && /natural|online/i.test(v.name)) || voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(lang));
+  const winHas = (lang) => !!(winVoices && winVoices.some((v) => v.toLowerCase().startsWith(lang)));
+
+  // texte lisible à voix haute (sans HTML, symboles remplacés)
+  function clean(html, lang) {
+    const d = document.createElement('div');
+    d.innerHTML = String(html || '').replace(/<sup>(.*?)<\/sup>/g, lang === 'fr' ? ' puissance $1 ' : lang === 'ar' ? ' أس $1 ' : ' ^$1 ').replace(/<sub>(.*?)<\/sub>/g, ' $1').replace(/<br\s*\/?>/g, '. ');
+    d.querySelectorAll('.sim-svg, svg, .w-sim, button, input, textarea, script, style, .no-voice').forEach((x) => x.remove());
+    let t = d.textContent || '';
+    const R = lang === 'fr' ? [[/→/g, ' donne '], [/×/g, ' fois '], [/≈/g, ' environ '], [/≤/g, ' inférieur ou égal à '], [/≥/g, ' supérieur ou égal à '], [/√/g, ' racine de '], [/Δ/g, ' delta '], [/π/g, ' pi '], [/=/g, ' égale '], [/²/g, ' au carré'], [/³/g, ' au cube'], [/\//g, ' sur ']]
+      : lang === 'en' ? [[/→/g, ' gives '], [/×/g, ' times '], [/≈/g, ' about '], [/=/g, ' equals ']] : [[/→/g, ' '], [/×/g, ' ضرب '], [/=/g, ' يساوي '], [/²/g, ' مربع'], [/≈/g, ' تقريبا ']];
+    for (const [a, b] of R) t = t.replace(a, b);
+    return t.replace(/[✔✘✓✗🔥🎉👂✍️🤔🙂📒🎯🖨↺→←•·💡🧪🌐📘🇫🇷]/gu, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  let audio = null, token = 0;
+  async function speakWin(text, lang, my) {
+    const w = win();
+    const parts = text.match(/[^.!?؟]+[.!?؟]*/g) || [text];
+    // lecture par groupes de phrases : le son commence vite, et « Stop » marche
+    const groups = []; let cur = '';
+    for (const p of parts) { if ((cur + p).length > 260 && cur) { groups.push(cur); cur = ''; } cur += p; }
+    if (cur.trim()) groups.push(cur);
+    let next = w.ttsSpeak(groups[0], lang, lang === 'ar' ? 0.95 : 1.0);
+    for (let i = 0; i < groups.length; i++) {
+      const r = await next;
+      if (my !== token) return;
+      if (i + 1 < groups.length) next = w.ttsSpeak(groups[i + 1], lang, lang === 'ar' ? 0.95 : 1.0);
+      if (!r || !r.wav) { if (r && r.error === 'novoice') { winVoices = (winVoices || []).filter((v) => !v.toLowerCase().startsWith(lang)); } return; }
+      const url = URL.createObjectURL(new Blob([r.wav], { type: 'audio/wav' }));
+      await new Promise((res) => {
+        audio = new Audio(url);
+        audio.onended = audio.onerror = () => res();
+        audio.onpause = () => res();
+        audio.play().catch(() => res());
+      });
+      URL.revokeObjectURL(url);
+      if (my !== token) return;
+    }
+  }
+
+  const V = {
+    get enabled() { return enabled; },
+    setEnabled(b) { enabled = !!b; try { localStorage.setItem(KEY, enabled ? 'on' : 'off'); } catch {} if (!enabled) V.stop(); },
+    canSpeak(lang) {
+      if (window.TCSF_NATIVE && window.TCSF_NATIVE.speak) return true;
+      if (win() && winHas(lang)) return true;
+      loadVoices();
+      return !!(synth && voiceFor(lang));
+    },
+    ready: refreshWin,
+    speaking: false,
+    // html : texte à lire ; ou une liste [[html, lang], …] (explication mélangée français + arabe)
+    async speak(html, lang = 'fr', force = false) {
+      if (!enabled && !force) return;
+      const seq = Array.isArray(html) ? html : [[html, lang]];
+      V.stop();
+      const my = ++token;
+      V.speaking = true;
+      try {
+        for (const [h, l] of seq) {
+          if (my !== token) break;
+          const text = clean(h, l);
+          if (!text) continue;
+          if (window.TCSF_NATIVE && window.TCSF_NATIVE.speak) { try { await window.TCSF_NATIVE.speak(text, LOC[l] || l); } catch {} continue; }
+          if (win() && (winVoices === null || winHas(l))) { if (winVoices === null) await refreshWin(); if (winHas(l)) { await speakWin(text, l, my); continue; } }
+          if (!synth) continue;
+          loadVoices();
+          const v = voiceFor(l);
+          if (!v) continue;
+          const parts = text.match(/[^.!?؟]+[.!?؟]*/g) || [text];
+          await new Promise((resolve) => {
+            parts.forEach((p, i) => {
+              const u = new SpeechSynthesisUtterance(p.trim());
+              u.voice = v; u.lang = v.lang; u.rate = l === 'ar' ? 0.95 : 1.02; u.pitch = 1;
+              if (i === parts.length - 1) u.onend = u.onerror = () => resolve();
+              synth.speak(u);
+            });
+          });
+        }
+      } finally { if (my === token) V.speaking = false; }
+    },
+    stop() {
+      token++;
+      V.speaking = false;
+      try { if (audio) { audio.pause(); audio = null; } } catch {}
+      try { if (window.TCSF_NATIVE && window.TCSF_NATIVE.stop) window.TCSF_NATIVE.stop(); } catch {}
+      try { if (synth) synth.cancel(); } catch {}
+    },
+    // Encadré « voix non installée » avec un bouton pour l'installer (PC Windows)
+    missingBox(lang, onDone) {
+      const box = document.createElement('div');
+      box.className = 'voice-missing no-voice';
+      const w = win();
+      const n = NAME[lang] || lang;
+      box.innerHTML = lang === 'ar'
+        ? `<p>🔇 الصوت العربي غير مثبت على هذا الحاسوب.</p>`
+        : `<p>🔇 La voix ${n} n’est pas installée sur ce ${window.TCSF_NATIVE ? 'téléphone' : 'PC'}.</p>`;
+      if (window.TCSF_NATIVE) {
+        box.insertAdjacentHTML('beforeend', `<p class="w-small">${lang === 'ar' ? 'افتح إعدادات الهاتف › تحويل النص إلى كلام، وحمّل اللغة العربية.' : 'Ouvre Paramètres du téléphone › Synthèse vocale (Text-to-speech) et télécharge la langue.'}</p>`);
+      } else if (w && w.ttsInstall) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn primary';
+        b.textContent = lang === 'ar' ? '📥 تثبيت الصوت العربي (مجاني)' : `📥 Installer la voix ${n} (gratuit)`;
+        const tip = document.createElement('p'); tip.className = 'w-small';
+        tip.textContent = lang === 'ar' ? 'يحتاج إلى الإنترنت. سيطلب Windows الإذن: اضغط «نعم».' : 'Il faut Internet. Windows va demander l’autorisation : clique « Oui ». Ça prend 1 à 3 minutes.';
+        b.addEventListener('click', async () => {
+          b.disabled = true; b.textContent = lang === 'ar' ? '⏳ جاري التثبيت…' : '⏳ Installation en cours…';
+          const r = await w.ttsInstall(lang).catch(() => ({ error: 'fail' }));
+          await refreshWin();
+          if (winHas(lang)) { box.innerHTML = `<p>✅ ${lang === 'ar' ? 'تم تثبيت الصوت!' : 'Voix installée ! Le prof peut parler.'}</p>`; if (onDone) onDone(); return; }
+          b.disabled = false; b.textContent = lang === 'ar' ? '↻ إعادة المحاولة' : '↻ Réessayer';
+          tip.innerHTML = (r && r.error === 'cancel' ? (lang === 'ar' ? 'لم يتم قبول الإذن. ' : 'Autorisation refusée. ') : (lang === 'ar' ? 'لم ينجح التثبيت. ' : 'L’installation n’a pas marché. '))
+            + (lang === 'ar' ? 'يمكنك أيضا: إعدادات Windows › الوقت واللغة › الكلام › إضافة أصوات.' : 'Tu peux aussi : Paramètres Windows › Heure et langue › Voix › Ajouter des voix.');
+          const o = document.createElement('button'); o.type = 'button'; o.className = 'btn ghost'; o.textContent = lang === 'ar' ? 'فتح الإعدادات' : 'Ouvrir les paramètres';
+          o.addEventListener('click', () => w.ttsSettings && w.ttsSettings());
+          tip.appendChild(document.createElement('br')); tip.appendChild(o);
+        });
+        box.append(b, tip);
+      } else {
+        box.insertAdjacentHTML('beforeend', `<p class="w-small">Paramètres Windows › Heure et langue › Voix › Ajouter des voix.</p>`);
+      }
+      return box;
+    },
+    // reconnaissance vocale : { text } ou { error }
+    async listen(lang = 'fr') {
+      V.stop();
+      try {
+        if (window.TCSF_NATIVE && window.TCSF_NATIVE.listen) return await window.TCSF_NATIVE.listen(LOC[lang] || lang);
+        if (window.tcsf && window.tcsf.listen) return await window.tcsf.listen(lang);
+      } catch (e) { return { error: 'fail', detail: String(e && e.message || e) }; }
+      return { error: 'unsupported' };
+    },
+    clean
+  };
+  window.TCSF_VOICE = V;
+})();

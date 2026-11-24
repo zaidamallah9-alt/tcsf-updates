@@ -1,0 +1,571 @@
+// Mode « Avec le prof » : un professeur guide l'élève pour construire la leçon lui-même.
+// Pour chaque partie : 1) le prof pose une question pour faire réfléchir, 2) il explique pas à pas
+// (avec les expériences), 3) l'élève écrit ce qu'il retient dans son cahier et le compare à la phrase clé.
+// À la fin : jeu d'association des notions, défi final, cahier complet. Fonctionne pour toutes les matières (fr / ar / en).
+(() => {
+  const W = window.TCSF_WIDGETS || (window.TCSF_WIDGETS = {});
+  const P = {
+    fr: {
+      name: 'Tico, le prof', title: 'Construis ta leçon avec le prof', notebook: 'Mon cahier', empty: 'Ton cahier se remplit au fur et à mesure.',
+      hello: (t) => `Salut ! Moi, c’est <b>Tico</b>, ton prof 👋 Aujourd’hui, on construit <b>ensemble</b> la leçon « ${t} ». Je ne vais pas tout te donner d’un coup : je te pose d’abord une question, tu réfléchis, puis je t’explique, et c’est <b>toi</b> qui écris l’essentiel dans ton cahier.`,
+      plan: 'Voici le plan de notre leçon :', goals: 'À la fin, tu sauras :', start: 'On commence !', resume: (n) => `Reprendre à la partie ${n}`, restart: '↺ Recommencer depuis le début',
+      part: (i, n, t) => `Partie ${i}/${n} : <b>${t}</b>`, think: 'Avant mon explication, essaie de répondre. Ce n’est pas grave si tu te trompes : on apprend en cherchant ! 🤔',
+      thinkNoQ: 'Avant de lire, demande-toi : qu’est-ce que tu sais déjà sur ce sujet ? Note une idée dans ta tête, puis on vérifie ensemble.',
+      okReact: ['Excellent, tu as le bon réflexe ! Voyons pourquoi.', 'Bravo ! Ton intuition est juste. On approfondit.', 'Très bien vu ! Regardons ça de plus près.'],
+      koReact: ['Pas grave, c’est justement pour ça qu’on est là. Regarde bien l’explication.', 'Erreur utile ! Tu vas comprendre pourquoi dans un instant.', 'Ce n’est pas encore ça, mais tu as cherché : c’est l’essentiel.'],
+      explainMe: 'Explique-moi 👂', look: 'Regarde bien :', cont: 'Continue →', understood: 'J’ai compris, à moi d’écrire ✍️',
+      build: 'À toi ! Écris en une ou deux phrases, <b>avec tes propres mots</b>, ce que tu retiens de cette partie. C’est ton cahier, pas le mien.',
+      ph: 'Ce que je retiens…', add: 'Ajouter à mon cahier', tooShort: 'Écris au moins quelques mots, même simples 🙂',
+      key: 'Voici la phrase clé que j’aurais écrite au tableau. Compare avec la tienne :', selfQ: 'Ta phrase dit-elle la même chose ?',
+      selfOk: 'Oui, j’avais compris ✔', selfKo: 'Pas tout à fait, je relis ↺', selfOkR: 'Super ! Tu as construit cette partie toi-même.', selfKoR: 'Bonne attitude. Relis l’explication ci-dessus, puis corrige ta phrase si tu veux.', fix: 'Corriger ma phrase',
+      next: 'Partie suivante →', matchT: 'Petit jeu : relie chaque notion à sa signification. Clique sur une notion puis sur sa définition.', matchDone: 'Toutes les notions sont reliées, bravo ! 🎯', matchErr: 'Pas cette paire, réessaie.',
+      finalT: 'Dernier défi ! Trois questions pour vérifier que tu as bien construit ta leçon.', final: (s, n) => `Défi terminé : ${s}/${n}.`, done: 'Ta leçon est construite ! 🎉 Voici ton cahier complet : relis-le avant les exercices de révision.',
+      yours: 'Ma phrase', prof: 'Phrase clé', print: '🖨 Imprimer mon cahier', goRev: 'Faire les exercices de révision →', me: 'Moi', step: 'Étape'
+    },
+    ar: {
+      name: 'تيكو، الأستاذ', title: 'ابنِ درسك مع الأستاذ', notebook: 'دفتري', empty: 'سيمتلئ دفترك تدريجيا.',
+      hello: (t) => `مرحبا! أنا <b>تيكو</b>، أستاذك 👋 اليوم سنبني <b>معاً</b> درس «${t}». لن أعطيك كل شيء دفعة واحدة: سأطرح عليك سؤالا أولا، تفكر، ثم أشرح لك، و<b>أنت</b> من يكتب الخلاصة في دفترك.`,
+      plan: 'هذه خطة درسنا:', goals: 'في النهاية ستكون قادرا على:', start: 'لنبدأ!', resume: (n) => `أكمل من الجزء ${n}`, restart: '↺ ابدأ من جديد',
+      part: (i, n, t) => `الجزء ${i}/${n}: <b>${t}</b>`, think: 'قبل أن أشرح، حاول أن تجيب. لا بأس إن أخطأت: نتعلم بالبحث! 🤔',
+      thinkNoQ: 'قبل القراءة، اسأل نفسك: ماذا تعرف عن هذا الموضوع؟ احتفظ بفكرة في ذهنك ثم نتحقق منها معاً.',
+      okReact: ['ممتاز، لديك الحدس الصحيح! لنرَ لماذا.', 'أحسنت! فكرتك صحيحة، لنتعمق أكثر.', 'رائع! لننظر إلى ذلك عن قرب.'],
+      koReact: ['لا بأس، لهذا نحن هنا. انتبه جيدا للشرح.', 'خطأ مفيد! ستفهم السبب بعد قليل.', 'ليس بعد، لكنك حاولت وهذا هو المهم.'],
+      explainMe: 'اشرح لي 👂', look: 'انتبه جيدا:', cont: '← تابع', understood: 'فهمت، دوري في الكتابة ✍️',
+      build: 'دورك! اكتب في جملة أو جملتين، <b>بأسلوبك الخاص</b>، ما تحتفظ به من هذا الجزء. إنه دفترك أنت.',
+      ph: 'ما أحتفظ به…', add: 'أضف إلى دفتري', tooShort: 'اكتب بضع كلمات على الأقل 🙂',
+      key: 'هذه الجملة الأساسية التي كنت سأكتبها على السبورة. قارنها بجملتك:', selfQ: 'هل تقول جملتك الشيء نفسه؟',
+      selfOk: 'نعم، فهمت ✔', selfKo: 'ليس تماما، سأعيد القراءة ↺', selfOkR: 'ممتاز! لقد بنيت هذا الجزء بنفسك.', selfKoR: 'موقف جيد. أعد قراءة الشرح أعلاه، ثم صحح جملتك إن شئت.', fix: 'صحّح جملتي',
+      next: '← الجزء الموالي', matchT: 'لعبة صغيرة: اربط كل مفهوم بمعناه. انقر على مفهوم ثم على تعريفه.', matchDone: 'ربطت جميع المفاهيم، أحسنت! 🎯', matchErr: 'ليس هذا الزوج، حاول مرة أخرى.',
+      finalT: 'التحدي الأخير! ثلاثة أسئلة للتأكد من أنك بنيت درسك جيدا.', final: (s, n) => `انتهى التحدي: ${s}/${n}.`, done: 'لقد بنيت درسك! 🎉 هذا دفترك كاملا: راجعه قبل تمارين المراجعة.',
+      yours: 'جملتي', prof: 'الجملة الأساسية', print: '🖨 اطبع دفتري', goRev: '← انتقل إلى تمارين المراجعة', me: 'أنا', step: 'مرحلة'
+    },
+    en: {
+      name: 'Tico, the teacher', title: 'Build your lesson with the teacher', notebook: 'My notebook', empty: 'Your notebook fills up as you go.',
+      hello: (t) => `Hi! I’m <b>Tico</b>, your teacher 👋 Today we are going to build the lesson “${t}” <b>together</b>. I won’t give you everything at once: first I ask you a question, you think, then I explain, and <b>you</b> write the key ideas in your notebook.`,
+      plan: 'Here is our plan:', goals: 'By the end, you will be able to:', start: 'Let’s start!', resume: (n) => `Continue from part ${n}`, restart: '↺ Start again',
+      part: (i, n, t) => `Part ${i}/${n}: <b>${t}</b>`, think: 'Before I explain, try to answer. It’s fine to make mistakes: we learn by searching! 🤔',
+      thinkNoQ: 'Before reading, ask yourself: what do you already know about this? Keep one idea in mind, then we check it together.',
+      okReact: ['Excellent, good thinking! Let’s see why.', 'Well done! Your idea is right. Let’s go deeper.', 'Great! Let’s look at it more closely.'],
+      koReact: ['No problem, that’s why we are here. Watch the explanation carefully.', 'A useful mistake! You will understand why in a moment.', 'Not yet, but you tried, and that’s what matters.'],
+      explainMe: 'Explain it to me 👂', look: 'Look carefully:', cont: 'Continue →', understood: 'I got it, my turn to write ✍️',
+      build: 'Your turn! Write one or two sentences, <b>in your own words</b>, about what you remember from this part. It’s your notebook, not mine.',
+      ph: 'What I remember…', add: 'Add to my notebook', tooShort: 'Write at least a few words 🙂',
+      key: 'Here is the key sentence I would write on the board. Compare it with yours:', selfQ: 'Does your sentence say the same thing?',
+      selfOk: 'Yes, I understood ✔', selfKo: 'Not quite, I’ll read again ↺', selfOkR: 'Great! You built this part yourself.', selfKoR: 'Good attitude. Read the explanation above again, then fix your sentence if you want.', fix: 'Fix my sentence',
+      next: 'Next part →', matchT: 'Little game: match each idea with its meaning. Click an idea, then its definition.', matchDone: 'All ideas matched, well done! 🎯', matchErr: 'Not this pair, try again.',
+      finalT: 'Final challenge! Three questions to check you built your lesson well.', final: (s, n) => `Challenge finished: ${s}/${n}.`, done: 'Your lesson is built! 🎉 Here is your full notebook: read it again before the revision practice.',
+      yours: 'My sentence', prof: 'Key sentence', print: '🖨 Print my notebook', goRev: 'Go to the revision practice →', me: 'Me', step: 'Step'
+    }
+  };
+  // Questions de l'élève + voix du prof
+  const P2 = {
+    fr: {
+      voiceOn: '🗣️ Voix du prof', voiceOff: '🔇 Voix coupée', ask: '❓ Poser une question', anyQ: 'Est-ce qu’il y a une question que tu veux me poser ? Écris-la, ou clique sur 🎤 pour me la dire à voix haute.',
+      qph: 'Ma question…', send: 'Demander', mic: '🎤 Parler', listening: 'Je t’écoute… parle maintenant 🎙️', heard: 'J’ai entendu :', noHear: 'Je n’ai rien entendu. Réessaie, ou écris ta question.',
+      noDict: 'La dictée vocale n’est pas installée pour cette langue sur ce PC. Astuce : clique dans la case, puis appuie sur <b>⊞ Windows + H</b> pour dicter ta question.',
+      noDictPhone: 'La reconnaissance vocale n’est pas disponible. Astuce : utilise le micro 🎤 de ton clavier pour dicter.', perm: 'Autorise l’accès au micro pour que je puisse t’entendre.',
+      search: 'Bonne question ! Je cherche dans tes leçons et sur Internet…', inLesson: (l) => `Dans ta leçon « ${l} »`, wiki: 'Sur Wikipédia', vikidia: 'Sur Vikidia (encyclopédie simple)', alsoSee: 'Voir aussi', src: 'source',
+      nothing: 'Je n’ai pas trouvé de réponse précise. Essaie avec d’autres mots, ou un mot-clé de la leçon (ex. : « force », « mole »…).', offline: '(Pas d’Internet : je réponds seulement avec tes leçons.)',
+      noUnd: '🤔 Je n’ai pas compris', und: '👍 J’ai compris', other: '❓ Autre question', thanks: 'Super ! N’hésite jamais à poser des questions, c’est comme ça qu’on apprend. 😊',
+      simpler: 'Pas de souci, je te l’explique plus simplement :', simplest: 'Essayons autrement, mot par mot :', example: 'Un exemple', short: 'En une phrase', retry: (l) => `Reprendre « ${l} » avec moi`, teacher: 'Et n’hésite pas à poser la question à ton professeur en classe 😉',
+      noVoice: 'La voix du prof en français n’est pas installée sur ce PC. Pour l’entendre : Paramètres Windows › Heure et langue › Voix › Ajouter des voix (Français). Le texte reste affiché.'
+    },
+    ar: {
+      voiceOn: '🗣️ صوت الأستاذ', voiceOff: '🔇 الصوت مطفأ', ask: '❓ اطرح سؤالا', anyQ: 'هل لديك سؤال تريد أن تطرحه علي؟ اكتبه، أو انقر على 🎤 لتقوله بصوتك.',
+      qph: 'سؤالي…', send: 'اسأل', mic: '🎤 تكلم', listening: 'أنا أستمع… تكلم الآن 🎙️', heard: 'سمعت:', noHear: 'لم أسمع شيئا. أعد المحاولة أو اكتب سؤالك.',
+      noDict: 'الإملاء الصوتي غير مثبت لهذه اللغة على هذا الحاسوب. نصيحة: انقر في الخانة ثم اضغط <b>⊞ Windows + H</b> لتملي سؤالك.',
+      noDictPhone: 'التعرف على الصوت غير متاح. نصيحة: استعمل الميكروفون 🎤 في لوحة المفاتيح.', perm: 'اسمح باستعمال الميكروفون لكي أسمعك.',
+      search: 'سؤال جيد! أبحث في دروسك وعلى الإنترنت…', inLesson: (l) => `في درسك «${l}»`, wiki: 'في ويكيبيديا', vikidia: 'في ويكيبيديا', alsoSee: 'انظر أيضا', src: 'المصدر',
+      nothing: 'لم أجد جوابا دقيقا. جرب كلمات أخرى أو كلمة مفتاحية من الدرس.', offline: '(لا يوجد إنترنت: أجيب من دروسك فقط.)',
+      noUnd: '🤔 لم أفهم', und: '👍 فهمت', other: '❓ سؤال آخر', thanks: 'ممتاز! لا تتردد أبدا في طرح الأسئلة، هكذا نتعلم. 😊',
+      simpler: 'لا بأس، سأشرح لك بطريقة أبسط:', simplest: 'لنجرب طريقة أخرى، كلمة بكلمة:', example: 'مثال', short: 'في جملة واحدة', retry: (l) => `أعد «${l}» معي`, teacher: 'ولا تتردد في طرح السؤال على أستاذك في القسم 😉',
+      noVoice: 'الصوت العربي غير مثبت على هذا الحاسوب. لسماعه: إعدادات Windows › الوقت واللغة › الصوت › إضافة أصوات (العربية). يبقى النص ظاهرا.'
+    },
+    en: {
+      voiceOn: '🗣️ Teacher’s voice', voiceOff: '🔇 Voice off', ask: '❓ Ask a question', anyQ: 'Is there a question you want to ask me? Type it, or click 🎤 to say it out loud.',
+      qph: 'My question…', send: 'Ask', mic: '🎤 Speak', listening: 'I’m listening… speak now 🎙️', heard: 'I heard:', noHear: 'I didn’t hear anything. Try again, or type your question.',
+      noDict: 'Voice dictation is not installed for this language on this PC. Tip: click in the box, then press <b>⊞ Windows + H</b> to dictate.',
+      noDictPhone: 'Speech recognition is not available. Tip: use the 🎤 key of your keyboard.', perm: 'Allow microphone access so I can hear you.',
+      search: 'Good question! I’m looking in your lessons and on the Internet…', inLesson: (l) => `In your lesson “${l}”`, wiki: 'On Wikipedia', vikidia: 'On Simple English Wikipedia', alsoSee: 'See also', src: 'source',
+      nothing: 'I didn’t find a precise answer. Try other words, or a key word from the lesson.', offline: '(No Internet: I only answer from your lessons.)',
+      noUnd: '🤔 I don’t understand', und: '👍 I understand', other: '❓ Another question', thanks: 'Great! Never hesitate to ask questions, that’s how we learn. 😊',
+      simpler: 'No problem, let me explain it more simply:', simplest: 'Let’s try another way, word by word:', example: 'An example', short: 'In one sentence', retry: (l) => `Redo “${l}” with me`, teacher: 'And feel free to ask your teacher in class 😉',
+      noVoice: 'No English voice is installed on this PC. Text stays on screen.'
+    }
+  };
+  // Choix de la langue de l'explication (français / mélangé / arabe)
+  const X = {
+    fr: { mFr: 'Fr · Français', mMix: '🔀 Français + عربية', mAr: 'ع العربية', langT: 'Langue de l’explication', noUndAr: '🤔 Je n’ai pas compris → explique en arabe', inAr: 'بالعربية', arWiki: 'ويكيبيديا بالعربية', formulas: 'الصيغ والتجربة' },
+    ar: { mFr: 'Fr · Français', mMix: '🔀 Français + عربية', mAr: 'ع العربية', langT: 'لغة الشرح', noUndAr: '🤔 لم أفهم، أعد الشرح', inAr: 'بالعربية', arWiki: 'ويكيبيديا بالعربية', formulas: 'الصيغ والتجربة' }
+  };
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const el_ = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const btn = (label, cls, fn) => { const b = el_('button', 'btn ' + (cls || ''), label); b.type = 'button'; b.addEventListener('click', fn); return b; };
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)) || null; } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+  const nucFix = (root) => root.querySelectorAll('nuc').forEach((n) => {
+    const s = el_('span', 'nuc', `<span class="az"><span>${n.getAttribute('a') || ''}</span><span>${n.getAttribute('z') || ''}</span></span><span class="x">${n.textContent}</span>`);
+    n.replaceWith(s);
+  });
+  const textOf = (html) => { const d = el_('div', '', html); return d.textContent.replace(/\s+/g, ' ').trim(); };
+
+  // Découpe une partie de cours en « morceaux » que le prof montre un par un
+  function chunks(html) {
+    const t = document.createElement('template');
+    t.innerHTML = html;
+    const out = [];
+    let buf = '';
+    for (const n of [...t.content.childNodes]) {
+      if (n.nodeType === 3) { if (n.textContent.trim()) buf += n.textContent; continue; }
+      const h = n.outerHTML;
+      // les petites lignes (formules) restent avec le paragraphe qui précède
+      if (buf && (n.classList?.contains('formula') || buf.length < 140)) { buf += h; continue; }
+      if (buf) out.push(buf);
+      buf = h;
+    }
+    if (buf) out.push(buf);
+    return out.length ? out : [html];
+  }
+  // Phrase clé d'une partie : formule encadrée > définition > premier paragraphe
+  function keyOf(html) {
+    const d = el_('div', '', html);
+    const k = d.querySelector('.formula.key') || d.querySelector('.box.def');
+    if (k) { const c = k.cloneNode(true); c.querySelector('.box-title')?.remove(); const s = c.innerHTML.trim(); if (textOf(s).length > 3) return s.length > 600 ? textOf(s).slice(0, 260) + '…' : s; }
+    const p = [...d.querySelectorAll('p, li, td')].find((x) => textOf(x.innerHTML).length > 25) || d;
+    const s = textOf(p.innerHTML);
+    return s.length > 260 ? s.slice(0, 257) + '…' : p.innerHTML;
+  }
+
+  W.prof = async (el, api) => {
+    const lang = (el.closest('[lang]')?.getAttribute('lang') || 'fr').slice(0, 2);
+    const Q = window.TCSF_Q;
+    const VO = window.TCSF_VOICE;
+    const QA = window.TCSF_QA;
+    const subject = String(el.dataset.src || '').split('/')[0];
+    const d = (await api.readJSON(el.dataset.src)) || {};
+    // Langue de l'explication (leçons en français qui ont une version arabe) : fr | mix | ar
+    const AR = lang === 'fr' && d.ar && d.ar.cours && d.ar.cours.length ? d.ar : null;
+    let mode = 'fr';
+    try { mode = localStorage.getItem('tcsf:proflang') || 'fr'; } catch {}
+    if (!AR || !['fr', 'mix', 'ar'].includes(mode)) mode = 'fr';
+    const ui = mode === 'ar' ? 'ar' : lang; // langue des messages du prof
+    const S = Object.assign({}, P[ui] || P.fr, P2[ui] || P2.fr, X[ui] || X.fr);
+    const QS = (Q && (Q.STR[ui] || Q.STR.fr)) || {};
+    const title = (mode === 'ar' && AR.title) || el.dataset.title || '';
+    const arBox = (html, label) => `<div class="prof-ar" dir="rtl" lang="ar"><b class="prof-ar-h"><span class="ar-badge">ع</span> ${label || X.fr.inAr}</b>${html}</div>`;
+    const firstP = (html, n = 1) => { const t = document.createElement('template'); t.innerHTML = html || ''; const ps = [...t.content.querySelectorAll('p')].slice(0, n); return ps.length ? ps.map((x) => x.outerHTML).join('') : html; };
+    // formules, tableaux et expériences de la version française (gardés tels quels en mode arabe)
+    const extras = (html) => { const t = document.createElement('template'); t.innerHTML = html; const xs = [...t.content.querySelectorAll('.formula, [data-widget], table')].filter((n) => !n.parentElement?.closest('.formula, [data-widget], table')); return xs.length ? `<div dir="ltr" lang="fr" class="prof-extras"><p class="prof-sub" dir="rtl">📐 ${X.ar.formulas}</p>${xs.map((n) => n.outerHTML).join('')}</div>` : ''; };
+    const revHref = el.dataset.rev || '';
+    // parties du cours
+    let parts = (d.cours || []).map((s) => ({ t: s.t, h: s.h }));
+    if (!parts.length && d.coursFile && api.readText) {
+      const html = (await api.readText(d.coursFile)) || '';
+      const t = document.createElement('template');
+      t.innerHTML = html;
+      let cur = null;
+      for (const n of [...t.content.childNodes]) {
+        if (n.nodeName === 'H2') { cur = { t: n.innerHTML, h: '' }; parts.push(cur); continue; }
+        if (cur) cur.h += n.nodeType === 1 ? n.outerHTML : n.textContent;
+      }
+      parts = parts.filter((p) => !/exercice/i.test(textOf(p.t)) && textOf(p.h).length > 20);
+    }
+    if (AR) parts.forEach((p, i) => { p.ar = AR.cours[i] || null; });
+    // titre d'une partie selon la langue choisie
+    const PT = (p) => (mode === 'ar' && p.ar ? p.ar.t : mode === 'mix' && p.ar ? `${p.t} <span class="prof-ar-t" dir="rtl" lang="ar">· ${p.ar.t}</span>` : p.t);
+    const keyHTML = (p) => (mode === 'ar' && p.ar ? firstP(p.ar.h) : keyOf(p.h) + (mode === 'mix' && p.ar ? arBox(firstP(p.ar.h)) : ''));
+    const ex = d.exercises || {};
+    const pool = [...(ex.facile || []), ...(ex.moyen || [])];
+    const hard = [...(ex.difficile || [])];
+    const used = new Set();
+    // pour chaque partie, la question (facile/moyen) dont les mots ressemblent le plus à la partie
+    const words = (s) => new Set(textOf(s).toLowerCase().normalize('NFD').replace(/[̀-ًͯ-ْ]/g, '').split(/[^a-z0-9؀-ۿ]+/).filter((w) => w.length >= 4));
+    const qText = (q) => [q.q, q.explain, ...(q.choices || []), ...(q.accept || [])].join(' ');
+    const warm = parts.map((p, i) => {
+      const pw = words(p.t + ' ' + p.t + ' ' + p.h);
+      let best = null, bestS = -1;
+      pool.concat(hard).forEach((q, k) => {
+        if (used.has(q)) return;
+        let s = 0; for (const w of words(qText(q))) if (pw.has(w)) s++;
+        s -= (k >= pool.length ? 0.5 : 0) + Math.abs(k - i) * 0.01; // préférer une question facile, puis l'ordre des exercices
+        if (s > bestS) { bestS = s; best = q; }
+      });
+      if (best) used.add(best);
+      return best;
+    });
+    const finals = hard.concat(pool).filter((q) => !used.has(q)).slice(0, 3);
+    const key = 'prof:' + el.dataset.src;
+    const st = Object.assign({ part: 0, notes: {}, self: {}, done: false }, store.get(key) || {});
+    const save = () => store.set(key, st);
+
+    el.classList.add('w-prof');
+    el.innerHTML = `<div class="w-head"><span class="w-badge">${S.name}</span><b>${S.title}</b><span class="prof-tools"><button type="button" class="chip-btn prof-voice"></button><button type="button" class="chip-btn prof-ask">${S.ask}</button></span></div>
+      ${AR ? `<div class="prof-lang" role="group" aria-label="${S.langT}"><span class="w-small">${S.langT} :</span>${[['fr', S.mFr], ['mix', S.mMix], ['ar', S.mAr]].map(([m, l]) => `<button type="button" class="chip-btn${m === mode ? ' on' : ''}" data-m="${m}">${l}</button>`).join('')}</div>` : ''}
+      <div class="prof-novoice" hidden></div>
+      <div class="prof-wrap"${mode === 'ar' ? ' dir="rtl" lang="ar"' : ''}><div class="prof-chat" aria-live="polite"></div><aside class="prof-book"><h4>📒 ${S.notebook}</h4><ol class="prof-book-list"></ol></aside></div>`;
+    el.querySelectorAll('.prof-lang button').forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.m === mode) return;
+      try { localStorage.setItem('tcsf:proflang', b.dataset.m); } catch {}
+      if (VO) VO.stop();
+      el.classList.remove('w-prof');
+      W.prof(el, api);
+    }));
+    const chat = el.querySelector('.prof-chat');
+    const bookList = el.querySelector('.prof-book-list');
+
+    function renderBook() {
+      bookList.innerHTML = parts.map((p, i) => {
+        const n = st.notes[i];
+        const cls = st.self[i] === true ? 'ok' : st.self[i] === false ? 'ko' : n ? 'wip' : i === st.part && !st.done ? 'cur' : '';
+        return `<li class="${cls}"><b>${PT(p)}</b>${n ? `<p>${Q ? Q.escHTML(n) : n}</p>` : ''}</li>`;
+      }).join('') || `<li>${S.empty}</li>`;
+    }
+    const scroll = (n) => { try { n.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch {} };
+    // ---- voix du prof ----
+    const vBtn = el.querySelector('.prof-voice'), noVoice = el.querySelector('.prof-novoice');
+    const needLangs = mode === 'mix' ? [lang, 'ar'] : [ui];
+    const paintVoice = () => {
+      const on = VO && VO.enabled;
+      vBtn.textContent = on ? S.voiceOn : S.voiceOff; vBtn.classList.toggle('on', !!on);
+      const miss = on && VO ? needLangs.find((l) => !VO.canSpeak(l)) : null;
+      noVoice.hidden = !miss;
+      if (miss && noVoice.dataset.l !== miss) { noVoice.innerHTML = ''; noVoice.dataset.l = miss; noVoice.appendChild(VO.missingBox ? VO.missingBox(miss, paintVoice) : document.createTextNode(S.noVoice)); }
+      if (!miss) { noVoice.innerHTML = ''; noVoice.dataset.l = ''; }
+    };
+    vBtn.hidden = !VO;
+    vBtn.addEventListener('click', () => { if (!VO) return; VO.setEnabled(!VO.enabled); paintVoice(); });
+    paintVoice(); if (VO && VO.ready) VO.ready().then(paintVoice); else setTimeout(paintVoice, 300);
+    // lecture : le français avec la voix française, les encadrés arabes avec la voix arabe
+    const talk = (html) => {
+      if (!VO || !VO.enabled) return;
+      const t = document.createElement('template'); t.innerHTML = html;
+      t.content.querySelectorAll('.prof-ar-t, .prof-extras').forEach((x) => x.remove());
+      const ars = [...t.content.querySelectorAll('.prof-ar')].map((a) => { a.querySelector('.prof-ar-h')?.remove(); const h = a.innerHTML; a.remove(); return h; });
+      VO.speak([[t.innerHTML, ui]].concat(ars.map((h) => [h, 'ar'])), ui);
+    };
+    el.querySelector('.prof-ask').addEventListener('click', () => { [...chat.querySelectorAll('.prof-actions')].forEach((a) => a.remove()); askBox(); });
+    function say(html, cls = '', silent = false) {
+      const M = window.TCSF_MASCOT;
+      const b = el_('div', 'prof-msg prof ' + cls, `<span class="prof-av mascot" aria-hidden="true">${M ? M.svg(46) : '👨‍🏫'}</span><div class="prof-bubble">${html}</div>`);
+      chat.appendChild(b); scroll(b);
+      if (!silent) talk(html);
+      // Tico (qui se promène sur l'écran) dit la première phrase
+      if (M && !/board/.test(cls)) { const t = textOf(html); M.say((t.match(/^[^.!?؟]{4,}[.!?؟]?/) || [t])[0]); }
+      return b.querySelector('.prof-bubble');
+    }
+    function me(html) { const b = el_('div', 'prof-msg me', `<div class="prof-bubble">${html}</div><span class="prof-av" aria-hidden="true">🧑‍🎓</span>`); chat.appendChild(b); scroll(b); }
+    function actions(...bs) { const a = el_('div', 'prof-actions'); bs.forEach((b) => a.appendChild(b)); chat.appendChild(a); scroll(a); return a; }
+    const clear = (a) => a && a.remove();
+    function initWidgets(node) {
+      nucFix(node);
+      node.querySelectorAll('[data-widget]').forEach((w) => { const f = W[w.dataset.widget]; if (f && f !== W.prof) { try { Promise.resolve(f(w, api)).catch((e) => console.error(e)); } catch (e) { console.error(e); } } });
+      node.querySelectorAll('table').forEach((t) => { if (!t.parentElement.classList.contains('table-wrap')) { const w = el_('div', 'table-wrap'); t.replaceWith(w); w.appendChild(t); } });
+      node.querySelectorAll('.flip').forEach((f) => { f.type = 'button'; f.addEventListener('click', () => f.classList.toggle('flipped')); });
+    }
+
+    // ---- Accueil ----
+    function hello() {
+      chat.innerHTML = '';
+      const b = say(S.hello(title) + `<p class="prof-sub">${S.plan}</p><ol>${parts.map((p) => `<li>${PT(p)}</li>`).join('')}</ol>` + (d.objectifs && d.objectifs.length ? `<p class="prof-sub">${S.goals}</p><ul${mode === 'ar' ? ' dir="ltr" lang="fr"' : ''}>${d.objectifs.map((o) => `<li>${o}</li>`).join('')}</ul>` : ''));
+      b.parentElement.classList.add('first');
+      const bs = [];
+      if (st.part > 0 && st.part < parts.length && !st.done) bs.push(btn(S.resume(st.part + 1), 'primary', () => { clear(a); partAsk(st.part); }));
+      else bs.push(btn(S.start, 'primary', () => { clear(a); st.part = 0; st.done = false; save(); partAsk(0); }));
+      if (st.part > 0 || st.done) bs.push(btn(S.restart, 'ghost', () => { st.part = 0; st.notes = {}; st.self = {}; st.done = false; save(); renderBook(); hello(); }));
+      const a = actions(...bs);
+      if (st.done) { a.prepend(btn(S.notebook + ' 📒', 'primary', () => { clear(a); finish(true); })); }
+    }
+
+    // ---- 1) Question pour faire réfléchir ----
+    function partAsk(i) {
+      st.part = i; save(); renderBook();
+      const p = parts[i];
+      const sep = el_('div', 'prof-sep', `<span>${S.step} ${i + 1}/${parts.length}</span>`); chat.appendChild(sep);
+      const q = warm[i];
+      if (!q || !Q) {
+        say(S.part(i + 1, parts.length, PT(p)) + `<p>${S.thinkNoQ}</p>`);
+        const a = actions(btn(S.explainMe, 'primary', () => { clear(a); me(S.explainMe); partExplain(i); }));
+        return;
+      }
+      // les questions restent en français (comme à l'examen)
+      const fq = mode === 'ar' ? ' dir="ltr" lang="fr"' : '';
+      const b = say(S.part(i + 1, parts.length, PT(p)) + `<p>${S.think}</p><p class="prof-q"${fq}>${q.q}</p>`);
+      const zone = el_('div', 'prof-zone'); if (fq) { zone.dir = 'ltr'; zone.lang = 'fr'; } b.appendChild(zone);
+      Q.askQuestion(zone, q, QS, (ok) => {
+        say(pick(ok ? S.okReact : S.koReact), ok ? 'good' : '');
+        const a = actions(btn(S.explainMe, 'primary', () => { clear(a); me(S.explainMe); partExplain(i); }));
+      });
+    }
+
+    // ---- 2) Explication pas à pas ----
+    function partExplain(i) {
+      const p = parts[i];
+      // en arabe : l'explication arabe, puis les formules / expériences de la version française
+      const cs = chunks(mode === 'ar' && p.ar ? p.ar.h + extras(p.h) : p.h);
+      let k = 0, arShown = false;
+      const b = say(`<p class="prof-sub">${S.look}</p>`, 'board');
+      // « je n'ai pas compris » : la même partie expliquée en arabe (avec les mots français entre parenthèses)
+      const showAr = () => {
+        if (arShown || !p.ar) return; arShown = true;
+        const c = el_('div', 'prof-chunk content', arBox(p.ar.h)); b.appendChild(c); nucFix(c); scroll(c); talk(arBox(p.ar.h));
+      };
+      const showNext = () => {
+        let html = cs[k];
+        // mélangé : à la fin de la partie, le résumé en arabe
+        if (mode === 'mix' && p.ar && k === cs.length - 1) { html += arBox(p.ar.h); arShown = true; }
+        const c = el_('div', 'prof-chunk content', html);
+        b.appendChild(c); initWidgets(c); scroll(c); talk(html);
+        k++;
+        const more = [];
+        if (mode === 'fr' && p.ar) more.push(btn(S.noUndAr, '', function () { this.remove(); me(S.noUndAr); showAr(); }));
+        const a = k < cs.length
+          ? actions(btn(S.cont, 'primary', () => { clear(a); showNext(); }), ...more)
+          : actions(btn(S.understood, 'primary', () => { clear(a); me(S.understood); partBuild(i); }), ...more);
+      };
+      showNext();
+    }
+
+    // ---- 3) L'élève construit son cahier ----
+    function partBuild(i) {
+      const b = say(`<p>${S.build}</p>`);
+      const ta = el_('textarea', 'lv-input prof-ta'); ta.rows = 3; ta.placeholder = S.ph; ta.dir = 'auto'; ta.value = st.notes[i] || '';
+      const warn = el_('p', 'w-small');
+      b.append(ta, warn);
+      setTimeout(() => ta.focus(), 50);
+      const a = actions(btn(S.add, 'primary', () => {
+        const v = ta.value.trim();
+        if (v.split(/\s+/).length < 3) { warn.textContent = S.tooShort; ta.focus(); return; }
+        st.notes[i] = v; save(); renderBook();
+        ta.disabled = true; clear(a);
+        me(`<b>${S.yours} :</b> ${Q ? Q.escHTML(v) : v}`);
+        const kb = say(`<p>${S.key}</p><div class="prof-key">${keyHTML(parts[i])}</div><p>${S.selfQ}</p>`);
+        nucFix(kb);
+        const a2 = actions(
+          btn(S.selfOk, 'primary', () => { clear(a2); st.self[i] = true; save(); renderBook(); me(S.selfOk); say(S.selfOkR, 'good'); goNext(i); }),
+          btn(S.selfKo, '', () => {
+            clear(a2); st.self[i] = false; save(); renderBook(); me(S.selfKo); say(S.selfKoR);
+            const a3 = actions(btn(S.fix, '', () => { clear(a3); ta.disabled = false; partBuild(i); }), btn(S.next, 'primary', () => { clear(a3); nextPart(i); }));
+          }));
+      }));
+    }
+    function goNext(i) { const a = actions(btn(i + 1 < parts.length ? S.next : S.cont, 'primary', () => { clear(a); nextPart(i); })); }
+    function nextPart(i) { if (i + 1 < parts.length) partAsk(i + 1); else { st.part = parts.length; save(); match(); } }
+
+    // ---- 4) Jeu d'association des notions ----
+    function match() {
+      const cards = (d.cards || []).filter((c) => c[0] && c[1]).slice(0, 6);
+      if (cards.length < 2) return finalQ();
+      const b = say(`<p>${S.matchT}</p>`);
+      const g = el_('div', 'prof-match');
+      const L = el_('div', 'pm-col'), R = el_('div', 'pm-col');
+      const order = cards.map((_, i) => i).sort(() => Math.random() - 0.5);
+      let sel = null, left = cards.length;
+      const msg = el_('p', 'w-small');
+      cards.forEach((c, i) => {
+        const x = el_('button', 'pm-item', c[0]); x.type = 'button'; x.dataset.i = i;
+        x.addEventListener('click', () => { if (x.disabled) return; L.querySelectorAll('.pm-item').forEach((y) => y.classList.remove('sel')); x.classList.add('sel'); sel = i; });
+        L.appendChild(x);
+      });
+      order.forEach((i) => {
+        const y = el_('button', 'pm-item def', cards[i][1]); y.type = 'button';
+        y.addEventListener('click', () => {
+          if (sel === null || y.disabled) return;
+          if (sel === i) {
+            const x = L.querySelector(`[data-i="${i}"]`);
+            [x, y].forEach((z) => { z.disabled = true; z.classList.remove('sel'); z.classList.add('ok'); });
+            sel = null; left--; msg.textContent = '';
+            if (!left) { say(S.matchDone, 'good'); if (Q) Q.burst(el); const a = actions(btn(S.cont, 'primary', () => { clear(a); finalQ(); })); }
+          } else { y.classList.add('ko'); msg.textContent = S.matchErr; setTimeout(() => y.classList.remove('ko'), 600); }
+        });
+        R.appendChild(y);
+      });
+      if (mode === 'ar') { g.dir = 'ltr'; g.lang = 'fr'; }
+      g.append(L, R); b.append(g, msg); nucFix(g);
+    }
+
+    // ---- 5) Défi final ----
+    function finalQ() {
+      if (!finals.length || !Q) return finish();
+      say(`<p>${S.finalT}</p>`);
+      let k = 0, score = 0;
+      const n = finals.length;
+      // carte « Défi » : progression en pastilles, une question à la fois, étoiles à la fin
+      const card = el_('div', 'defi');
+      card.innerHTML = `<div class="defi-top"><span class="defi-cup">🏆</span><b>${ui === 'ar' ? 'التحدي الأخير' : ui === 'en' ? 'Final challenge' : 'Défi final'}</b><span class="defi-dots">${finals.map(() => '<i></i>').join('')}</span></div><div class="defi-body"></div>`;
+      chat.appendChild(card); scroll(card);
+      const dots = [...card.querySelectorAll('.defi-dots i')], body = card.querySelector('.defi-body');
+      const one = () => {
+        const q = finals[k];
+        dots.forEach((d, i) => d.classList.toggle('cur', i === k));
+        body.innerHTML = '';
+        const fq = mode === 'ar';
+        const qd = el_('div', 'defi-q', `<span class="defi-num">${k + 1}<small>/${n}</small></span><p class="prof-q"${fq ? ' dir="ltr" lang="fr"' : ''}>${q.q}</p>`);
+        const zone = el_('div', 'prof-zone'); if (fq) { zone.dir = 'ltr'; zone.lang = 'fr'; }
+        body.append(qd, zone); body.classList.remove('in'); void body.offsetWidth; body.classList.add('in');
+        talk(q.q);
+        Q.askQuestion(zone, q, QS, (ok) => {
+          if (ok) score++;
+          dots[k].classList.remove('cur'); dots[k].classList.add(ok ? 'ok' : 'ko');
+          card.classList.remove('flash-ok', 'flash-ko'); void card.offsetWidth; card.classList.add(ok ? 'flash-ok' : 'flash-ko');
+          k++;
+          const nx = btn(k < n ? QS.next || S.cont : (ui === 'ar' ? 'النتيجة 🏆' : ui === 'en' ? 'My result 🏆' : 'Mon résultat 🏆'), 'primary', () => { nx.remove(); if (k < n) one(); else result(); });
+          const row = el_('div', 'defi-next'); row.appendChild(nx); body.appendChild(row); scroll(row);
+        });
+      };
+      const result = () => {
+        const stars = score === n ? 3 : score >= Math.ceil(n / 2) ? 2 : score > 0 ? 1 : 0;
+        const msg = ui === 'ar' ? ['حاول مرة أخرى، ستنجح! 💪', 'بداية جيدة! 👍', 'جيد جدا! 👏', 'ممتاز، علامة كاملة! 🌟'][stars] : ui === 'en' ? ['Try again, you can do it! 💪', 'Good start! 👍', 'Very good! 👏', 'Perfect score! 🌟'][stars] : ['Recommence, tu vas y arriver ! 💪', 'Bon début ! 👍', 'Très bien ! 👏', 'Sans faute, bravo ! 🌟'][stars];
+        dots.forEach((d) => d.classList.remove('cur'));
+        body.innerHTML = `<div class="defi-res"><div class="defi-stars">${[0, 1, 2].map((i) => `<span class="${i < stars ? 'on' : ''}" style="animation-delay:${0.15 + i * 0.25}s">★</span>`).join('')}</div>
+          <div class="defi-score"><b>${score}</b> / ${n}</div><p>${msg}</p></div>`;
+        body.classList.remove('in'); void body.offsetWidth; body.classList.add('in');
+        if (stars === 3 && Q) Q.burst(card);
+        try { if (window.TCSF_SFX) window.TCSF_SFX[stars >= 2 ? 'fanfare' : 'good'](); } catch {}
+        talk(msg);
+        setTimeout(() => finish(), 1600);
+      };
+      one();
+    }
+
+    // ---- 6) Le cahier complet ----
+    function finish(direct) {
+      st.done = true; st.part = parts.length; save(); renderBook();
+      if (!direct && Q) Q.burst(el);
+      if (!direct) window.dispatchEvent(new CustomEvent('tcsf:activity', { detail: { act: 'prof', src: el.dataset.src } }));
+      const b = say(`<p>${S.done}</p>`, 'good');
+      const book = el_('div', 'prof-final');
+      book.innerHTML = `<h3>📒 ${S.notebook} — ${title}</h3>` + parts.map((p, i) => `<section><h4>${i + 1}. ${PT(p)}</h4>
+        ${st.notes[i] ? `<p><b>${S.yours} :</b> ${Q ? Q.escHTML(st.notes[i]) : st.notes[i]}</p>` : ''}
+        <div class="prof-key"><b>${S.prof} :</b> ${keyHTML(p)}</div></section>`).join('');
+      b.appendChild(book); nucFix(book);
+      const bs = [btn(S.print, '', () => window.print())];
+      if (revHref) { const r = el_('a', 'btn primary', S.goRev); r.href = revHref; bs.push(r); }
+      bs.push(btn(S.restart, 'ghost', () => { st.part = 0; st.notes = {}; st.self = {}; st.done = false; save(); renderBook(); hello(); }));
+      actions(...bs);
+      setTimeout(() => askBox(true), direct ? 0 : 600);
+    }
+
+    // ---- 7) « As-tu une question ? » : écrite ou dite à voix haute ----
+    function askBox(intro) {
+      const b = say(intro ? S.anyQ : S.anyQ.split(/[.?؟]/)[0] + (lang === 'ar' ? '؟' : ' ?'));
+      const form = el_('form', 'prof-askform');
+      const ta = el_('textarea', 'lv-input prof-ta'); ta.rows = 2; ta.placeholder = S.qph; ta.dir = 'auto';
+      const mic = btn(S.mic, 'prof-mic', () => listen());
+      const go = el_('button', 'btn primary', S.send); go.type = 'submit';
+      const tip = el_('p', 'w-small');
+      const row = el_('div', 'prof-askrow'); row.append(mic, go);
+      form.append(ta, row, tip); b.appendChild(form);
+      setTimeout(() => ta.focus(), 60);
+      async function listen() {
+        if (!VO) return;
+        mic.disabled = true; mic.classList.add('rec'); tip.innerHTML = S.listening;
+        const r = await VO.listen(lang);
+        mic.disabled = false; mic.classList.remove('rec');
+        if (r && r.text) { ta.value = (ta.value ? ta.value + ' ' : '') + r.text; tip.innerHTML = `${S.heard} « ${Q ? Q.escHTML(r.text) : r.text} »`; ta.focus(); }
+        else if (r && r.error === 'empty') tip.innerHTML = S.noHear;
+        else if (r && r.error === 'perm') tip.innerHTML = S.perm;
+        else { tip.innerHTML = window.TCSF_NATIVE ? S.noDictPhone : S.noDict; ta.focus(); }
+      }
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = ta.value.trim();
+        if (q.length < 3) { ta.focus(); return; }
+        form.remove();
+        me(Q ? Q.escHTML(q) : q);
+        answer(q);
+      });
+    }
+
+    async function answer(q) {
+      say(S.search, '', true);
+      if (!QA) return;
+      const [hits, wk] = await Promise.all([
+        QA.search(subject, q, api, 4).catch(() => []),
+        Promise.race([QA.wiki(/[؀-ۿ]/.test(q) ? 'ar' : lang, q, false), new Promise((r) => setTimeout(() => r({ offline: true }), 9000))])
+      ]);
+      const best = hits[0];
+      let html = '', speak = '';
+      if (best && mode === 'ar' && best.ar) {
+        // réponse en arabe : la partie de la leçon expliquée en arabe
+        html += `<div class="qa-src"><b>📘 ${S.inLesson(best.lesson)}</b> <span class="muted">› ${best.ar.t}</span><div class="qa-txt">${firstP(best.ar.h, 2)}</div></div>`;
+        speak += firstP(best.ar.h, 2);
+      } else if (best) {
+        html += `<div class="qa-src"><b>📘 ${S.inLesson(best.lesson)}</b>${best.part ? ` <span class="muted">› ${best.part}</span>` : ''}<div class="qa-txt">${best.html}</div></div>`;
+        speak += best.text + '. ';
+        if (mode === 'mix' && best.ar && /[a-z]/i.test(best.text)) { html += arBox(firstP(best.ar.h, 2)); speak += arBox(firstP(best.ar.h, 2)); }
+        const other = hits.slice(1).find((h) => h.score > best.score * 0.55 && h.text !== best.text);
+        if (other) html += `<div class="qa-src small"><b>${S.alsoSee} :</b> ${other.lesson}${other.part ? ' › ' + other.part : ''}<div class="qa-txt">${other.html}</div></div>`;
+      }
+      if (wk && wk.text) {
+        html += `<div class="qa-src wiki"><b>🌐 ${S.wiki}</b> — ${Q ? Q.escHTML(wk.title) : wk.title}<div class="qa-txt">${Q ? Q.escHTML(wk.text) : wk.text}</div><a href="${wk.url}" target="_blank" rel="noopener">${S.src} ↗</a></div>`;
+        if (!best) speak += wk.text;
+      } else if (wk && wk.offline) html += `<p class="w-small">${S.offline}</p>`;
+      if (!html.includes('qa-src')) { say(S.nothing); return askBox(false); }
+      const b = say(html, 'board', true);
+      nucFix(b); talk(speak || html);
+      followUp(q, hits, 1);
+    }
+
+    function followUp(q, hits, level) {
+      const a = actions(
+        btn(S.noUnd, 'primary', () => { clear(a); me(S.noUnd); simplify(q, hits, level); }),
+        btn(S.und, '', () => { clear(a); me(S.und); say(S.thanks, 'good'); actions(btn(S.other, '', function () { this.parentNode.remove(); askBox(false); })); }),
+        btn(S.other, 'ghost', () => { clear(a); askBox(false); }));
+    }
+
+    async function simplify(q, hits, level) {
+      const best = hits[0];
+      if (level === 1) {
+        let html = '', speak = '';
+        if (best) {
+          const one = QA.firstSentences(best.text, 1);
+          html += `<div class="qa-src"><b>💡 ${S.short} :</b><div class="qa-txt big">${Q ? Q.escHTML(one) : one}</div></div>`; speak += one + '. ';
+          const def = hits.find((h) => (h.kind === 'carte' || h.kind === 'def') && h !== best);
+          if (def) html += `<div class="qa-src"><div class="qa-txt">${def.html}</div></div>`;
+          const ex = (await QA.search(subject, q + ' ' + best.part, api, 12).catch(() => [])).find((h) => h.kind === 'exemple' && h.lessonId === best.lessonId);
+          if (ex) { html += `<div class="qa-src ex"><b>🧪 ${S.example} :</b><div class="qa-txt">${ex.html}</div></div>`; speak += ex.text; }
+        }
+        const wk = await Promise.race([QA.wiki(lang, q, true), new Promise((r) => setTimeout(() => r({}), 9000))]);
+        if (wk && wk.text) {
+          const t = QA.firstSentences(wk.text, 2);
+          html += `<div class="qa-src wiki"><b>🌐 ${lang === 'fr' && /vikidia/.test(wk.source || '') ? S.vikidia : S.wiki}</b><div class="qa-txt">${Q ? Q.escHTML(t) : t}</div><a href="${wk.url}" target="_blank" rel="noopener">${S.src} ↗</a></div>`;
+          if (!speak) speak = t;
+        }
+        // « je n'ai pas compris » : on mélange avec l'arabe (leçon + Wikipédia en arabe)
+        if (lang === 'fr' && mode !== 'ar') {
+          if (best && best.ar) { const a = arBox(firstP(best.ar.h, 2)); html += a; speak += a; }
+          const wa = await Promise.race([QA.wiki('fr', q, false, true), new Promise((r) => setTimeout(() => r({}), 9000))]);
+          if (wa && wa.text) {
+            const t = QA.firstSentences(wa.text, 2);
+            html += `<div class="qa-src wiki" dir="rtl" lang="ar"><b>🌐 ${X.fr.arWiki}</b> — ${Q ? Q.escHTML(wa.title) : wa.title}<div class="qa-txt">${Q ? Q.escHTML(t) : t}</div><a href="${wa.url}" target="_blank" rel="noopener">المصدر ↗</a></div>`;
+            if (!(best && best.ar)) speak += arBox(Q ? Q.escHTML(t) : t);
+          }
+        }
+        if (!html) { say(S.nothing); return askBox(false); }
+        say(S.simpler, '', true);
+        const b = say(html, 'board', true); nucFix(b); talk(S.simpler + ' ' + speak);
+        return followUp(q, hits, 2);
+      }
+      // niveau 2 : mot par mot + reprendre la leçon avec le prof
+      const words = [...new Set(QA.tokens(q))].slice(0, 4);
+      let html = '';
+      for (const w of words) {
+        const h = (await QA.search(subject, w, api, 6).catch(() => [])).find((x) => x.kind === 'carte' || x.kind === 'def');
+        if (h) html += `<li>${h.html}</li>`;
+      }
+      say(S.simplest, '', true);
+      const b = say((html ? `<ul class="qa-words">${html}</ul>` : '') + `<p>${S.teacher}</p>`, 'board', true);
+      nucFix(b); talk(S.simplest + ' ' + b.textContent);
+      const bs = [];
+      if (best) { const r = el_('a', 'btn primary', S.retry(best.lesson)); r.href = `#/l/${encodeURIComponent(subject)}/prof/${encodeURIComponent(best.lessonId)}`; bs.push(r); }
+      bs.push(btn(S.other, '', () => { clear(a); askBox(false); }));
+      const a = actions(...bs);
+    }
+
+    renderBook();
+    if (!parts.length) { say(S.empty); return; }
+    hello();
+  };
+})();

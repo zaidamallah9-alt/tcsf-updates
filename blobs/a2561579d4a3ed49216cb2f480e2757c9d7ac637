@@ -1,0 +1,487 @@
+// Expériences interactives de Physique-Chimie : <div data-widget="sim" data-sim="nom"></div>
+// Ce fichier : outils communs + simulations de mécanique. Électricité : sims-elec.js, chimie : sims-chim.js.
+(() => {
+  const W = window.TCSF_WIDGETS || (window.TCSF_WIDGETS = {});
+  const SIMS = {};
+  const SUP = '⁻⁰¹²³⁴⁵⁶⁷⁸⁹';
+  const sup = (e) => String(e).replace(/[-0-9]/g, (c) => SUP['-0123456789'.indexOf(c)]);
+  // nombre → texte HTML (virgule décimale, puissances de 10)
+  const fr = (x, d = 3) => {
+    if (x === Infinity) return '∞';
+    if (!isFinite(x)) return '—';
+    const a = Math.abs(x);
+    if (a !== 0 && (a >= 1e5 || a < 1e-3)) {
+      let e = Math.floor(Math.log10(a)); let m = +(x / 10 ** e).toFixed(2);
+      if (Math.abs(m) >= 10) { m = +(m / 10).toFixed(2); e++; }
+      return `${String(m).replace('.', ',')} × 10<sup>${e}</sup>`;
+    }
+    return String(+x.toPrecision(d)).replace('.', ',');
+  };
+  // même chose en texte simple (pour le SVG)
+  const ft = (x, d = 3) => fr(x, d).replace(/ × 10<sup>(-?\d+)<\/sup>/, (_, e) => '×10' + sup(e));
+  const COL = { a: '#e5484d', b: '#3b82f6', c: '#16a34a', d: '#f59e0b', e: '#8b5cf6', f: '#0891b2' };
+
+  function frame(el, title, hint, vb = '0 0 640 320') {
+    el.classList.add('w-sim');
+    el.innerHTML = `<div class="w-head"><span class="w-badge">Expérience</span><b>${title}</b>${hint ? `<span class="w-hint">${hint}</span>` : ''}</div>
+      <div class="sim-top"></div>
+      <div class="w-stage sim-stage"><svg class="sim-svg" viewBox="${vb}" role="img" aria-label="${title}"></svg></div>
+      <div class="sim-ctrls"></div><div class="w-stats sim-out"></div><p class="w-note sim-note" hidden></p>`;
+    const q = (s) => el.querySelector(s);
+    return {
+      el, top: q('.sim-top'), svg: q('.sim-svg'), ctrls: q('.sim-ctrls'), out: q('.sim-out'), noteEl: q('.sim-note'),
+      draw(s) { this.svg.innerHTML = s; },
+      stats(rows) { this.out.innerHTML = rows.map(([l, v, u]) => `<div><small class="sim-k">${l}</small><b>${v}</b>${u ? `<small>${u}</small>` : ''}</div>`).join(''); },
+      note(s, kind) { this.noteEl.innerHTML = s || ''; this.noteEl.hidden = !s; this.noteEl.className = 'w-note sim-note' + (kind ? ' ' + kind : ''); }
+    };
+  }
+  function slider(parent, o, cb) {
+    const w = document.createElement('label');
+    w.className = 'sim-sl';
+    w.innerHTML = `<span class="sim-sl-l">${o.label}</span><input type="range" min="${o.min}" max="${o.max}" step="${o.step || 1}" value="${o.value}"><output></output>`;
+    const inp = w.querySelector('input'), out = w.querySelector('output');
+    const show = () => { out.innerHTML = (o.fmt ? o.fmt(+inp.value) : fr(+inp.value)) + (o.unit ? ' ' + o.unit : ''); };
+    inp.addEventListener('input', () => { show(); if (cb) cb(+inp.value); });
+    show();
+    parent.appendChild(w);
+    return { get v() { return +inp.value; }, set v(x) { inp.value = x; show(); }, el: w, inp, setMax(m) { inp.max = m; show(); } };
+  }
+  function seg(parent, label, opts, value, cb) {
+    const w = document.createElement('div');
+    w.className = 'sim-seg';
+    w.innerHTML = (label ? `<span class="sim-sl-l">${label}</span>` : '') + `<div class="sim-seg-b">${opts.map(([v, l]) => `<button type="button" class="chip-btn${v === value ? ' on' : ''}" data-v="${v}">${l}</button>`).join('')}</div>`;
+    let cur = value;
+    w.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+      w.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+      cur = opts.find((o) => String(o[0]) === b.dataset.v)[0];
+      if (cb) cb(cur);
+    }));
+    parent.appendChild(w);
+    return { get v() { return cur; }, el: w };
+  }
+  function btn(parent, label, cb, primary) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn' + (primary ? ' primary' : ''); b.innerHTML = label;
+    b.addEventListener('click', cb);
+    parent.appendChild(b);
+    return b;
+  }
+  // boucle d'animation qui s'arrête toute seule quand on quitte la page
+  function loop(el, step) {
+    let last = performance.now(), id = 0, on = true;
+    const f = (t) => {
+      if (!on || !el.isConnected) return;
+      const dt = Math.min(0.05, (t - last) / 1000); last = t;
+      if (step(dt) === false) { on = false; return; }
+      id = requestAnimationFrame(f);
+    };
+    id = requestAnimationFrame(f);
+    return () => { on = false; cancelAnimationFrame(id); };
+  }
+  // ---- dessin SVG ----
+  const n2 = (x) => Math.round(x * 10) / 10;
+  function arrow(x1, y1, x2, y2, c, lab, lx, ly, w = 3) {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy);
+    if (L < 1.5) return '';
+    const ux = dx / L, uy = dy / L, hs = Math.min(12, L * 0.6), bx = x2 - ux * hs, by = y2 - uy * hs;
+    return `<line x1="${n2(x1)}" y1="${n2(y1)}" x2="${n2(bx)}" y2="${n2(by)}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>` +
+      `<polygon points="${n2(x2)},${n2(y2)} ${n2(bx - uy * hs * 0.5)},${n2(by + ux * hs * 0.5)} ${n2(bx + uy * hs * 0.5)},${n2(by - ux * hs * 0.5)}" fill="${c}"/>` +
+      (lab ? `<text x="${n2(lx ?? x2 + 6)}" y="${n2(ly ?? y2 - 6)}" fill="${c}" class="lab" style="fill:${c}">${lab}</text>` : '');
+  }
+  const T = (x, y, s, a = 'start', cls = '') => `<text x="${n2(x)}" y="${n2(y)}" text-anchor="${a}"${cls ? ` class="${cls}"` : ''}>${s}</text>`;
+  const L = (x1, y1, x2, y2, cls = 'stroke', extra = '') => `<line x1="${n2(x1)}" y1="${n2(y1)}" x2="${n2(x2)}" y2="${n2(y2)}" class="${cls}" ${extra}/>`;
+  function spring(x, y1, y2, coils = 12, w = 12) {
+    const n = coils * 2, step = (y2 - y1 - 16) / n;
+    let d = `M${x},${y1} L${x},${y1 + 8}`;
+    for (let i = 1; i <= n; i++) d += ` L${x + (i % 2 ? w : -w)},${n2(y1 + 8 + step * (i - 0.5))}`;
+    d += ` L${x},${n2(y2 - 8)} L${x},${n2(y2)}`;
+    return `<path d="${d}" class="stroke" fill="none" stroke-width="2"/>`;
+  }
+  // graphique : axes + grille + séries
+  function plot(o) {
+    const X = (v) => o.x + ((v - o.xmin) / (o.xmax - o.xmin)) * o.w;
+    const Y = (v) => o.y + o.h - ((v - o.ymin) / (o.ymax - o.ymin)) * o.h;
+    let s = `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" class="plotbg"/>`;
+    const nx = o.nx || 5, ny = o.ny || 5;
+    for (let i = 0; i <= nx; i++) { const gx = o.x + (o.w * i) / nx; s += L(gx, o.y, gx, o.y + o.h, 'grid') + T(gx, o.y + o.h + 14, ft(o.xmin + ((o.xmax - o.xmin) * i) / nx), 'middle', 'tick'); }
+    for (let i = 0; i <= ny; i++) { const gy = o.y + o.h - (o.h * i) / ny; s += L(o.x, gy, o.x + o.w, gy, 'grid') + T(o.x - 5, gy + 4, ft(o.ymin + ((o.ymax - o.ymin) * i) / ny), 'end', 'tick'); }
+    const zx = o.xmin < 0 && o.xmax > 0 ? X(0) : o.x, zy = o.ymin < 0 && o.ymax > 0 ? Y(0) : o.y + o.h;
+    s += L(o.x, zy, o.x + o.w, zy, 'ax') + L(zx, o.y, zx, o.y + o.h, 'ax');
+    s += T(o.x + o.w, zy - 6, o.xl || '', 'end', 'axl') + T(zx + 6, o.y + 12, o.yl || '', 'start', 'axl');
+    const clip = (p) => p[0] >= o.xmin && p[0] <= o.xmax && p[1] >= o.ymin && p[1] <= o.ymax;
+    for (const se of o.series || []) {
+      if (se.line) {
+        const pts = se.line.filter((p) => isFinite(p[1])).map((p) => [Math.max(o.x, Math.min(o.x + o.w, X(p[0]))), Math.max(o.y, Math.min(o.y + o.h, Y(p[1])))]);
+        if (pts.length > 1) s += `<polyline points="${pts.map((p) => n2(p[0]) + ',' + n2(p[1])).join(' ')}" fill="none" stroke="${se.color}" stroke-width="${se.w || 2.5}" ${se.dash ? 'stroke-dasharray="6 5"' : ''} stroke-linejoin="round"/>`;
+      }
+      for (const p of se.dots || []) if (clip(p)) s += `<circle cx="${n2(X(p[0]))}" cy="${n2(Y(p[1]))}" r="${se.r || 4}" fill="${se.color}"/>`;
+    }
+    return { svg: s, X, Y };
+  }
+
+  // =================== MÉCANIQUE ===================
+
+  // 1. Gravitation universelle
+  SIMS.gravitation = (el) => {
+    const S = frame(el, 'Interaction gravitationnelle', 'Change les masses et la distance', '0 0 640 260');
+    const G = 6.67e-11;
+    const PRE = {
+      tl: { a: 'Terre', b: 'Lune', ma: 5.97e24, mb: 7.35e22, d: 3.84e8, ca: '#3b82f6', cb: '#9ca3af', ra: 30, rb: 14 },
+      st: { a: 'Soleil', b: 'Terre', ma: 1.99e30, mb: 5.97e24, d: 1.5e11, ca: '#f59e0b', cb: '#3b82f6', ra: 38, rb: 12 },
+      lab: { a: 'Boule A', b: 'Boule B', ma: 100, mb: 1, d: 0.2, ca: '#64748b', cb: '#94a3b8', ra: 24, rb: 12 }
+    };
+    let p = PRE.tl;
+    seg(S.ctrls, 'Système', [['tl', 'Terre – Lune'], ['st', 'Soleil – Terre'], ['lab', 'Deux boules de laboratoire']], 'tl', (v) => { p = PRE[v]; draw(); });
+    const ka = slider(S.ctrls, { label: 'Masse de A', min: 0.5, max: 3, step: 0.5, value: 1, fmt: (v) => '× ' + fr(v) }, draw);
+    const kb = slider(S.ctrls, { label: 'Masse de B', min: 0.5, max: 3, step: 0.5, value: 1, fmt: (v) => '× ' + fr(v) }, draw);
+    const kd = slider(S.ctrls, { label: 'Distance d', min: 0.5, max: 3, step: 0.25, value: 1, fmt: (v) => '× ' + fr(v) }, draw);
+    function draw() {
+      const ma = p.ma * ka.v, mb = p.mb * kb.v, d = p.d * kd.v;
+      const F = (G * ma * mb) / d ** 2, r = (ka.v * kb.v) / kd.v ** 2;
+      const xa = 110, xb = 150 + 150 * kd.v, y = 130;
+      const ra = p.ra * Math.cbrt(ka.v), rb = p.rb * Math.cbrt(kb.v);
+      const Lf = Math.max(10, Math.min(170, 45 * r));
+      S.draw(L(xa, y, xb, y, 'dash') +
+        `<circle cx="${xa}" cy="${y}" r="${ra}" fill="${p.ca}"/><circle cx="${xb}" cy="${y}" r="${rb}" fill="${p.cb}"/>` +
+        arrow(xa, y, xa + Lf, y, COL.a, 'F B/A', xa + Lf - 20, y - 14) + arrow(xb, y, xb - Lf, y, COL.b, 'F A/B', xb - Lf - 10, y - 14) +
+        T(xa, y + ra + 22, `${p.a} (m<tspan baseline-shift="sub" font-size="10">A</tspan>)`, 'middle') + T(xb, y + rb + 22, `${p.b} (m<tspan baseline-shift="sub" font-size="10">B</tspan>)`, 'middle') +
+        L(xa, 40, xa, 60, 'stroke') + L(xb, 40, xb, 60, 'stroke') + L(xa, 50, xb, 50, 'stroke') + T((xa + xb) / 2, 42, 'd = ' + ft(d) + ' m', 'middle'));
+      S.stats([['F<sub>A/B</sub> = F<sub>B/A</sub>', fr(F), 'N'], ['Distance d', fr(d), 'm'], ['Par rapport au départ', '× ' + fr(r)]]);
+      S.note(kd.v !== 1 && ka.v === 1 && kb.v === 1 ? `La distance est multipliée par ${fr(kd.v)}, donc F est multipliée par 1/${fr(kd.v)}² = ${fr(r)}.` : 'Les deux forces ont la même droite d’action, la même intensité et des sens opposés : <b>F = G·m<sub>A</sub>·m<sub>B</sub>/d²</b>.');
+    }
+    draw();
+  };
+
+  // 1-2. Pesanteur : P = m·g et variation de g avec l'altitude
+  SIMS.pesanteur = (el) => {
+    const S = frame(el, 'Le poids d’un corps sur un astre', 'Choisis l’astre, la masse et l’altitude', '0 0 640 300');
+    const AST = { terre: { n: 'Terre', g: 9.8, R: 6370, c: '#3b82f6' }, lune: { n: 'Lune', g: 1.62, R: 1737, c: '#9ca3af' }, mars: { n: 'Mars', g: 3.71, R: 3390, c: '#dc6b3c' }, jupiter: { n: 'Jupiter', g: 24.8, R: 69911, c: '#d4a373' } };
+    let a = AST.terre;
+    seg(S.ctrls, 'Astre', Object.entries(AST).map(([k, v]) => [k, v.n]), 'terre', (k) => { a = AST[k]; draw(); });
+    const m = slider(S.ctrls, { label: 'Masse m', min: 1, max: 150, value: 70, unit: 'kg' }, draw);
+    const h = slider(S.ctrls, { label: 'Altitude h', min: 0, max: 20000, step: 100, value: 0, unit: 'km' }, draw);
+    function draw() {
+      const g = a.g * (a.R / (a.R + h.v)) ** 2, P = m.v * g;
+      const cx = 170, cy = 150, R = 95, dist = Math.min(410, R * (a.R + h.v) / a.R);
+      const ox = cx + dist + 14, oy = cy;
+      S.draw(`<circle cx="${cx}" cy="${cy}" r="${R}" fill="${a.c}" opacity=".9"/>` + T(cx, cy + 5, a.n, 'middle', 'white') +
+        L(cx, cy, ox, oy, 'dash') + `<rect x="${ox - 9}" y="${oy - 9}" width="18" height="18" rx="3" class="obj"/>` +
+        arrow(ox, oy, ox - Math.max(8, 9 * g), oy, COL.a, 'P', ox - 9 * g - 4, oy - 14) +
+        T(cx + R + (dist - R) / 2 + 7, cy + 28, 'h = ' + ft(h.v) + ' km', 'middle', 'muted') + (dist >= 410 ? T(600, 40, '(distance non à l’échelle)', 'end', 'muted') : ''));
+      S.stats([['g à cette altitude', fr(g), 'N/kg'], ['Poids P = m·g', fr(P), 'N'], ['Poids au sol', fr(m.v * a.g), 'N'], ['Masse m', fr(m.v), 'kg (ne change pas)']]);
+      S.note(`g = g<sub>0</sub>·R² / (R + h)² avec g<sub>0</sub> = ${fr(a.g)} N/kg et R = ${fr(a.R)} km. La masse ne change pas, mais le poids diminue quand on s’éloigne de l’astre.`);
+    }
+    draw();
+  };
+
+  // 2. Représenter une force par un vecteur
+  SIMS.vecteur = (el) => {
+    const S = frame(el, 'Représenter une force par un vecteur', 'Règle l’intensité, la direction et l’échelle', '0 0 640 300');
+    const F = slider(S.ctrls, { label: 'Intensité F', min: 0.5, max: 10, step: 0.5, value: 4, unit: 'N' }, draw);
+    const ang = slider(S.ctrls, { label: 'Direction (angle avec l’horizontale)', min: 0, max: 345, step: 15, value: 30, unit: '°' }, draw);
+    const sc = seg(S.ctrls, 'Échelle : 1 cm ↔', [[1, '1 N'], [2, '2 N'], [5, '5 N']], 1, draw);
+    function draw() {
+      const cm = 26, cx = 320, cy = 150, len = F.v / sc.v, a = (ang.v * Math.PI) / 180;
+      let s = '';
+      for (let x = cx % cm; x < 640; x += cm) s += L(x, 0, x, 300, 'grid');
+      for (let y = cy % cm; y < 300; y += cm) s += L(0, y, 640, y, 'grid');
+      s += `<rect x="${cx - 40}" y="${cy - 26}" width="80" height="52" rx="8" class="obj" opacity=".55"/>`;
+      s += L(cx - 320 * Math.cos(a), cy + 320 * Math.sin(a), cx + 320 * Math.cos(a), cy - 320 * Math.sin(a), 'dash');
+      s += arrow(cx, cy, cx + len * cm * Math.cos(a), cy - len * cm * Math.sin(a), COL.a, 'F', undefined, undefined, 4);
+      s += `<circle cx="${cx}" cy="${cy}" r="5" fill="${COL.a}"/>` + T(cx - 10, cy + 20, 'A', 'end');
+      S.draw(s);
+      const sens = ['vers la droite', 'vers le haut à droite', 'vers le haut', 'vers le haut à gauche', 'vers la gauche', 'vers le bas à gauche', 'vers le bas', 'vers le bas à droite'][Math.round((ang.v % 360) / 45) % 8];
+      S.stats([['Point d’application', 'A'], ['Droite d’action', `inclinée de ${ang.v % 180}°`], ['Sens', sens], ['Intensité', fr(F.v), 'N'], ['Longueur du vecteur', fr(len), 'cm']]);
+      S.note(`Longueur = F / échelle = ${fr(F.v)} / ${sc.v} = ${fr(len)} cm. La ligne pointillée est la droite d’action.`);
+    }
+    draw();
+  };
+
+  // 3. Chronophotographie : trajectoire et vitesse instantanée
+  SIMS.chrono = (el) => {
+    const S = frame(el, 'Chronophotographie d’un mobile', 'Lance l’enregistrement puis choisis un point', '0 0 640 300');
+    const type = seg(S.ctrls, 'Mouvement', [['uni', 'Rectiligne uniforme'], ['acc', 'Rectiligne accéléré'], ['dec', 'Rectiligne ralenti'], ['circ', 'Circulaire uniforme']], 'uni', reset);
+    const tau = seg(S.ctrls, 'Durée τ entre deux images', [[0.04, '40 ms'], [0.06, '60 ms'], [0.08, '80 ms']], 0.04, reset);
+    const vs = slider(S.ctrls, { label: 'Vitesse du lancement', min: 0.2, max: 0.8, step: 0.05, value: 0.5, unit: 'm/s' }, reset);
+    const pi = slider(S.ctrls, { label: 'Point étudié M<sub>i</sub>', min: 1, max: 12, value: 5, fmt: (v) => 'M' + v }, draw);
+    const N = 14;
+    let shown = N, stop = null;
+    btn(S.ctrls, '▶ Lancer l’enregistrement', () => {
+      if (stop) stop();
+      shown = 0; let acc = 0;
+      stop = loop(el, (dt) => { acc += dt; if (acc > 0.16) { acc = 0; shown++; draw(); } return shown < N; });
+    }, true);
+    function pts() {
+      const t = tau.v, v = vs.v, out = [];
+      const R = 0.11, tmax = (N - 1) * t;
+      for (let k = 0; k < N; k++) {
+        const tk = k * t;
+        let x, y = 150;
+        if (type.v === 'uni') x = 0.03 + v * tk;
+        else if (type.v === 'acc') x = 0.03 + 0.15 * v * tk + 0.5 * (2.2 * v) * tk * tk;
+        else if (type.v === 'dec') { const v0 = 1.7 * v, a = v0 / (tmax * 1.15); x = 0.03 + v0 * tk - 0.5 * a * tk * tk; }
+        else { const th = (v / R) * tk; out.push([320 + R * 1000 * Math.cos(th - Math.PI / 2), 150 + R * 1000 * Math.sin(th - Math.PI / 2)]); continue; }
+        out.push([30 + x * 1000, y]);
+      }
+      return out;
+    }
+    function reset() { shown = N; draw(); }
+    function draw() {
+      const P = pts(), t = tau.v, i = pi.v;
+      let s = '';
+      if (type.v === 'circ') s += `<circle cx="320" cy="150" r="110" class="dash" fill="none"/><circle cx="320" cy="150" r="3" class="dot"/>`;
+      else { s += L(20, 150, 620, 150, 'dash'); for (let k = 0; k <= 6; k++) s += L(30 + k * 100, 175, 30 + k * 100, 185, 'stroke') + T(30 + k * 100, 200, k * 10 + ' cm', 'middle', 'tick'); }
+      P.forEach((p, k) => {
+        if (k >= shown || p[0] > 625) return;
+        s += `<circle cx="${n2(p[0])}" cy="${n2(p[1])}" r="${k === i ? 6 : 4}" fill="${k === i ? COL.a : 'currentColor'}" class="${k === i ? '' : 'pt'}"/>`;
+        if (type.v !== 'circ') s += T(p[0], 135 - (k % 2) * 12, 'M' + k, 'middle', 'tick'); else s += T(320 + (p[0] - 320) * 1.18, 150 + (p[1] - 150) * 1.18 + 4, 'M' + k, 'middle', 'tick');
+      });
+      const ok = shown >= N && P[i + 1] && P[i + 1][0] <= 625;
+      if (ok) {
+        const a = P[i - 1], b = P[i + 1], dpx = Math.hypot(b[0] - a[0], b[1] - a[1]), d = dpx / 1000, vi = d / (2 * t);
+        const ux = (b[0] - a[0]) / dpx, uy = (b[1] - a[1]) / dpx;
+        s += arrow(P[i][0], P[i][1], P[i][0] + ux * vi * 90, P[i][1] + uy * vi * 90, COL.a, 'v' + i);
+        S.stats([['τ', fr(t * 1000), 'ms'], [`M${i - 1}M${i + 1}`, fr(d * 100), 'cm'], [`v${i} = M${i - 1}M${i + 1} / 2τ`, fr(vi), 'm/s']].concat(type.v === 'circ' ? [['ω = v / R', fr(vi / 0.11), 'rad/s'], ['Période T', fr((2 * Math.PI * 0.11) / vi), 's']] : []));
+        S.note({ uni: 'Les points sont équidistants et alignés : le mouvement est <b>rectiligne uniforme</b> (v constante).', acc: 'Les distances entre points augmentent : le mouvement est <b>rectiligne accéléré</b>.', dec: 'Les distances entre points diminuent : le mouvement est <b>rectiligne ralenti (décéléré)</b>.', circ: 'Trajectoire circulaire et arcs égaux : <b>mouvement circulaire uniforme</b>. Le vecteur vitesse est tangent au cercle, il change de direction.' }[type.v]);
+      } else { S.stats([['τ', fr(t * 1000), 'ms']]); S.note(shown < N ? 'Enregistrement…' : 'Choisis un point dont les voisins sont visibles.'); }
+      S.draw(s);
+    }
+    draw();
+  };
+
+  // 4. Principe d'inertie : autoporteur sur table horizontale / inclinée
+  SIMS.inertie = (el) => {
+    const S = frame(el, 'Mobile autoporteur lancé en tournant', 'G = centre d’inertie (rouge), B = point du bord (bleu)', '0 0 640 300');
+    const table = seg(S.ctrls, 'Table', [['h', 'Horizontale (pseudo-isolé)'], ['i', 'Inclinée (non isolé)']], 'h', go);
+    const v0 = slider(S.ctrls, { label: 'Vitesse de lancement', min: 0.3, max: 0.9, step: 0.05, value: 0.7, unit: 'm/s' }, go);
+    const w = slider(S.ctrls, { label: 'Rotation du mobile', min: 0, max: 30, value: 14, unit: 'rad/s' }, go);
+    const N = 18, tau = 0.04;
+    let shown = N, stop = null;
+    btn(S.ctrls, '▶ Relancer', go, true);
+    function go() {
+      if (stop) stop();
+      shown = 0; let acc = 0;
+      stop = loop(el, (dt) => { acc += dt; if (acc > 0.09) { acc = 0; shown++; draw(); } return shown < N; });
+    }
+    function draw() {
+      const G = [], B = [];
+      for (let k = 0; k < N; k++) {
+        const t = k * tau, x = 40 + v0.v * t * 800, y = table.v === 'h' ? 150 : 60 + 0.5 * 2.6 * t * t * 800;
+        G.push([x, y]); B.push([x + 26 * Math.cos(w.v * t), y + 26 * Math.sin(w.v * t)]);
+      }
+      let s = table.v === 'i' ? T(620, 290, '↓ pente', 'end', 'muted') : '';
+      for (let k = 0; k < Math.min(shown, N); k++) {
+        if (G[k][0] > 610) break;
+        s += `<circle cx="${n2(G[k][0])}" cy="${n2(G[k][1])}" r="26" class="puck"/>`;
+        s += `<circle cx="${n2(G[k][0])}" cy="${n2(G[k][1])}" r="4" fill="${COL.a}"/><circle cx="${n2(B[k][0])}" cy="${n2(B[k][1])}" r="4" fill="${COL.b}"/>`;
+      }
+      S.draw(s);
+      const dG = Math.hypot(G[2][0] - G[1][0], G[2][1] - G[1][1]), dG2 = Math.hypot(G[9][0] - G[8][0], G[9][1] - G[8][1]);
+      S.stats([['G₁G₂', fr(dG / 8), 'mm (échelle)'], ['G₈G₉', fr(dG2 / 8), 'mm'], ['Mouvement de G', table.v === 'h' ? 'rectiligne uniforme' : 'curviligne, accéléré']]);
+      S.note(table.v === 'h' ? 'Le poids et la réaction de la table se compensent : le mobile est <b>pseudo-isolé</b>. Seul le point G a un mouvement rectiligne uniforme ; le point B, lui, tourne autour de G.' : 'Sur la table inclinée, les forces ne se compensent plus : la trajectoire de G n’est plus une droite et sa vitesse change.');
+    }
+    draw();
+  };
+
+  // 4-2. Centre d'inertie de deux masses
+  SIMS.barycentre = (el) => {
+    const S = frame(el, 'Centre d’inertie d’un système de deux corps', 'Change les masses aux extrémités', '0 0 640 200');
+    const m1 = slider(S.ctrls, { label: 'Masse m₁ (en A)', min: 50, max: 500, step: 10, value: 200, unit: 'g' }, draw);
+    const m2 = slider(S.ctrls, { label: 'Masse m₂ (en B)', min: 50, max: 500, step: 10, value: 100, unit: 'g' }, draw);
+    function draw() {
+      const xa = 80, xb = 560, AB = 30; // cm
+      const AG = (m2.v / (m1.v + m2.v)) * AB, xg = xa + ((xb - xa) * AG) / AB;
+      const r1 = 10 + Math.sqrt(m1.v) * 1.1, r2 = 10 + Math.sqrt(m2.v) * 1.1;
+      S.draw(`<rect x="${xa}" y="96" width="${xb - xa}" height="8" rx="4" class="obj"/><circle cx="${xa}" cy="100" r="${r1}" fill="${COL.b}"/><circle cx="${xb}" cy="100" r="${r2}" fill="${COL.c}"/>` +
+        T(xa, 100 + r1 + 18, 'A (m₁)', 'middle') + T(xb, 100 + r2 + 18, 'B (m₂)', 'middle') +
+        `<circle cx="${n2(xg)}" cy="100" r="7" fill="${COL.a}"/>` + T(xg, 70, 'G', 'middle', 'lab') + L(xa, 160, xg, 160, 'stroke') + T((xa + xg) / 2, 178, 'AG = ' + ft(AG) + ' cm', 'middle'));
+      S.stats([['AG = m₂·AB / (m₁ + m₂)', fr(AG), 'cm'], ['GB', fr(AB - AG), 'cm'], ['m₁·GA', fr(m1.v * AG), 'g·cm'], ['m₂·GB', fr(m2.v * (AB - AG)), 'g·cm']]);
+      S.note('Relation barycentrique : m₁·<span class="v">GA</span> + m₂·<span class="v">GB</span> = <span class="v">0</span>. G est toujours plus près de la masse la plus grande.');
+    }
+    draw();
+  };
+
+  // 5. Équilibre sous deux forces
+  SIMS.deuxforces = (el) => {
+    const S = frame(el, 'Anneau léger tiré par deux dynamomètres', 'Cherche la position d’équilibre', '0 0 640 280');
+    const f2 = slider(S.ctrls, { label: 'Intensité de F₂', min: 0, max: 8, step: 0.5, value: 6, unit: 'N' }, draw);
+    const a2 = slider(S.ctrls, { label: 'Direction de F₂', min: 120, max: 240, step: 5, value: 160, unit: '°' }, draw);
+    const F1 = 4;
+    function draw() {
+      const cx = 320, cy = 140, k = 22, a = (a2.v * Math.PI) / 180;
+      const fx = F1 + f2.v * Math.cos(a), fy = f2.v * Math.sin(a), Rr = Math.hypot(fx, fy);
+      const eq = Rr < 0.05;
+      let s = `<circle cx="${cx}" cy="${cy}" r="14" fill="none" stroke="${eq ? COL.c : 'currentColor'}" stroke-width="4" class="${eq ? '' : 'stroke'}"/>`;
+      s += arrow(cx, cy, cx + F1 * k, cy, COL.a, 'F₁ = 4 N') + arrow(cx, cy, cx + f2.v * k * Math.cos(a), cy - f2.v * k * Math.sin(a), COL.b, 'F₂', cx + f2.v * k * Math.cos(a) - 24, cy - f2.v * k * Math.sin(a) - 8);
+      if (!eq) s += arrow(cx, cy, cx + fx * k, cy - fy * k, COL.d, 'somme', undefined, undefined, 2);
+      S.draw(s);
+      S.stats([['Même droite d’action ?', Math.abs(a2.v - 180) < 1 ? 'oui ✔' : 'non ✘'], ['Même intensité ?', f2.v === F1 ? 'oui ✔' : 'non ✘'], ['F₁ + F₂ (somme)', fr(Rr), 'N']]);
+      S.note(eq ? '<b>Équilibre !</b> <span class="v">F₁</span> + <span class="v">F₂</span> = <span class="v">0</span> : les deux forces ont la même droite d’action, des sens opposés et la même intensité.' : 'Pas d’équilibre : l’anneau serait entraîné dans le sens de la somme (flèche orange).', eq ? 'ok' : '');
+    }
+    draw();
+  };
+
+  // 5-2. Loi de Hooke : tension d'un ressort
+  SIMS.ressort = (el) => {
+    const S = frame(el, 'Allongement d’un ressort (loi de Hooke)', 'Accroche des masses : les mesures s’ajoutent au graphique', '0 0 640 340');
+    const K = { A: 20, B: 40, C: 80 };
+    let kn = 'A', mes = {};
+    seg(S.ctrls, 'Ressort', [['A', 'Ressort A'], ['B', 'Ressort B'], ['C', 'Ressort C']], 'A', (v) => { kn = v; mes = {}; draw(); });
+    const m = slider(S.ctrls, { label: 'Masse accrochée', min: 0, max: 400, step: 50, value: 100, unit: 'g' }, draw);
+    btn(S.ctrls, 'Effacer les mesures', () => { mes = {}; draw(); });
+    function draw() {
+      const k = K[kn], T0 = (m.v / 1000) * 9.8, dl = (T0 / k) * 100; // cm
+      mes[m.v] = [dl, T0];
+      const top = 20, l0 = 90, px = 7, yEnd = top + l0 + dl * px;
+      let s = `<rect x="60" y="10" width="120" height="10" class="obj"/>` + spring(120, top, yEnd, 12, 11);
+      for (let c = 0; c <= 30; c += 2) s += L(30, top + l0 + c * px, c % 10 ? 38 : 44, top + l0 + c * px, 'stroke') + (c % 10 ? '' : T(26, top + l0 + c * px + 4, c, 'end', 'tick'));
+      s += T(30, top + l0 - 8, 'Δl (cm)', 'start', 'tick') + L(100, top + l0, 140, top + l0, 'dash');
+      if (m.v) s += `<rect x="104" y="${n2(yEnd)}" width="32" height="${14 + m.v / 20}" rx="3" fill="${COL.d}"/>` + arrow(155, yEnd, 155, yEnd - T0 * 12, COL.b, 'T', 162, yEnd - T0 * 12 + 10);
+      const pts = Object.values(mes).sort((a, b) => a[0] - b[0]);
+      const pl = plot({ x: 300, y: 20, w: 310, h: 270, xmin: 0, xmax: 20, ymin: 0, ymax: 4, xl: 'Δl (cm)', yl: 'T (N)', nx: 4, ny: 4, series: [{ dots: pts, color: COL.b }].concat(pts.length > 1 ? [{ line: [[0, 0], [20, k * 0.2]], color: COL.b, dash: true, w: 1.5 }] : []) });
+      S.draw(s + pl.svg);
+      S.stats([['T = P = m·g', fr(T0), 'N'], ['Allongement Δl', fr(dl), 'cm'], ['T / Δl', m.v ? fr(T0 / (dl / 100)) : '—', 'N/m'], ['Mesures', pts.length]]);
+      S.note(pts.length > 1 ? `Les points sont alignés avec l’origine : T = k·Δl, avec la raideur <b>k = ${k} N/m</b> pour ce ressort.` : 'À l’équilibre, la tension du ressort compense le poids : T = P = m·g.');
+    }
+    draw();
+  };
+
+  // 5-3. Poussée d'Archimède
+  SIMS.archimede = (el) => {
+    const S = frame(el, 'La poussée d’Archimède', 'Enfonce le cylindre dans le liquide', '0 0 640 320');
+    const LQ = { eau: { n: 'Eau', r: 1000, c: '#60a5fa' }, sale: { n: 'Eau salée', r: 1150, c: '#38bdf8' }, huile: { n: 'Huile', r: 900, c: '#fbbf24' } };
+    let lq = LQ.eau;
+    seg(S.ctrls, 'Liquide', Object.entries(LQ).map(([k, v]) => [k, v.n]), 'eau', (k) => { lq = LQ[k]; draw(); });
+    const imm = slider(S.ctrls, { label: 'Partie immergée', min: 0, max: 100, step: 5, value: 50, unit: '%' }, draw);
+    const V = 200e-6, rhoS = 2700, P = rhoS * V * 9.8;
+    function draw() {
+      const Vi = (V * imm.v) / 100, Fa = lq.r * Vi * 9.8, Fd = P - Fa;
+      const by = 150 + imm.v * 0.9, h = 90;
+      let s = `<rect x="200" y="160" width="240" height="140" fill="${lq.c}" opacity=".45"/><rect x="200" y="160" width="240" height="140" fill="none" class="stroke"/>`;
+      s += `<rect x="300" y="10" width="40" height="60" rx="6" class="obj"/>` + T(320, 46, fr(Fd).replace(/<[^>]+>/g, '') + ' N', 'middle', 'white small');
+      s += spring(320, 70, by - h, 6, 8) + `<rect x="295" y="${by - h}" width="50" height="${h}" rx="4" fill="#94a3b8"/>`;
+      s += arrow(370, by - h / 2, 370, by - h / 2 + P * 14, COL.a, 'P') + (Fa > 0 ? arrow(390, by - 10, 390, by - 10 - Fa * 14, COL.b, 'Fa', 396, by - 10 - Fa * 14 + 10) : '');
+      S.draw(s);
+      S.stats([['Poids P', fr(P), 'N'], ['Volume immergé', fr(Vi * 1e6), 'cm³'], ['Poussée Fa = ρ·V·g', fr(Fa), 'N'], ['Indication du dynamomètre', fr(Fd), 'N']]);
+      S.note(`F<sub>a</sub> = ρ<sub>liquide</sub> · V<sub>immergé</sub> · g avec ρ = ${lq.r} kg/m³. Le dynamomètre indique P − F<sub>a</sub> : le corps paraît plus léger.`);
+    }
+    draw();
+  };
+
+  // 6. Équilibre sous trois forces : corps suspendu à deux fils
+  SIMS.troisforces = (el) => {
+    const S = frame(el, 'Solide suspendu par deux fils', 'Règle les angles : le triangle des forces se ferme', '0 0 640 320');
+    const Pw = slider(S.ctrls, { label: 'Poids P', min: 2, max: 12, step: 1, value: 6, unit: 'N' }, draw);
+    const al = slider(S.ctrls, { label: 'Angle α du fil 1 avec la verticale', min: 10, max: 70, step: 5, value: 40, unit: '°' }, draw);
+    const be = slider(S.ctrls, { label: 'Angle β du fil 2 avec la verticale', min: 10, max: 70, step: 5, value: 30, unit: '°' }, draw);
+    function draw() {
+      const a = (al.v * Math.PI) / 180, b = (be.v * Math.PI) / 180, P = Pw.v;
+      const T1 = (P * Math.sin(b)) / Math.sin(a + b), T2 = (P * Math.sin(a)) / Math.sin(a + b);
+      const ox = 200, oy = 190, k = 11;
+      let s = L(20, 20, 380, 20, 'stroke', 'stroke-width="4"');
+      const l = Math.min(160 / Math.cos(a), 170 / Math.sin(a) ), l2 = Math.min(160 / Math.cos(b), 170 / Math.sin(b));
+      s += L(ox, oy, ox - l * Math.sin(a), oy - l * Math.cos(a), 'stroke') + L(ox, oy, ox + l2 * Math.sin(b), oy - l2 * Math.cos(b), 'stroke') + L(ox, oy, ox, oy + 40, 'stroke');
+      s += `<rect x="${ox - 18}" y="${oy + 40}" width="36" height="30" rx="4" fill="${COL.d}"/>`;
+      s += arrow(ox, oy, ox - T1 * k * Math.sin(a), oy - T1 * k * Math.cos(a), COL.a, 'T₁', ox - T1 * k * Math.sin(a) - 26, oy - T1 * k * Math.cos(a)) +
+        arrow(ox, oy, ox + T2 * k * Math.sin(b), oy - T2 * k * Math.cos(b), COL.b, 'T₂') + arrow(ox, oy, ox, oy + P * k, COL.c, 'P', ox + 8, oy + P * k);
+      // polygone des forces (P puis T1 puis T2)
+      const kx = 12, px = 520, py = 40;
+      const p1 = [px, py + P * kx], p2 = [p1[0] - T1 * kx * Math.sin(a), p1[1] - T1 * kx * Math.cos(a)], p3 = [p2[0] + T2 * kx * Math.sin(b), p2[1] - T2 * kx * Math.cos(b)];
+      s += T(520, 20, 'Dynamique des forces', 'middle', 'muted') + arrow(px, py, p1[0], p1[1], COL.c, 'P', px + 8, (py + p1[1]) / 2) + arrow(p1[0], p1[1], p2[0], p2[1], COL.a, 'T₁', (p1[0] + p2[0]) / 2 - 8, (p1[1] + p2[1]) / 2 + 18) + arrow(p2[0], p2[1], p3[0], p3[1], COL.b, 'T₂', (p2[0] + p3[0]) / 2 - 24, (p2[1] + p3[1]) / 2);
+      S.draw(s);
+      S.stats([['T₁ = P·sinβ / sin(α+β)', fr(T1), 'N'], ['T₂ = P·sinα / sin(α+β)', fr(T2), 'N'], ['Écart de fermeture', fr(Math.hypot(p3[0] - px, p3[1] - py) / kx, 2), 'N']]);
+      S.note('À l’équilibre : <span class="v">T₁</span> + <span class="v">T₂</span> + <span class="v">P</span> = <span class="v">0</span>. Mis bout à bout, les trois vecteurs forment un triangle fermé, et leurs droites d’action se coupent en un même point (ici le nœud).', 'ok');
+    }
+    draw();
+  };
+
+  // 6-2. Plan incliné avec frottement
+  SIMS.planincline = (el) => {
+    const S = frame(el, 'Solide sur un plan incliné', 'Incline le plan : le solide glisse-t-il ?', '0 0 640 320');
+    const al = slider(S.ctrls, { label: 'Inclinaison α', min: 0, max: 50, value: 20, unit: '°' }, draw);
+    const ph = slider(S.ctrls, { label: 'Angle de frottement φ (surface)', min: 0, max: 40, value: 25, unit: '°' }, draw);
+    const P = 10;
+    function draw() {
+      const a = (al.v * Math.PI) / 180, eq = al.v <= ph.v;
+      const ox = 80, oy = 280, Lp = 480;
+      const ex = ox + Lp * Math.cos(a), ey = oy - Lp * Math.sin(a);
+      const ux = Math.cos(a), uy = -Math.sin(a), nx = -Math.sin(a), ny = -Math.cos(a);
+      const t = 0.55, bx = ox + Lp * t * ux, by = oy + Lp * t * uy, cx = bx + nx * 22, cy = by + ny * 22;
+      let s = `<polygon points="${ox},${oy} ${n2(ex)},${n2(ey)} ${n2(ex)},${oy}" class="plane"/>`;
+      s += `<g transform="rotate(${-al.v} ${n2(cx)} ${n2(cy)})"><rect x="${n2(cx - 34)}" y="${n2(cy - 22)}" width="68" height="44" rx="5" fill="${COL.d}"/></g>`;
+      const k = 9, RN = P * Math.cos(a), RT = eq ? P * Math.sin(a) : P * Math.cos(a) * Math.tan((ph.v * Math.PI) / 180);
+      s += arrow(cx, cy, cx, cy + P * k, COL.c, 'P', cx + 6, cy + P * k);
+      const rx = nx * RN + ux * RT, ry = ny * RN + uy * RT;
+      s += arrow(cx, cy, cx + rx * k, cy + ry * k, COL.a, 'R', cx + rx * k + 4, cy + ry * k);
+      s += arrow(cx, cy, cx + nx * RN * k, cy + ny * RN * k, '#f87171', 'R<tspan font-size="10" baseline-shift="sub">N</tspan>', undefined, undefined, 1.6) + (RT > 0.05 ? arrow(cx, cy, cx + ux * RT * k, cy + uy * RT * k, '#fca5a5', 'R<tspan font-size="10" baseline-shift="sub">T</tspan>', undefined, undefined, 1.6) : '');
+      s += T(ox + 60, oy - 8, 'α', 'middle');
+      S.draw(s);
+      S.stats([['R<sub>N</sub> = P·cosα', fr(RN), 'N'], ['R<sub>T</sub> (frottement)', fr(RT), 'N'], ['Angle entre R et la normale', eq ? al.v + '°' : '≥ φ = ' + ph.v + '°'], ['État', eq ? 'équilibre' : 'glisse']]);
+      S.note(eq ? `Équilibre : <span class="v">R</span> compense <span class="v">P</span>, donc R est verticale. L’angle entre <span class="v">R</span> et la normale vaut α = ${al.v}°, inférieur à φ = ${ph.v}°.` : `α = ${al.v}° dépasse l’angle de frottement φ = ${ph.v}° : la force de frottement ne peut plus compenser, <b>le solide glisse</b>.`, eq ? 'ok' : 'bad');
+    }
+    draw();
+  };
+
+  // 7. Théorème des moments : barre en équilibre autour d'un axe
+  SIMS.moments = (el) => {
+    const S = frame(el, 'Barre mobile autour d’un axe fixe', 'Place les masses pour équilibrer la barre', '0 0 640 300');
+    const m1 = slider(S.ctrls, { label: 'Masse à gauche', min: 50, max: 300, step: 50, value: 200, unit: 'g' }, draw);
+    const d1 = slider(S.ctrls, { label: 'Distance à l’axe (gauche)', min: 5, max: 25, step: 5, value: 10, unit: 'cm' }, draw);
+    const m2 = slider(S.ctrls, { label: 'Masse à droite', min: 50, max: 300, step: 50, value: 100, unit: 'g' }, draw);
+    const d2 = slider(S.ctrls, { label: 'Distance à l’axe (droite)', min: 5, max: 25, step: 5, value: 15, unit: 'cm' }, draw);
+    let ang = 0;
+    loop(el, (dt) => { const target = target0(); ang += (target - ang) * Math.min(1, dt * 4); render(); return true; });
+    function sums() { const F1 = (m1.v / 1000) * 9.8, F2 = (m2.v / 1000) * 9.8; return { F1, F2, M1: F1 * d1.v / 100, M2: -F2 * d2.v / 100 }; }
+    function target0() { const { M1, M2 } = sums(), sm = M1 + M2; return Math.abs(sm) < 1e-6 ? 0 : sm > 0 ? -14 : 14; }
+    function render() {
+      const cx = 320, cy = 120, px = 10, a = (ang * Math.PI) / 180;
+      const P = (d) => [cx + d * px * Math.cos(a), cy + d * px * Math.sin(a)];
+      let s = `<polygon points="${cx},${cy} ${cx - 22},${cy + 140} ${cx + 22},${cy + 140}" class="obj" opacity=".5"/>`;
+      s += `<g transform="rotate(${n2(ang)} ${cx} ${cy})"><rect x="${cx - 270}" y="${cy - 5}" width="540" height="10" rx="5" class="obj"/>${[-25, -20, -15, -10, -5, 5, 10, 15, 20, 25].map((d) => `<circle cx="${cx + d * px}" cy="${cy}" r="2.5" class="dot"/>`).join('')}</g>`;
+      const [x1, y1] = P(-d1.v), [x2, y2] = P(d2.v), { F1, F2 } = sums();
+      s += L(x1, y1, x1, y1 + 50, 'stroke') + `<rect x="${n2(x1 - 13)}" y="${n2(y1 + 50)}" width="26" height="${16 + m1.v / 15}" rx="3" fill="${COL.b}"/>` + arrow(x1, y1, x1, y1 + F1 * 25, COL.a, 'F₁', x1 - 26, y1 + F1 * 25);
+      s += L(x2, y2, x2, y2 + 50, 'stroke') + `<rect x="${n2(x2 - 13)}" y="${n2(y2 + 50)}" width="26" height="${16 + m2.v / 15}" rx="3" fill="${COL.c}"/>` + arrow(x2, y2, x2, y2 + F2 * 25, COL.a, 'F₂', x2 + 8, y2 + F2 * 25);
+      s += `<circle cx="${cx}" cy="${cy}" r="7" fill="${COL.a}"/>` + T(cx, cy - 14, 'Δ', 'middle', 'lab');
+      S.draw(s);
+    }
+    function draw() {
+      const { M1, M2 } = sums(), sm = M1 + M2;
+      S.stats([['M(F₁) = +F₁·d₁', fr(M1), 'N·m'], ['M(F₂) = −F₂·d₂', fr(M2), 'N·m'], ['Somme des moments', fr(Math.abs(sm) < 1e-9 ? 0 : sm), 'N·m']]);
+      S.note(Math.abs(sm) < 1e-9 ? '<b>Équilibre !</b> La somme algébrique des moments est nulle : M(F₁) + M(F₂) = 0.' : `La barre tourne vers ${sm > 0 ? 'la gauche' : 'la droite'} : la somme des moments n’est pas nulle.`, Math.abs(sm) < 1e-9 ? 'ok' : '');
+    }
+    draw(); render();
+  };
+
+  W.sim = (el) => {
+    const f = SIMS[el.dataset.sim];
+    if (!f) { el.innerHTML = '<p class="muted">Expérience indisponible.</p>'; return; }
+    f(el);
+    // explication du prof (but, étapes, conclusion) + lecture à voix haute
+    const g = (window.TCSF_GUIDES || {})[el.dataset.sim];
+    if (g) {
+      const d = document.createElement('details');
+      d.className = 'sim-guide';
+      if (el.dataset.open === '1') d.open = true;
+      d.innerHTML = `<summary>👨‍🏫 Explication du prof</summary>
+        <p><b>🎯 But :</b> ${g.b}</p><ol>${g.s.map((x) => `<li>${x}</li>`).join('')}</ol>
+        <p class="sim-guide-c"><b>💡 À comprendre :</b> ${g.c}</p>
+        <button type="button" class="chip-btn sim-listen">🔈 Écouter le prof</button>`;
+      const head = el.querySelector('.w-head');
+      if (head) head.after(d); else el.prepend(d);
+      const lb = d.querySelector('.sim-listen');
+      lb.addEventListener('click', async () => {
+        const V = window.TCSF_VOICE;
+        if (!V) return;
+        if (V.speaking) { V.stop(); lb.textContent = '🔈 Écouter le prof'; return; }
+        if (V.ready) await V.ready();
+        if (!V.canSpeak('fr')) {
+          if (!d.querySelector('.voice-missing')) lb.after(V.missingBox('fr', () => lb.click()));
+          return;
+        }
+        lb.textContent = '⏹ Arrêter';
+        Promise.resolve(V.speak(`${g.b} ${g.s.map((x, i) => `Étape ${i + 1}. ${x}`).join(' ')} À comprendre : ${g.c}`, 'fr', true)).then(() => { lb.textContent = '🔈 Écouter le prof'; });
+      });
+    }
+  };
+  window.TCSF_SIM = { SIMS, frame, slider, seg, btn, loop, arrow, T, L, spring, plot, fr, ft, n2, COL, sup };
+})();

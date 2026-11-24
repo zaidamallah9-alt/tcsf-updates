@@ -1,0 +1,273 @@
+// Expériences interactives — Électricité
+(() => {
+  const { SIMS, frame, slider, seg, btn, arrow, T, L, plot, fr, ft, n2, COL } = window.TCSF_SIM;
+  const flowDur = (I, ref) => (I <= 1e-9 ? 0 : Math.max(0.25, Math.min(6, ref / I)));
+  // fil parcouru par un courant (pointillés animés dans le sens conventionnel)
+  const wire = (pts, I, ref = 0.2) => {
+    const d = pts.map((p) => p.join(',')).join(' ');
+    const dur = flowDur(Math.abs(I), ref);
+    return `<polyline points="${d}" class="wire"/>` + (dur ? `<polyline points="${d}" class="flow" style="animation-duration:${dur}s"/>` : '');
+  };
+  const meter = (x, y, l, val) => `<circle cx="${x}" cy="${y}" r="17" class="meter"/>` + T(x, y + 5, l, 'middle', 'lab') + (val !== undefined ? `<rect x="${x + 20}" y="${y - 12}" width="78" height="22" rx="5" class="lcd"/>` + T(x + 59, y + 4, val, 'middle', 'lcdt') : '');
+  const resH = (x, y, lab) => `<rect x="${x - 22}" y="${y - 8}" width="44" height="16" class="comp"/>` + (lab ? T(x, y - 14, lab, 'middle', 'small') : '');
+  const resV = (x, y, lab) => `<rect x="${x - 8}" y="${y - 22}" width="16" height="44" class="comp"/>` + (lab ? T(x + 14, y + 4, lab, 'start', 'small') : '');
+  const lampV = (x, y, glow, lab) => `<circle cx="${x}" cy="${y}" r="${14 + glow * 10}" fill="#fde047" opacity="${Math.min(0.85, glow)}"/><circle cx="${x}" cy="${y}" r="14" class="comp"/>` + L(x - 10, y - 10, x + 10, y + 10, 'stroke') + L(x - 10, y + 10, x + 10, y - 10, 'stroke') + (lab ? T(x + 20, y + 4, lab, 'start', 'small') : '');
+  const genV = (x, y, lab) => `<rect x="${x - 16}" y="${y - 10}" width="32" height="20" class="hole"/>` + L(x - 16, y - 5, x + 16, y - 5, 'stroke', 'stroke-width="3"') + L(x - 9, y + 5, x + 9, y + 5, 'stroke', 'stroke-width="3"') + T(x + 22, y - 2, '+', 'start', 'lab') + T(x + 22, y + 14, '−', 'start', 'lab') + (lab ? T(x - 24, y + 4, lab, 'end', 'small') : '');
+
+  // 8. Loi des nœuds (montage en dérivation)
+  SIMS.noeuds = (el) => {
+    const S = frame(el, 'Loi des nœuds', 'Change les lampes : observe les ampèremètres', '0 0 640 300');
+    const E = slider(S.ctrls, { label: 'Tension du générateur', min: 3, max: 12, step: 0.5, value: 6, unit: 'V' }, draw);
+    const R1 = slider(S.ctrls, { label: 'Résistance de L₁', min: 10, max: 100, step: 5, value: 30, unit: 'Ω' }, draw);
+    const R2 = slider(S.ctrls, { label: 'Résistance de L₂', min: 10, max: 100, step: 5, value: 60, unit: 'Ω' }, draw);
+    function draw() {
+      const I1 = E.v / R1.v, I2 = E.v / R2.v, I = I1 + I2;
+      let s = wire([[60, 120], [60, 40], [360, 40]], I) + wire([[360, 40], [560, 40], [560, 260], [360, 260]], I2) + wire([[360, 40], [360, 260]], I1) + wire([[360, 260], [60, 260], [60, 180]], I);
+      s += genV(60, 150, 'G') + meter(180, 40, 'A', fr(I * 1000, 3).replace(/<[^>]+>/g, '') + ' mA') + meter(360, 100, 'A₁') + meter(560, 100, 'A₂');
+      s += T(380, 105, fr(I1 * 1000) + ' mA', 'start', 'lcdt2') + T(580, 105, fr(I2 * 1000) + ' mA', 'start', 'lcdt2');
+      s += lampV(360, 190, I1 * 2.2) + lampV(560, 190, I2 * 2.2) + T(340, 194, 'L₁', 'end', 'small') + T(540, 194, 'L₂', 'end', 'small');
+      s += `<circle cx="360" cy="40" r="5" class="dot"/><circle cx="360" cy="260" r="5" class="dot"/>` + T(360, 28, 'N', 'middle', 'lab') + T(360, 284, 'N′', 'middle', 'lab');
+      S.draw(s);
+      S.stats([['I (branche principale)', fr(I * 1000), 'mA'], ['I₁', fr(I1 * 1000), 'mA'], ['I₂', fr(I2 * 1000), 'mA'], ['I₁ + I₂', fr((I1 + I2) * 1000), 'mA'], ['Charge en 1 min : Q = I·Δt', fr(I * 60), 'C']]);
+      S.note('Au nœud N : la somme des intensités des courants qui arrivent est égale à la somme des intensités des courants qui en partent : <b>I = I₁ + I₂</b>.', 'ok');
+    }
+    draw();
+  };
+
+  // 8-2. Lecture d'un ampèremètre à aiguille
+  SIMS.amperemetre = (el) => {
+    const S = frame(el, 'Mesurer avec un ampèremètre à aiguille', 'Choisis le bon calibre', '0 0 640 260');
+    const Ireal = slider(S.ctrls, { label: 'Courant dans le circuit (à mesurer)', min: 0.02, max: 2.5, step: 0.01, value: 0.24, fmt: () => '?' }, draw);
+    const C = seg(S.ctrls, 'Calibre', [[0.1, '100 mA'], [0.3, '300 mA'], [1, '1 A'], [3, '3 A']], 3, draw);
+    function draw() {
+      const n0 = 100, over = Ireal.v > C.v, n = Math.min(n0 * 1.04, (Ireal.v / C.v) * n0);
+      const cx = 320, cy = 230, R = 180, a0 = 150, a1 = 30;
+      const ang = (d) => ((a0 - ((a0 - a1) * d) / n0) * Math.PI) / 180;
+      let s = `<path d="M${cx - R - 20},${cy} A${R + 20},${R + 20} 0 0 1 ${cx + R + 20},${cy} Z" class="dial"/>`;
+      for (let d = 0; d <= n0; d += 2) {
+        const a = ang(d), r2 = d % 10 ? R - 8 : R - 16;
+        s += L(cx + R * Math.cos(a), cy - R * Math.sin(a), cx + r2 * Math.cos(a), cy - r2 * Math.sin(a), 'stroke');
+        if (d % 20 === 0) s += T(cx + (R - 30) * Math.cos(a), cy - (R - 30) * Math.sin(a) + 4, d, 'middle', 'tick');
+      }
+      const a = ang(n);
+      s += L(cx, cy, cx + (R - 4) * Math.cos(a), cy - (R - 4) * Math.sin(a), '', `stroke="${COL.a}" stroke-width="3"`) + `<circle cx="${cx}" cy="${cy}" r="7" fill="${COL.a}"/>`;
+      s += T(cx, cy - 60, 'Calibre : ' + (C.v < 1 ? C.v * 1000 + ' mA' : C.v + ' A') + ' · 100 divisions', 'middle', 'muted');
+      S.draw(s);
+      const nl = Math.round(n * 2) / 2;
+      S.stats([['Divisions lues n', over ? '> 100' : fr(nl)], ['I = C · n / n₀', over ? '—' : fr((C.v * nl) / n0 * 1000), 'mA'], ['Incertitude (classe 1,5)', fr((1.5 * C.v) / 100 * 1000), 'mA']]);
+      const best = [0.1, 0.3, 1, 3].find((c) => c >= Ireal.v);
+      S.note(over ? '⚠ L’aiguille dépasse la graduation : le calibre est trop petit, il faut choisir un calibre plus grand.' : C.v === best ? '✔ Bon calibre : c’est le plus petit calibre supérieur à l’intensité mesurée, la lecture est la plus précise.' : 'La mesure est possible, mais un calibre plus petit donnerait une lecture plus précise.', over ? 'bad' : C.v === best ? 'ok' : '');
+    }
+    draw();
+  };
+
+  // 9. Oscilloscope
+  SIMS.oscillo = (el) => {
+    const S = frame(el, 'Visualiser une tension à l’oscilloscope', 'Règle les sensibilités pour bien lire', '0 0 640 340');
+    const mode = seg(S.ctrls, 'Tension', [['dc', 'Continue (pile)'], ['ac', 'Alternative sinusoïdale (GBF)']], 'dc', draw);
+    const U = slider(S.ctrls, { label: 'Tension continue U', min: -12, max: 12, step: 0.5, value: 4.5, unit: 'V' }, draw);
+    const Um = slider(S.ctrls, { label: 'Tension maximale Um (GBF)', min: 1, max: 12, step: 0.5, value: 6, unit: 'V' }, draw);
+    const f = seg(S.ctrls, 'Fréquence (GBF)', [[50, '50 Hz'], [100, '100 Hz'], [250, '250 Hz']], 100, draw);
+    const Sv = seg(S.ctrls, 'Sensibilité verticale', [[1, '1 V/div'], [2, '2 V/div'], [5, '5 V/div']], 2, draw);
+    const Sh = seg(S.ctrls, 'Balayage', [[1, '1 ms/div'], [2, '2 ms/div'], [5, '5 ms/div']], 2, draw);
+    function draw() {
+      const x0 = 20, y0 = 10, dv = 40, W = 400, H = 320, cy = y0 + H / 2;
+      let s = `<rect x="${x0}" y="${y0}" width="${W}" height="${H}" rx="8" class="screen"/>`;
+      for (let i = 1; i < 10; i++) s += L(x0 + i * dv, y0, x0 + i * dv, y0 + H, 'sgrid');
+      for (let j = 1; j < 8; j++) s += L(x0, y0 + j * dv, x0 + W, y0 + j * dv, 'sgrid');
+      s += L(x0, cy, x0 + W, cy, 'sgrid2') + L(x0 + W / 2, y0, x0 + W / 2, y0 + H, 'sgrid2');
+      const clip = (y) => Math.max(y0 + 2, Math.min(y0 + H - 2, y));
+      let st;
+      if (mode.v === 'dc') {
+        const yd = U.v / Sv.v;
+        s += L(x0, clip(cy - yd * dv), x0 + W, clip(cy - yd * dv), 'trace');
+        st = [['Déviation verticale y', Math.abs(yd) > 4 ? 'hors écran' : fr(yd), 'div'], ['U = S<sub>v</sub> · y', Math.abs(yd) > 4 ? '—' : fr(yd * Sv.v), 'V']];
+        S.note(Math.abs(yd) > 4 ? 'La trace sort de l’écran : augmente la sensibilité verticale (plus de V/div).' : 'Une tension continue donne une droite horizontale. Si U < 0, la trace est en dessous de l’axe central.', Math.abs(yd) > 4 ? 'bad' : '');
+      } else {
+        const Tms = 1000 / f.v, pts = [];
+        for (let k = 0; k <= 400; k++) { const tms = (k / 400) * 10 * Sh.v; pts.push([x0 + k, clip(cy - ((Um.v * Math.sin((2 * Math.PI * tms) / Tms)) / Sv.v) * dv)]); }
+        s += `<polyline points="${pts.map((p) => n2(p[0]) + ',' + n2(p[1])).join(' ')}" class="trace" fill="none"/>`;
+        const ym = Um.v / Sv.v, xT = Tms / Sh.v;
+        st = [['Hauteur max y<sub>m</sub>', ym > 4 ? 'hors écran' : fr(ym), 'div'], ['Um = S<sub>v</sub> · y<sub>m</sub>', ym > 4 ? '—' : fr(Um.v), 'V'], ['Période : x divisions', xT > 10 ? '> 10' : fr(xT), 'div'], ['T = S<sub>h</sub> · x', fr(Tms), 'ms'], ['f = 1 / T', fr(f.v), 'Hz'], ['U<sub>eff</sub> = Um / √2', fr(Um.v / Math.SQRT2), 'V']];
+        S.note('Tension alternative sinusoïdale : elle change de signe périodiquement. Le voltmètre (mode AC) affiche la valeur efficace U<sub>eff</sub> = U<sub>m</sub>/√2.');
+      }
+      s += T(430, 40, 'S<tspan font-size="10" baseline-shift="sub">v</tspan> = ' + Sv.v + ' V/div', 'start') + T(430, 64, 'S<tspan font-size="10" baseline-shift="sub">h</tspan> = ' + Sh.v + ' ms/div', 'start');
+      S.draw(s);
+      S.stats(st);
+      U.el.hidden = mode.v !== 'dc'; Um.el.hidden = f.el.hidden = Sh.el.hidden = mode.v === 'dc';
+    }
+    draw();
+  };
+
+  // 9-2. Additivité des tensions (circuit série)
+  SIMS.mailles = (el) => {
+    const S = frame(el, 'Additivité des tensions dans un circuit série', 'Change les résistances', '0 0 640 280');
+    const E = slider(S.ctrls, { label: 'Tension du générateur U<sub>PN</sub>', min: 3, max: 12, step: 0.5, value: 9, unit: 'V' }, draw);
+    const R1 = slider(S.ctrls, { label: 'R₁', min: 10, max: 200, step: 10, value: 100, unit: 'Ω' }, draw);
+    const R2 = slider(S.ctrls, { label: 'R₂', min: 10, max: 200, step: 10, value: 50, unit: 'Ω' }, draw);
+    let inv = false;
+    btn(S.ctrls, 'Inverser les bornes du voltmètre V₁', () => { inv = !inv; draw(); });
+    function draw() {
+      const I = E.v / (R1.v + R2.v), U1 = R1.v * I, U2 = R2.v * I;
+      let s = wire([[80, 110], [80, 60], [560, 60], [560, 200], [80, 200], [80, 150]], I, 0.05);
+      s += genV(80, 130, 'G') + resH(240, 60, 'R₁') + resH(420, 60, 'R₂');
+      s += T(180, 50, 'A', 'middle', 'lab') + T(330, 50, 'B', 'middle', 'lab') + T(500, 50, 'C', 'middle', 'lab');
+      s += L(180, 60, 180, 100, 'dash') + L(300, 60, 300, 100, 'dash') + meter(240, 115, 'V₁') + T(240, 150, (inv ? 'U_BA = ' : 'U_AB = ') + ft(inv ? -U1 : U1) + ' V', 'middle', 'lcdt2');
+      s += L(360, 60, 360, 100, 'dash') + L(480, 60, 480, 100, 'dash') + meter(420, 115, 'V₂') + T(420, 150, 'U_BC = ' + ft(U2) + ' V', 'middle', 'lcdt2');
+      s += T(320, 240, 'U_PN = ' + ft(E.v) + ' V', 'middle', 'lab');
+      S.draw(s);
+      S.stats([['U<sub>AB</sub>', fr(U1), 'V'], ['U<sub>BC</sub>', fr(U2), 'V'], ['U<sub>AB</sub> + U<sub>BC</sub>', fr(U1 + U2), 'V'], ['U<sub>AC</sub> = U<sub>PN</sub>', fr(E.v), 'V']]);
+      S.note(inv ? 'En inversant les bornes, le voltmètre affiche une valeur négative : <b>U<sub>BA</sub> = −U<sub>AB</sub></b>.' : 'Loi d’additivité : <b>U<sub>AC</sub> = U<sub>AB</sub> + U<sub>BC</sub></b>. La tension est la même aux bornes du générateur et de l’ensemble des récepteurs.', 'ok');
+    }
+    draw();
+  };
+
+  // 10. Association de conducteurs ohmiques
+  SIMS.resistances = (el) => {
+    const S = frame(el, 'Association de deux conducteurs ohmiques', 'Série ou dérivation ?', '0 0 640 280');
+    const mode = seg(S.ctrls, 'Montage', [['s', 'En série'], ['p', 'En dérivation (parallèle)']], 's', draw);
+    const R1 = slider(S.ctrls, { label: 'R₁', min: 10, max: 470, step: 10, value: 100, unit: 'Ω' }, draw);
+    const R2 = slider(S.ctrls, { label: 'R₂', min: 10, max: 470, step: 10, value: 220, unit: 'Ω' }, draw);
+    const U = 12;
+    function draw() {
+      const ser = mode.v === 's';
+      const Req = ser ? R1.v + R2.v : (R1.v * R2.v) / (R1.v + R2.v), I = U / Req;
+      const I1 = ser ? I : U / R1.v, I2 = ser ? I : U / R2.v;
+      let s;
+      if (ser) s = wire([[80, 110], [80, 60], [560, 60], [560, 220], [80, 220], [80, 150]], I, 0.02) + resH(250, 60, 'R₁ = ' + R1.v + ' Ω') + resH(420, 60, 'R₂ = ' + R2.v + ' Ω');
+      else s = wire([[80, 110], [80, 50], [300, 50]], I, 0.02) + wire([[300, 50], [480, 50], [480, 230], [300, 230]], I2, 0.02) + wire([[300, 50], [300, 230]], I1, 0.02) + wire([[300, 230], [80, 230], [80, 150]], I, 0.02) + resV(300, 140, 'R₁') + resV(480, 140, 'R₂');
+      s += genV(80, 130, '12 V') + `<rect x="160" y="250" width="320" height="26" rx="8" class="lcd"/>` + T(320, 268, 'R_éq = ' + ft(Req) + ' Ω', 'middle', 'lcdt');
+      S.draw(s);
+      S.stats([['R<sub>éq</sub>', fr(Req), 'Ω'], ['I (générateur)', fr(I * 1000), 'mA'], ['I₁', fr(I1 * 1000), 'mA'], ['I₂', fr(I2 * 1000), 'mA'], ['U₁', fr(R1.v * I1), 'V'], ['U₂', fr(R2.v * I2), 'V']]);
+      S.note(ser ? 'En série : <b>R<sub>éq</sub> = R₁ + R₂</b>. Même intensité partout ; les tensions s’ajoutent. R<sub>éq</sub> est plus grande que chaque résistance.' : 'En dérivation : <b>1/R<sub>éq</sub> = 1/R₁ + 1/R₂</b>. Même tension aux bornes de chaque branche ; les intensités s’ajoutent. R<sub>éq</sub> est plus petite que chaque résistance.');
+    }
+    draw();
+  };
+
+  // 11. Caractéristiques de dipôles passifs
+  SIMS.caracteristique = (el) => {
+    const S = frame(el, 'Tracer la caractéristique I = f(U) d’un dipôle', 'Fais varier U : chaque mesure s’ajoute au graphique', '0 0 640 320');
+    const D = {
+      ohm: { n: 'Conducteur ohmique (100 Ω)', u: [-10, 10], i: [-100, 100], f: (u) => u * 10 },
+      lampe: { n: 'Lampe', u: [-6, 6], i: [-100, 100], f: (u) => Math.sign(u) * 85 * Math.pow(Math.abs(u) / 6, 0.55) },
+      diode: { n: 'Diode', u: [-4, 1], i: [-20, 100], f: (u) => (u < 0.6 ? 0 : Math.min(200, (u - 0.6) * 400)) },
+      zener: { n: 'Diode Zener (5,6 V)', u: [-7, 1], i: [-100, 100], f: (u) => (u > 0.6 ? Math.min(200, (u - 0.6) * 400) : u < -5.6 ? Math.max(-200, (u + 5.6) * 120) : 0) },
+      ctn: { n: 'Thermistance CTN', u: [0, 10], i: [0, 100], x: 'T', f: (u, x) => (u / (1000 * Math.exp(3500 * (1 / (x + 273) - 1 / 298)))) * 1000 },
+      ldr: { n: 'Photorésistance (LDR)', u: [0, 10], i: [0, 100], x: 'E', f: (u, x) => (u / (40000 / (1 + x / 10))) * 1000 }
+    };
+    let d = D.ohm, mes = [], curve = false;
+    seg(S.ctrls, 'Dipôle', Object.entries(D).map(([k, v]) => [k, v.n]), 'ohm', (k) => { d = D[k]; mes = []; curve = false; U.inp.min = d.u[0]; U.inp.max = d.u[1]; U.v = Math.max(d.u[0], Math.min(d.u[1], 0.5)); X.el.hidden = !d.x; if (d.x) X.el.querySelector('.sim-sl-l').textContent = d.x === 'T' ? 'Température' : 'Éclairement'; draw(); });
+    const U = slider(S.ctrls, { label: 'Tension U appliquée', min: -10, max: 10, step: 0.1, value: 2, unit: 'V' }, draw);
+    const X = slider(S.ctrls, { label: 'Paramètre', min: 0, max: 100, step: 5, value: 25, fmt: (v) => (d.x === 'T' ? v + ' °C' : v * 10 + ' lux') }, () => { mes = []; draw(); });
+    X.el.hidden = true;
+    btn(S.ctrls, 'Tracer toute la courbe', () => { curve = !curve; draw(); });
+    function draw() {
+      const x = d.x === 'E' ? X.v * 10 : X.v, I = d.f(U.v, x);
+      mes.push([U.v, I]);
+      const line = [];
+      for (let k = 0; k <= 200; k++) { const u = d.u[0] + ((d.u[1] - d.u[0]) * k) / 200; line.push([u, d.f(u, x)]); }
+      const pl = plot({ x: 60, y: 20, w: 540, h: 260, xmin: d.u[0], xmax: d.u[1], ymin: d.i[0], ymax: d.i[1], xl: 'U (V)', yl: 'I (mA)', series: [curve ? { line, color: COL.b, w: 2 } : {}, { dots: mes, color: COL.b, r: 3 }, { dots: [[U.v, I]], color: COL.a, r: 6 }] });
+      S.draw(pl.svg);
+      S.stats([['U', fr(U.v), 'V'], ['I', fr(I), 'mA'], ['U / I', Math.abs(I) > 1e-6 ? fr(U.v / (I / 1000)) : '∞ (bloquée)', 'Ω']]);
+      S.note({
+        ohm: 'Droite passant par l’origine : <b>U = R·I</b> (loi d’Ohm). Dipôle linéaire et symétrique.',
+        lampe: 'Courbe non linéaire mais symétrique : la résistance de la lampe augmente quand elle chauffe.',
+        diode: 'En sens inverse, la diode est bloquée (I = 0). En sens direct, elle conduit au-delà du seuil U<sub>s</sub> ≈ 0,6 V. Dipôle non symétrique.',
+        zener: 'En sens direct : comme une diode (seuil ≈ 0,6 V). En sens inverse, elle conduit quand U atteint −U<sub>Z</sub> = −5,6 V : la tension reste alors presque constante.',
+        ctn: 'Quand la température augmente, la résistance de la CTN diminue : la droite devient plus pentue.',
+        ldr: 'Plus l’éclairement est fort, plus la résistance de la LDR diminue.'
+      }[Object.keys(D).find((k) => D[k] === d)]);
+    }
+    draw();
+  };
+
+  // 11-2. Montage potentiométrique
+  SIMS.potentiometre = (el) => {
+    const S = frame(el, 'Montage potentiométrique', 'Déplace le curseur C', '0 0 640 260');
+    const E = slider(S.ctrls, { label: 'Tension d’alimentation', min: 3, max: 12, step: 1, value: 12, unit: 'V' }, draw);
+    const xs = slider(S.ctrls, { label: 'Position du curseur', min: 0, max: 100, step: 5, value: 40, unit: '%' }, draw);
+    function draw() {
+      const Us = (E.v * xs.v) / 100, xc = 200 + xs.v * 2.4;
+      let s = wire([[80, 110], [80, 60], [200, 60]], 0.1) + `<rect x="200" y="50" width="240" height="20" class="comp"/>` + wire([[440, 60], [520, 60], [520, 200], [80, 200], [80, 150]], 0.1);
+      s += genV(80, 130, 'E') + arrow(xc, 20, xc, 48, COL.a, 'C', xc + 6, 22) + L(xc, 20, xc, 10, '', `stroke="${COL.a}" stroke-width="3"`) + L(xc, 10, 600, 10, '', `stroke="${COL.a}" stroke-width="2"`) + L(600, 10, 600, 200, '', `stroke="${COL.a}" stroke-width="2"`) + L(520, 200, 600, 200, 'stroke');
+      s += `<rect x="584" y="90" width="32" height="40" class="comp"/>` + T(570, 115, 'récepteur', 'end', 'small') + T(200, 90, 'A', 'middle', 'lab') + T(440, 90, 'B', 'middle', 'lab');
+      s += `<rect x="230" y="225" width="200" height="26" rx="8" class="lcd"/>` + T(330, 243, 'U_s = ' + ft(Us) + ' V', 'middle', 'lcdt');
+      S.draw(s);
+      S.stats([['Tension de sortie U<sub>s</sub>', fr(Us), 'V'], ['Fraction AC / AB', fr(xs.v / 100), '']]);
+      S.note('Le potentiomètre (rhéostat à 3 bornes) permet d’obtenir une tension réglable entre 0 et E à partir d’une tension fixe.');
+    }
+    draw();
+  };
+
+  // 12. Dipôle actif : caractéristique d'une pile et point de fonctionnement
+  SIMS.pile = (el) => {
+    const S = frame(el, 'Caractéristique d’une pile et point de fonctionnement', 'Change la résistance branchée sur la pile', '0 0 640 320');
+    const E = slider(S.ctrls, { label: 'Force électromotrice E', min: 1.5, max: 9, step: 0.5, value: 4.5, unit: 'V' }, draw);
+    const r = slider(S.ctrls, { label: 'Résistance interne r', min: 0.5, max: 5, step: 0.5, value: 1.5, unit: 'Ω' }, draw);
+    const R = slider(S.ctrls, { label: 'Résistance R du conducteur ohmique', min: 0.5, max: 30, step: 0.5, value: 6, unit: 'Ω' }, draw);
+    function draw() {
+      const I = E.v / (R.v + r.v), U = E.v - r.v * I, Icc = E.v / r.v;
+      const xmax = Math.max(2, Math.ceil(Icc * 1.1)), ymax = 10;
+      const pl = plot({ x: 60, y: 20, w: 540, h: 260, xmin: 0, xmax, ymin: 0, ymax, xl: 'I (A)', yl: 'U (V)', series: [{ line: [[0, E.v], [Icc, 0]], color: COL.b }, { line: [[0, 0], [xmax, R.v * xmax]], color: COL.c, dash: true }, { dots: [[I, U]], color: COL.a, r: 7 }] });
+      S.draw(pl.svg + T(pl.X(0) + 8, pl.Y(E.v) - 8, 'E', 'start', 'lab') + T(600, 40, 'pile : U = E − r·I', 'end', 'small') + T(600, 58, 'résistor : U = R·I (pointillés)', 'end', 'small'));
+      S.stats([['Point de fonctionnement', `I = ${fr(I)} A ; U = ${fr(U)} V`], ['Courant de court-circuit E/r', fr(Icc), 'A'], ['Puissance reçue par R', fr(U * I), 'W'], ['Perte par effet Joule dans r', fr(r.v * I * I), 'W']]);
+      S.note('Loi d’Ohm pour un générateur : <b>U<sub>PN</sub> = E − r·I</b>. Le point de fonctionnement est l’intersection de la caractéristique de la pile et de celle du conducteur ohmique.');
+    }
+    draw();
+  };
+
+  // 13. Transistor NPN
+  SIMS.transistor = (el) => {
+    const S = frame(el, 'Le transistor NPN : un amplificateur de courant', 'Augmente la tension de commande', '0 0 640 320');
+    const Ub = slider(S.ctrls, { label: 'Tension de commande U<sub>BB</sub>', min: 0, max: 5, step: 0.05, value: 1.5, unit: 'V' }, draw);
+    const beta = slider(S.ctrls, { label: 'Coefficient d’amplification β', min: 50, max: 300, step: 10, value: 100 }, draw);
+    const RB = 10000, RC = 100, VCC = 9;
+    function draw() {
+      const IB = Math.max(0, (Ub.v - 0.7) / RB), ICmax = (VCC - 0.2 - 2) / RC, IC = Math.min(beta.v * IB, ICmax);
+      const state = IB <= 0 ? 'bloqué' : beta.v * IB < ICmax ? 'fonctionnement linéaire' : 'saturé';
+      const glow = IC / ICmax;
+      let s = wire([[40, 200], [40, 150], [120, 150]], IB * 1000) + resH(90, 150, 'R_B') + wire([[120, 150], [180, 150]], IB * 1000);
+      s += `<circle cx="200" cy="150" r="30" class="comp"/>` + L(180, 130, 180, 170, 'stroke', 'stroke-width="4"') + L(180, 140, 210, 115, 'stroke') + L(180, 160, 210, 185, 'stroke') + arrow(196, 174, 210, 185, 'currentColor', '', 0, 0, 2);
+      s += T(165, 145, 'B', 'end', 'small') + T(214, 112, 'C', 'start', 'small') + T(214, 196, 'E', 'start', 'small');
+      s += wire([[210, 115], [210, 40], [300, 40]], IC, 0.01) + `<circle cx="330" cy="40" r="${12 + glow * 14}" fill="#ef4444" opacity="${Math.min(0.9, glow)}"/><circle cx="330" cy="40" r="11" class="comp"/>` + T(330, 74, 'DEL', 'middle', 'small') + wire([[341, 40], [380, 40], [380, 100]], IC, 0.01) + T(386, 110, '+9 V', 'start', 'small');
+      s += wire([[210, 185], [210, 240]], IC + IB, 0.01) + L(190, 240, 230, 240, 'stroke', 'stroke-width="3"') + T(210, 258, 'masse', 'middle', 'small') + genV(40, 220, 'U_BB');
+      const ib = [], cur = [];
+      for (let k = 0; k <= 50; k++) { const x = k * 10; cur.push([x, Math.min(beta.v * x / 1000, ICmax * 1000)]); }
+      const pl = plot({ x: 440, y: 20, w: 180, h: 240, xmin: 0, xmax: 500, ymin: 0, ymax: 80, xl: 'I_B (µA)', yl: 'I_C (mA)', nx: 2, ny: 4, series: [{ line: cur, color: COL.b, w: 2 }, { dots: [[IB * 1e6, IC * 1000]], color: COL.a, r: 6 }] });
+      S.draw(s + pl.svg);
+      S.stats([['I<sub>B</sub>', fr(IB * 1e6), 'µA'], ['I<sub>C</sub>', fr(IC * 1000), 'mA'], ['I<sub>E</sub> = I<sub>B</sub> + I<sub>C</sub>', fr((IB + IC) * 1000), 'mA'], ['État', state]]);
+      S.note(state === 'bloqué' ? 'U<sub>BE</sub> < 0,7 V : aucun courant de base, le transistor est <b>bloqué</b> (interrupteur ouvert), la DEL est éteinte.' : state === 'saturé' ? 'I<sub>C</sub> ne peut plus augmenter : le transistor est <b>saturé</b> (interrupteur fermé).' : `Régime linéaire : <b>I<sub>C</sub> = β·I<sub>B</sub></b> = ${beta.v} × I<sub>B</sub>. Un petit courant de base commande un grand courant de collecteur.`, state === 'saturé' ? 'ok' : '');
+    }
+    draw();
+  };
+
+  // 14. Amplificateur opérationnel
+  SIMS.ampliop = (el) => {
+    const S = frame(el, 'Montages avec l’amplificateur opérationnel', 'Choisis le montage et fais varier Ue', '0 0 640 320');
+    const mode = seg(S.ctrls, 'Montage', [['inv', 'Inverseur'], ['ninv', 'Non inverseur'], ['suiv', 'Suiveur'], ['comp', 'Comparateur (sans contre-réaction)']], 'inv', draw);
+    const Ue = slider(S.ctrls, { label: 'Tension d’entrée U<sub>e</sub>', min: -6, max: 6, step: 0.1, value: 1, unit: 'V' }, draw);
+    const R1 = slider(S.ctrls, { label: 'R₁', min: 1, max: 10, step: 1, value: 1, unit: 'kΩ' }, draw);
+    const R2 = slider(S.ctrls, { label: 'R₂', min: 1, max: 47, step: 1, value: 4, unit: 'kΩ' }, draw);
+    const VS = 13.5;
+    const out = (u) => {
+      const m = mode.v;
+      const v = m === 'inv' ? (-R2.v / R1.v) * u : m === 'ninv' ? (1 + R2.v / R1.v) * u : m === 'suiv' ? u : u > 0 ? VS : -VS;
+      return Math.max(-VS, Math.min(VS, v));
+    };
+    function draw() {
+      const us = out(Ue.v), line = [];
+      for (let k = 0; k <= 240; k++) { const u = -6 + k * 0.05; line.push([u, out(u)]); }
+      const A = mode.v === 'inv' ? -R2.v / R1.v : mode.v === 'ninv' ? 1 + R2.v / R1.v : mode.v === 'suiv' ? 1 : null;
+      let s = `<polygon points="60,60 60,200 180,130" class="comp"/>` + T(72, 100, '−', 'start', 'lab') + T(72, 175, '+', 'start', 'lab') + T(120, 135, '▷∞', 'middle', 'small');
+      s += L(180, 130, 260, 130, 'stroke') + T(262, 134, 'S', 'start', 'lab') + T(120, 230, { inv: 'U_s = −(R₂/R₁)·U_e', ninv: 'U_s = (1 + R₂/R₁)·U_e', suiv: 'U_s = U_e', comp: 'U_s = ±V_sat' }[mode.v], 'middle', 'lab');
+      s += T(120, 256, 'V_sat = ±13,5 V', 'middle', 'small');
+      const pl = plot({ x: 320, y: 20, w: 300, h: 270, xmin: -6, xmax: 6, ymin: -15, ymax: 15, xl: 'U_e (V)', yl: 'U_s (V)', nx: 4, ny: 6, series: [{ line, color: COL.b }, { dots: [[Ue.v, us]], color: COL.a, r: 6 }] });
+      S.draw(s + pl.svg);
+      const sat = Math.abs(us) >= VS - 1e-9;
+      S.stats([['U<sub>e</sub>', fr(Ue.v), 'V'], ['U<sub>s</sub>', fr(us), 'V'], ['Amplification A = U<sub>s</sub>/U<sub>e</sub>', A === null ? '—' : fr(A)], ['Régime', mode.v === 'comp' || sat ? 'saturé' : 'linéaire']]);
+      R1.el.hidden = R2.el.hidden = mode.v === 'suiv' || mode.v === 'comp';
+      S.note(mode.v === 'comp' ? 'Sans contre-réaction, l’AO compare V<sub>+</sub> et V<sub>−</sub> : U<sub>s</sub> = +V<sub>sat</sub> si V<sub>+</sub> > V<sub>−</sub>, sinon −V<sub>sat</sub>.' : sat ? 'La sortie est limitée à ±V<sub>sat</sub> : l’AO est <b>saturé</b>, la relation linéaire ne s’applique plus.' : 'Régime linéaire (contre-réaction sur l’entrée −) : V<sub>+</sub> = V<sub>−</sub> et les courants d’entrée sont nuls (AO idéal).', sat && mode.v !== 'comp' ? 'bad' : '');
+    }
+    draw();
+  };
+})();

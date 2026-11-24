@@ -1,0 +1,184 @@
+[
+ {
+  "id": "sardi",
+  "title": "النص السردي",
+  "module": "المجزوءة 1: دروس النصوص",
+  "description": "مكونات السرد: الأحداث، الشخصيات، الزمان، المكان، الراوي، البنية.",
+  "data": "arabe/l/sardi.json"
+ },
+ {
+  "id": "wasfi",
+  "title": "النص الوصفي",
+  "module": "المجزوءة 1: دروس النصوص",
+  "description": "أنواع الوصف، أدواته ووظائفه.",
+  "data": "arabe/l/wasfi.json"
+ },
+ {
+  "id": "hiwari",
+  "title": "النص الحواري",
+  "module": "المجزوءة 1: دروس النصوص",
+  "description": "الحوار الداخلي والخارجي، خصائصه ووظائفه.",
+  "data": "arabe/l/hiwari.json"
+ },
+ {
+  "id": "hijaji",
+  "title": "النص الحجاجي",
+  "module": "المجزوءة 1: دروس النصوص",
+  "description": "الأطروحة، الحجج، الروابط الحجاجية.",
+  "data": "arabe/l/hijaji.json"
+ },
+ {
+  "id": "ilami",
+  "title": "النص الإعلامي",
+  "module": "المجزوءة 1: دروس النصوص",
+  "description": "خصائص الخطاب الإعلامي وأنواعه.",
+  "data": "arabe/l/ilami.json"
+ },
+ {
+  "id": "takhyili",
+  "title": "النص التخيلي (الخيال العلمي)",
+  "module": "المجزوءة 1: دروس النصوص",
+  "description": "خصائص النص التخيلي وقصص الخيال العلمي.",
+  "data": "arabe/l/takhyili.json"
+ },
+ {
+  "id": "imla",
+  "title": "تذكير بدروس الإملاء: الهمزة، التاء، علامات الترقيم",
+  "module": "المجزوءة 1: الدروس اللغوية",
+  "description": "كتابة الهمزة المتوسطة، التاء المربوطة والمبسوطة، علامات الترقيم.",
+  "data": "arabe/l/imla.json"
+ },
+ {
+  "id": "khabar-insha",
+  "title": "الخبر والإنشاء",
+  "module": "المجزوءة 1: الدروس اللغوية",
+  "description": "تعريف الخبر والإنشاء، أنواع الإنشاء الطلبي وغير الطلبي.",
+  "data": "arabe/l/khabar-insha.json"
+ },
+ {
+  "id": "khabar-aghrad",
+  "title": "الخبر: أغراضه وأضربه وخروجه عن مقتضى الظاهر",
+  "module": "المجزوءة 1: الدروس اللغوية",
+  "description": "الغرضان الأصليان والأغراض البلاغية، أضرب الخبر الثلاثة.",
+  "data": "arabe/l/khabar-aghrad.json"
+ },
+ {
+  "id": "tashbih",
+  "title": "التشبيه: أركانه وأقسامه",
+  "module": "المجزوءة 1: الدروس اللغوية",
+  "description": "أركان التشبيه الأربعة وأقسامه.",
+  "data": "arabe/l/tashbih.json"
+ },
+ {
+  "id": "haqiqa-majaz",
+  "title": "الحقيقة والمجاز",
+  "module": "المجزوءة 1: الدروس اللغوية",
+  "description": "الحقيقة والمجاز اللغوي: الاستعارة والمجاز المرسل.",
+  "data": "arabe/l/haqiqa-majaz.json"
+ },
+ {
+  "id": "insha-sard",
+  "title": "مهارة إنتاج نص سردي",
+  "module": "المجزوءة 1: التعبير والإنشاء",
+  "description": "خطوات كتابة نص سردي متماسك.",
+  "data": "arabe/l/insha-sard.json"
+ },
+ {
+  "id": "insha-hijaj",
+  "title": "مهارة إنتاج نص حجاجي",
+  "module": "المجزوءة 1: التعبير والإنشاء",
+  "description": "خطوات كتابة نص حجاجي مقنع.",
+  "data": "arabe/l/insha-hijaj.json"
+ },
+ {
+  "id": "awlama",
+  "title": "نص العولمة",
+  "module": "المجزوءة 2: قضايا معاصرة",
+  "description": "مفهوم العولمة، أبعادها، أثرها على الهوية الثقافية.",
+  "data": "arabe/l/awlama.json"
+ },
+ {
+  "id": "huquq",
+  "title": "نص الثقافة الحقوقية",
+  "module": "المجزوءة 2: قضايا معاصرة",
+  "description": "حقوق الإنسان: مفهومها، خصائصها ومرجعياتها.",
+  "data": "arabe/l/huquq.json"
+ },
+ {
+  "id": "ittisal",
+  "title": "نص الاتصال والتواصل",
+  "module": "المجزوءة 2: قضايا معاصرة",
+  "description": "عناصر التواصل، ثورة الاتصال والإعلام وآثارها.",
+  "data": "arabe/l/ittisal.json"
+ },
+ {
+  "id": "basariya",
+  "title": "نص الثقافة البصرية (عصر الصورة)",
+  "module": "المجزوءة 2: قضايا معاصرة",
+  "description": "سلطة الصورة، أنواعها، قراءتها النقدية.",
+  "data": "arabe/l/basariya.json"
+ },
+ {
+  "id": "shir-hurriya",
+  "title": "نص الشعر والحرية",
+  "module": "المجزوءة 2: قضايا معاصرة",
+  "description": "قضية الحرية في الشعر العربي الحديث وخصائص قصيدة التفعيلة.",
+  "data": "arabe/l/shir-hurriya.json"
+ },
+ {
+  "id": "shir-madina",
+  "title": "نص الشعر والمدينة",
+  "module": "المجزوءة 2: قضايا معاصرة",
+  "description": "صورة المدينة في الشعر العربي الحديث.",
+  "data": "arabe/l/shir-madina.json"
+ },
+ {
+  "id": "ism-ala",
+  "title": "أسماء الآلة والزمان والمكان",
+  "module": "المجزوءة 2: الدروس اللغوية",
+  "description": "صياغة اسم الآلة، واسمي الزمان والمكان من الثلاثي وغير الثلاثي.",
+  "data": "arabe/l/ism-ala.json"
+ },
+ {
+  "id": "mawsul-ishara",
+  "title": "الاسم الموصول واسم الإشارة",
+  "module": "المجزوءة 2: الدروس اللغوية",
+  "description": "أنواع الاسم الموصول وصلته، أسماء الإشارة للقريب والبعيد.",
+  "data": "arabe/l/mawsul-ishara.json"
+ },
+ {
+  "id": "jumu",
+  "title": "الجموع",
+  "module": "المجزوءة 2: الدروس اللغوية",
+  "description": "جمع المذكر السالم، جمع المؤنث السالم، جمع التكسير وصيغ منتهى الجموع.",
+  "data": "arabe/l/jumu.json"
+ },
+ {
+  "id": "kitaba-arudiya",
+  "title": "الكتابة العروضية والتفاعيل",
+  "module": "المجزوءة 2: الدروس اللغوية",
+  "description": "قواعد الكتابة العروضية، الرموز، التفاعيل.",
+  "data": "arabe/l/kitaba-arudiya.json"
+ },
+ {
+  "id": "mutaqarib",
+  "title": "بحر المتقارب",
+  "module": "المجزوءة 2: الدروس اللغوية",
+  "description": "وزن المتقارب، تفعيلته، مفتاحه وتقطيعه.",
+  "data": "arabe/l/mutaqarib.json"
+ },
+ {
+  "id": "mawqif",
+  "title": "مهارة التعبير عن موقف",
+  "module": "المجزوءة 2: التعبير والإنشاء",
+  "description": "خطوات التعبير عن موقف شخصي معلل.",
+  "data": "arabe/l/mawqif.json"
+ },
+ {
+  "id": "taqrir",
+  "title": "مهارة إعداد تقرير",
+  "module": "المجزوءة 2: التعبير والإنشاء",
+  "description": "بنية التقرير وخطوات إعداده.",
+  "data": "arabe/l/taqrir.json"
+ }
+]

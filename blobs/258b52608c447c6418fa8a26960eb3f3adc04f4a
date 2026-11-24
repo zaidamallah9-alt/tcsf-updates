@@ -1,0 +1,72 @@
+[
+ {
+  "id": "u1-personal-relations",
+  "title": "Unit 1 — Personal Relations",
+  "module": "Term 1",
+  "description": "Introducing yourself, describing people, present simple vs present continuous.",
+  "data": "anglais/l/u1-personal-relations.json"
+ },
+ {
+  "id": "u2-education",
+  "title": "Unit 2 — Education",
+  "module": "Term 1",
+  "description": "School life, the past simple and past continuous, expressing likes and dislikes.",
+  "data": "anglais/l/u2-education.json"
+ },
+ {
+  "id": "u3-food",
+  "title": "Unit 3 — Food",
+  "module": "Term 1",
+  "description": "Food vocabulary, countable and uncountable nouns, quantifiers, ordering in a restaurant.",
+  "data": "anglais/l/u3-food.json"
+ },
+ {
+  "id": "u4-shopping",
+  "title": "Unit 4 — Shopping",
+  "module": "Term 1",
+  "description": "Shops and money, comparatives and superlatives, asking for prices and complaining.",
+  "data": "anglais/l/u4-shopping.json"
+ },
+ {
+  "id": "u5-recreation",
+  "title": "Unit 5 — Recreation",
+  "module": "Term 1",
+  "description": "Leisure activities, the present perfect (ever, never, for, since), invitations.",
+  "data": "anglais/l/u5-recreation.json"
+ },
+ {
+  "id": "u6-health",
+  "title": "Unit 6 — Health and Welfare",
+  "module": "Term 2",
+  "description": "Body and illnesses, healthy habits, should / must / have to, giving advice.",
+  "data": "anglais/l/u6-health.json"
+ },
+ {
+  "id": "u7-arts",
+  "title": "Unit 7 — The Arts",
+  "module": "Term 2",
+  "description": "Music, cinema, painting and heritage; the passive voice; expressing opinions.",
+  "data": "anglais/l/u7-arts.json"
+ },
+ {
+  "id": "u8-science-technology",
+  "title": "Unit 8 — Science and Technology",
+  "module": "Term 2",
+  "description": "Inventions and gadgets, the future (will / going to), first conditional, predictions.",
+  "data": "anglais/l/u8-science-technology.json"
+ },
+ {
+  "id": "u9-environment",
+  "title": "Unit 9 — Environment and Ecology",
+  "module": "Term 2",
+  "description": "Pollution and protection of nature, relative pronouns, cause and effect, second conditional.",
+  "data": "anglais/l/u9-environment.json"
+ },
+ {
+  "id": "u10-economy",
+  "title": "Unit 10 — Economy",
+  "module": "Term 2",
+  "description": "Work, money and trade; gerund and infinitive; expressing purpose.",
+  "data": "anglais/l/u10-economy.json"
+ }
+]

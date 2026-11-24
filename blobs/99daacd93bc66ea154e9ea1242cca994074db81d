@@ -1,0 +1,105 @@
+// Réponses aux questions des élèves : recherche dans toutes les leçons de la matière (hors ligne)
+// + Wikipédia / Vikidia si Internet est disponible. Utilisé par le mode « Avec le prof ».
+(() => {
+  const STOP = new Set(('le la les l de des du d un une et est sont que qui quoi comment pourquoi quel quelle quels quelles dans pour par sur avec ce cet cette ces en au aux a ou se sa son ses il elle on nous vous ils elles je tu me te mon ma mes est-ce c qu y ne pas plus moins tres bien faire fait peut veut dire signifie explique expliquer difference entre quand combien comme donc alors mais ' +
+    'the an of to is are was what how why which in on for and or does do can you me explain mean means ' +
+    'في من على الى إلى عن ما ماذا كيف لماذا هل هو هي ذلك هذا هذه التي الذي و أن ان لا كان يكون ثم او أو مع بين عند كل اشرح معنى').split(/\s+/));
+  const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ًͯ-ْـ]/g, '')
+    .replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+  const stem = (w) => {
+    if (/[؀-ۿ]/.test(w)) { w = w.replace(/^(وال|بال|كال|فال|لل|ال)/, ''); return w.replace(/(ات|ون|ين|ها|هم)$/, ''); }
+    return w.length > 4 ? w.replace(/(ements|ement|ations|ation|ments|ment|ques|ique|aux|eux|es|s|x|e)$/, '') : w;
+  };
+  const tokens = (s) => norm(s).split(/[^a-z0-9؀-ۿ]+/).filter((w) => w.length > 1 && !STOP.has(w)).map(stem).filter((w) => w.length > 1);
+  const textOf = (html) => { const d = document.createElement('div'); d.innerHTML = String(html || ''); d.querySelectorAll('.w-sim, [data-widget]').forEach((x) => x.remove()); return d.textContent.replace(/\s+/g, ' ').trim(); };
+
+  const tpl0 = (html) => { const t = document.createElement('template'); t.innerHTML = html; return [...t.content.children]; };
+  // Découpe une leçon en passages courts (avec la partie d'où ils viennent)
+  function passagesOf(lesson, d, html2parts) {
+    const out = [];
+    let ar = null;
+    const push = (part, kind, html) => { const t = textOf(html); if (t.length > 15) out.push({ lesson: lesson.title, lessonId: lesson.id, part, kind, html, text: t, ar }); };
+    const parts = (d.cours || []).map((s) => ({ t: s.t, h: s.h })).concat((html2parts || []).filter((p) => !/exercice/i.test(textOf(p.t))));
+    const AR = (d.ar && d.ar.cours) || [];
+    // passages en arabe (questions posées en arabe)
+    AR.forEach((a) => { ar = a; tpl0(a.h).forEach((n) => push(textOf(a.t), 'cours', n.innerHTML)); });
+    for (const [pi, p] of parts.entries()) {
+      ar = AR[pi] || null; // explication arabe de la même partie (pour « je n'ai pas compris »)
+      const tpl = document.createElement('template');
+      tpl.innerHTML = p.h;
+      for (const n of [...tpl.content.children]) {
+        if (n.matches('ul, ol')) [...n.children].forEach((li) => push(textOf(p.t), 'cours', li.innerHTML));
+        else if (n.matches('table')) [...n.querySelectorAll('tr')].slice(1).forEach((tr) => push(textOf(p.t), 'cours', [...tr.children].map((c) => c.innerHTML).join(' — ')));
+        else if (n.matches('.box.ex')) push(textOf(p.t), 'exemple', n.innerHTML.replace(/<span class="box-title">.*?<\/span>/, ''));
+        else if (!n.matches('[data-widget]')) push(textOf(p.t), n.matches('.box.def, .formula.key') ? 'def' : 'cours', n.innerHTML.replace(/<span class="box-title">(.*?)<\/span>/, '<b>$1 :</b> '));
+      }
+    }
+    ar = null;
+    for (const c of d.cards || []) push(textOf(c[0]), 'carte', `<b>${c[0]}</b> : ${c[1]}`);
+    if (d.recap) push('', 'recap', d.recap);
+    for (const lv of ['facile', 'moyen', 'difficile']) for (const q of (d.exercises || {})[lv] || []) if (q.explain) push('', 'exercice', `${q.q} — ${q.explain}`);
+    return out;
+  }
+
+  const cache = {};
+  async function loadIndex(subject, api) {
+    if (cache[subject]) return cache[subject];
+    const list = (await api.readJSON(subject + '/index.json')) || [];
+    const all = [];
+    for (const l of list) {
+      const d = (await api.readJSON(l.data)) || {};
+      let extra = null;
+      if (d.coursFile && api.readText) {
+        const html = (await api.readText(d.coursFile)) || '';
+        const tpl = document.createElement('template'); tpl.innerHTML = html;
+        extra = []; let cur = null;
+        for (const n of [...tpl.content.childNodes]) { if (n.nodeName === 'H2') { cur = { t: n.innerHTML, h: '' }; extra.push(cur); } else if (cur) cur.h += n.nodeType === 1 ? n.outerHTML : ''; }
+      }
+      for (const p of passagesOf(l, d, extra)) { p.tok = tokens(p.text + ' ' + p.part + ' ' + p.part); p.titleTok = new Set(tokens(l.title + ' ' + p.part)); all.push(p); }
+    }
+    const df = {};
+    for (const p of all) for (const w of new Set(p.tok)) df[w] = (df[w] || 0) + 1;
+    cache[subject] = { all, df, N: all.length };
+    return cache[subject];
+  }
+
+  // Meilleurs passages pour une question
+  async function search(subject, q, api, k = 3) {
+    const idx = await loadIndex(subject, api);
+    const qt = [...new Set(tokens(q))];
+    if (!qt.length) return [];
+    const idf = (w) => Math.log(1 + idx.N / (1 + (idx.df[w] || 0)));
+    const scored = idx.all.map((p) => {
+      const set = new Set(p.tok);
+      let s = 0, hits = 0;
+      for (const w of qt) {
+        let m = set.has(w) ? 1 : 0;
+        if (!m && w.length >= 5) for (const t of set) if (t.length >= 5 && (t.startsWith(w.slice(0, 5)) || w.startsWith(t.slice(0, 5)))) { m = 0.6; break; }
+        if (m) { hits++; s += m * idf(w) * (p.titleTok.has(w) ? 1.4 : 1); }
+      }
+      if (!hits) return null;
+      s *= hits / qt.length + 0.5;                       // couvrir plusieurs mots de la question
+      s *= { def: 1.35, carte: 1.3, cours: 1, exemple: 0.9, recap: 0.85, exercice: 0.75 }[p.kind] || 1;
+      s /= Math.sqrt(Math.max(1, p.text.length / 220));  // préférer les passages courts et précis
+      return { p, s };
+    }).filter(Boolean).sort((a, b) => b.s - a.s);
+    return scored.slice(0, k).map((x) => Object.assign({ score: x.s }, x.p));
+  }
+
+  // Wikipédia (ou Vikidia / Simple Wikipedia si simple = true)
+  // seulement les mots importants de la question (Wikipédia cherche tous les mots)
+  const keyWords = (q) => String(q).replace(/[’']/g, ' ').split(/[^\p{L}\p{N}-]+/u).filter((w) => w.length > 1 && !STOP.has(norm(w))).join(' ');
+  // toAr = true : même article français, mais renvoyé en arabe (ar.wikipedia.org)
+  async function wiki(lang, q, simple, toAr) {
+    q = keyWords(q) || q;
+    try {
+      if (window.TCSF_NATIVE && window.TCSF_NATIVE.wiki) return await window.TCSF_NATIVE.wiki(lang, q, simple, toAr);
+      if (window.tcsf && window.tcsf.wiki) return await window.tcsf.wiki(lang, q, simple, toAr);
+    } catch {}
+    return { offline: true };
+  }
+  // phrase(s) courtes pour la version simplifiée
+  const firstSentences = (t, n = 1) => (String(t).match(/[^.!?؟]+[.!?؟]?/g) || [t]).slice(0, n).join(' ').trim();
+
+  window.TCSF_QA = { search, wiki, firstSentences, tokens, textOf };
+})();

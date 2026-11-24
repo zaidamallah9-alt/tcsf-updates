@@ -1,0 +1,125 @@
+// Accès privé : l'application ne s'ouvre que pour les personnes acceptées par le propriétaire (Zaid Amallah).
+// Chaque appareil a un code (TC-XXXX-XXXX). L'élève l'envoie au propriétaire, qui l'accepte depuis son PC ;
+// la liste publique (access.json sur GitHub) ne contient que des empreintes SHA-256 des codes, pas de noms.
+(() => {
+  const T = window.tcsf || {};
+  if (!T.accessList) return; // aperçu navigateur : pas de verrou
+  const KEY = 'tcsf:access';
+  const OWNER_NAME = 'Zaid Amallah';
+  const AB = 'ABCDEFGHJKLMNPQRSUVWXYZ23456789'; // sans T, I, O, 0, 1 (pas de confusion)
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
+  const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const newCode = () => { const r = crypto.getRandomValues(new Uint8Array(8)); const s = [...r].map((b) => AB[b % AB.length]).join(''); return `TC-${s.slice(0, 4)}-${s.slice(4)}`; };
+  async function hash(code) {
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('tcsf:' + code));
+    return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  let st = load();
+  if (!st.code) { st.code = newCode(); save(st); }
+  if (!st.ok) document.documentElement.classList.add('acc-locked'); // rien n'est visible avant la vérification
+
+  // ---- vérification auprès du serveur : true / false / null (pas d'Internet) ----
+  async function accepted() {
+    const l = await T.accessList().catch(() => ({ error: 'offline' }));
+    if (!l || l.error || !Array.isArray(l.hashes)) return null;
+    return l.hashes.includes(await hash(st.code));
+  }
+
+  // ---- écran verrouillé ----
+  let lockEl = null, timer = 0;
+  function lock(reason) {
+    document.documentElement.classList.add('acc-locked');
+    if (!lockEl) { lockEl = document.createElement('div'); lockEl.className = 'acc-lock'; document.body.appendChild(lockEl); }
+    const M = window.TCSF_MASCOT;
+    const msg = `Salut ${OWNER_NAME} ! Je voudrais accéder à l’application Tronc Commun Scientifique Français.\nMon nom : ${st.name || ''}\nMon code : ${st.code}`;
+    lockEl.innerHTML = `<div class="acc-card">
+      <div class="acc-ic">${M ? M.svg(86) : '🔒'}</div>
+      <h2>Application privée 🔒</h2>
+      ${reason === 'revoked' ? '<p class="acc-warn">Ton accès a été retiré par le propriétaire.</p>' : ''}
+      <p>Pour utiliser l’application, demande l’accès à <b>${OWNER_NAME}</b>, son créateur. Dès qu’il t’accepte, l’application s’ouvre.</p>
+      <p class="acc-ar" dir="rtl" lang="ar">تطبيق خاص: أرسل رمزك إلى <b>زيد أملاح</b> ليقبلك، ثم يُفتح التطبيق.</p>
+      ${!st.name ? `<form class="acc-form"><label>Ton prénom et ton nom<input class="lv-input" name="n" maxlength="50" required placeholder="ex. Yassine B." autocomplete="name"></label><button class="btn primary" type="submit">Créer ma demande →</button></form>`
+      : `<div class="acc-code-box"><span class="w-small">Ton code d’accès</span><div class="acc-code">${esc(st.code)}</div><span class="w-small">${esc(st.name)} · <a href="#" class="acc-rename">changer le nom</a></span></div>
+        <ol class="acc-steps"><li>Envoie ce code à ${OWNER_NAME} (WhatsApp ou autre).</li><li>Attends qu’il t’accepte.</li><li>Appuie sur « Vérifier » (ou attends : je vérifie tout seul).</li></ol>
+        <div class="acc-btns"><button type="button" class="btn primary acc-wa">💬 Envoyer sur WhatsApp</button><button type="button" class="btn acc-copy">📋 Copier</button><button type="button" class="btn acc-check">🔄 Vérifier</button></div>
+        <p class="acc-status w-small" role="status"></p>`}
+    </div>`;
+    const f = lockEl.querySelector('.acc-form');
+    if (f) f.addEventListener('submit', (e) => { e.preventDefault(); const n = f.n.value.trim(); if (n.length < 2) return; st.name = n; save(st); lock(); });
+    const status = lockEl.querySelector('.acc-status');
+    lockEl.querySelector('.acc-rename')?.addEventListener('click', (e) => { e.preventDefault(); st.name = ''; save(st); lock(); });
+    lockEl.querySelector('.acc-copy')?.addEventListener('click', async () => { try { await navigator.clipboard.writeText(msg); status.textContent = '✅ Code copié. Colle-le dans un message à ' + OWNER_NAME + '.'; } catch { status.textContent = 'Recopie ce code : ' + st.code; } });
+    lockEl.querySelector('.acc-wa')?.addEventListener('click', () => { const a = document.createElement('a'); a.href = 'https://wa.me/?text=' + encodeURIComponent(msg); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); });
+    lockEl.querySelector('.acc-check')?.addEventListener('click', () => check(true));
+    clearInterval(timer);
+    if (st.name) timer = setInterval(() => check(false), 90000);
+    async function check(manual) {
+      if (status && manual) status.textContent = 'Vérification…';
+      const ok = await accepted();
+      if (ok) return unlock(true);
+      if (!status) return;
+      status.textContent = ok === null ? '📶 Pas de connexion au serveur. Vérifie ton Internet puis réessaie.' : manual ? '⏳ Pas encore accepté. Après l’acceptation, il faut parfois attendre 1 à 2 minutes.' : status.textContent;
+    }
+  }
+  function unlock(celebrate) {
+    clearInterval(timer);
+    st.ok = true; st.at = new Date().toISOString(); save(st);
+    document.documentElement.classList.remove('acc-locked');
+    if (!lockEl) return;
+    if (celebrate) {
+      lockEl.querySelector('.acc-card').innerHTML = `<div class="acc-ic">${window.TCSF_MASCOT ? window.TCSF_MASCOT.svg(90) : '🎉'}</div><h2>Bienvenue ${esc(st.name)} ! 🎉</h2><p>${OWNER_NAME} t’a accepté. Bonnes révisions !</p>`;
+      try { if (window.TCSF_SFX) window.TCSF_SFX.fanfare(); if (window.TCSF_Q) window.TCSF_Q.burst(lockEl.querySelector('.acc-card')); } catch {}
+      setTimeout(() => { lockEl.classList.add('out'); setTimeout(() => { lockEl.remove(); lockEl = null; }, 400); }, 2200);
+    } else { lockEl.remove(); lockEl = null; }
+  }
+
+  // ---- fenêtre du propriétaire : accepter / retirer des accès ----
+  async function adminModal() {
+    document.querySelector('.acc-admin')?.remove();
+    const o = document.createElement('div'); o.className = 'live-modal acc-admin';
+    o.innerHTML = `<div class="live-card acc-admin-card"><h3>👥 Gérer les accès</h3>
+      <p class="w-small">Colle le code reçu (TC-XXXX-XXXX) et le nom de la personne, puis « Accepter ». Son application s’ouvre en 1 à 2 minutes.</p>
+      <form class="acc-add"><input class="lv-input" name="c" placeholder="TC-XXXX-XXXX" required><input class="lv-input" name="n" placeholder="Nom" required><button class="btn primary" type="submit">✅ Accepter</button></form>
+      <p class="acc-amsg w-small" role="status"></p><div class="acc-list"><p class="muted">Chargement…</p></div>
+      <div class="live-btns"><button type="button" class="btn ghost acc-close">Fermer</button></div></div>`;
+    document.body.appendChild(o);
+    const msg = o.querySelector('.acc-amsg'), listEl = o.querySelector('.acc-list');
+    o.querySelector('.acc-close').addEventListener('click', () => o.remove());
+    const refresh = async () => {
+      const r = await T.adminList();
+      if (r.error) { listEl.innerHTML = `<p class="acc-warn">${esc(r.error)}</p><p class="w-small">Vérifie que le dépôt « tcsf-updates » existe (public) et que le jeton est valide.</p>`; return; }
+      listEl.innerHTML = r.items.length ? `<table class="acc-table"><tr><th>Nom</th><th>Code</th><th>État</th><th></th></tr>${r.items.map((x) => `<tr><td>${esc(x.name)}</td><td><code>${esc(x.code)}</code></td><td>${x.active ? '✅ accepté' : '⛔ retiré'}</td><td><button type="button" class="chip-btn" data-c="${esc(x.code)}" data-n="${esc(x.name)}" data-a="${x.active ? 'rev' : 'app'}">${x.active ? 'Retirer' : 'Remettre'}</button></td></tr>`).join('')}</table>` : '<p class="muted">Personne n’a encore été accepté.</p>';
+      listEl.querySelectorAll('[data-c]').forEach((b) => b.addEventListener('click', async () => {
+        b.disabled = true; msg.textContent = '…';
+        const res = b.dataset.a === 'rev' ? await T.adminRevoke(b.dataset.c) : await T.adminApprove(b.dataset.c, b.dataset.n);
+        msg.textContent = res.error ? '❌ ' + res.error : '✔ Fait.'; refresh();
+      }));
+    };
+    o.querySelector('.acc-add').addEventListener('submit', async (e) => {
+      e.preventDefault(); const f = e.target; const b = f.querySelector('button'); b.disabled = true; msg.textContent = 'Envoi à GitHub…';
+      const res = await T.adminApprove(f.c.value, f.n.value);
+      b.disabled = false; msg.textContent = res.error ? '❌ ' + res.error : `✅ ${res.code} accepté.`;
+      if (!res.error) { f.reset(); refresh(); }
+    });
+    refresh();
+  }
+
+  // ---- démarrage ----
+  (async () => {
+    const owner = T.accessOwner ? await T.accessOwner().catch(() => false) : false;
+    const vl = document.getElementById('versionLine');
+    if (owner) {
+      document.documentElement.classList.remove('acc-locked');
+      const actions = document.querySelector('#menu .menu-actions');
+      if (actions && T.adminList) { const b = document.createElement('button'); b.className = 'btn'; b.id = 'accessBtn'; b.textContent = '👥 Gérer les accès'; b.addEventListener('click', () => { document.getElementById('closeMenu')?.click(); adminModal(); }); actions.appendChild(b); }
+      return;
+    }
+    if (vl) setTimeout(() => { vl.textContent += ` · Code d’accès ${st.code}`; }, 800);
+    if (!st.ok) { lock(); const ok = await accepted(); if (ok) unlock(true); return; }
+    // déjà accepté : on vérifie en arrière-plan (si l'accès a été retiré → verrou)
+    const ok = await accepted();
+    if (ok === false) { st.ok = false; save(st); lock('revoked'); }
+  })();
+  window.TCSF_ACCESS = { code: () => st.code, adminModal };
+})();

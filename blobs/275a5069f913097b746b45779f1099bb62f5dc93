@@ -1,0 +1,198 @@
+[
+ {
+  "id": "mutawassiti",
+  "title": "العالم المتوسطي من القرن 15 إلى القرن 18م: مدخل",
+  "module": "التاريخ: القرنان 15 و16م",
+  "description": "الإطار الزمني والمجالي، ضفتا المتوسط، مفاهيم أساسية.",
+  "data": "histoire-geographie/l/mutawassiti.json"
+ },
+ {
+  "id": "islami-15-16",
+  "title": "أوضاع العالم الإسلامي خلال القرنين 15 و16م",
+  "module": "التاريخ: القرنان 15 و16م",
+  "description": "الدولة العثمانية، المغرب الوطاسي والسعدي، الضغط الإيبيري.",
+  "data": "histoire-geographie/l/islami-15-16.json"
+ },
+ {
+  "id": "insiya",
+  "title": "التحولات الفكرية والعلمية والفنية: النهضة والإصلاح الديني",
+  "module": "التاريخ: القرنان 15 و16م",
+  "description": "الحركة الإنسية، النهضة الفنية والعلمية، الإصلاح الديني.",
+  "data": "histoire-geographie/l/insiya.json"
+ },
+ {
+  "id": "urubba-15-16",
+  "title": "التحولات السياسية والاجتماعية في أوربا (ق 15 – 16م)",
+  "module": "التاريخ: القرنان 15 و16م",
+  "description": "تقوية السلطة الملكية والملكية المطلقة وصعود البورجوازية.",
+  "data": "histoire-geographie/l/urubba-15-16.json"
+ },
+ {
+  "id": "iktishafat",
+  "title": "الاكتشافات الجغرافية وظاهرة الميركنتيلية",
+  "module": "التاريخ: القرنان 15 و16م",
+  "description": "عوامل الاكتشافات، أهم الرحلات، النتائج، الميركنتيلية.",
+  "data": "histoire-geographie/l/iktishafat.json"
+ },
+ {
+  "id": "madd-islami",
+  "title": "المد الإسلامي: امتداد النفوذ العثماني وبداية التدخل الأوربي",
+  "module": "التاريخ: القرنان 15 و16م",
+  "description": "توسع العثمانيين في البحر المتوسط وشمال إفريقيا، المواجهة مع الإيبيريين، موقف المغرب.",
+  "data": "histoire-geographie/l/madd-islami.json"
+ },
+ {
+  "id": "islami-siyasi",
+  "title": "التطورات السياسية والاجتماعية في العالم الإسلامي",
+  "module": "التاريخ: القرنان 15 و16م",
+  "description": "تنظيم الحكم في الدولة العثمانية والمغرب السعدي، والبنية الاجتماعية.",
+  "data": "histoire-geographie/l/islami-siyasi.json"
+ },
+ {
+  "id": "islami-iqtisadi",
+  "title": "التطورات الاقتصادية في العالم الإسلامي",
+  "module": "التاريخ: القرنان 15 و16م",
+  "description": "الفلاحة والحرف والتجارة، وأثر تحول الطرق التجارية.",
+  "data": "histoire-geographie/l/islami-iqtisadi.json"
+ },
+ {
+  "id": "anwar",
+  "title": "عصر الأنوار: الفكر الإنجليزي والفكر الفرنسي",
+  "module": "التاريخ: القرون 17 – 19م",
+  "description": "الفكر السياسي الإنجليزي، فلاسفة الأنوار في فرنسا، الموسوعة.",
+  "data": "histoire-geographie/l/anwar.json"
+ },
+ {
+  "id": "thawra-faransiya",
+  "title": "الثورات الاجتماعية والسياسية: الثورة الفرنسية",
+  "module": "التاريخ: القرون 17 – 19م",
+  "description": "أسباب الثورة الفرنسية، مراحلها، نتائجها.",
+  "data": "histoire-geographie/l/thawra-faransiya.json"
+ },
+ {
+  "id": "thawra-sinaiya",
+  "title": "انطلاقة الثورة الصناعية",
+  "module": "التاريخ: القرون 17 – 19م",
+  "description": "عوامل الثورة الصناعية بإنجلترا، التطور التقني، الانعكاسات الاجتماعية.",
+  "data": "histoire-geographie/l/thawra-sinaiya.json"
+ },
+ {
+  "id": "islami-17-18",
+  "title": "الأوضاع العامة في العالم الإسلامي خلال القرنين 17 و18م",
+  "module": "التاريخ: القرون 17 – 19م",
+  "description": "تراجع الدولة العثمانية، المغرب في عهد العلويين.",
+  "data": "histoire-geographie/l/islami-17-18.json"
+ },
+ {
+  "id": "daghut",
+  "title": "تصاعد الضغوط الأوربية على العالم الإسلامي",
+  "module": "التاريخ: القرون 17 – 19م",
+  "description": "التدخل الأوربي في الدولة العثمانية ومصر والجزائر والمغرب خلال القرن 19م.",
+  "data": "histoire-geographie/l/daghut.json"
+ },
+ {
+  "id": "islah",
+  "title": "بداية محاولات الإصلاح وحدودها",
+  "module": "التاريخ: القرون 17 – 19م",
+  "description": "الإصلاحات في الدولة العثمانية ومصر والمغرب وأسباب محدوديتها.",
+  "data": "histoire-geographie/l/islah.json"
+ },
+ {
+  "id": "tadaris",
+  "title": "المجموعات البنيوية الكبرى وأشكال التضاريس",
+  "module": "الجغرافيا: المجال والإنسان",
+  "description": "بنية الأرض، الصفائح التكتونية، المجموعات البنيوية، أشكال التضاريس.",
+  "data": "histoire-geographie/l/tadaris.json"
+ },
+ {
+  "id": "manakh",
+  "title": "النطاقات المناخية والغطاء النباتي في العالم",
+  "module": "الجغرافيا: المجال والإنسان",
+  "description": "العوامل المتحكمة في المناخ، النطاقات المناخية، الغطاء النباتي المرتبط بها.",
+  "data": "histoire-geographie/l/manakh.json"
+ },
+ {
+  "id": "sukkan",
+  "title": "السكان: التوزع في العالم",
+  "module": "الجغرافيا: المجال والإنسان",
+  "description": "عدد سكان العالم، الكثافة السكانية، مناطق التركز والفراغ وعوامل التوزع.",
+  "data": "histoire-geographie/l/sukkan.json"
+ },
+ {
+  "id": "aryaf",
+  "title": "أشكال استغلال الإنسان للمجال في الأرياف",
+  "module": "الجغرافيا: المجال والإنسان",
+  "description": "المجال الريفي، أنماط الاستغلال الفلاحي التقليدي والعصري.",
+  "data": "histoire-geographie/l/aryaf.json"
+ },
+ {
+  "id": "mudun",
+  "title": "أشكال استغلال الإنسان للمجال في المدن",
+  "module": "الجغرافيا: المجال والإنسان",
+  "description": "المجال الحضري، وظائف المدينة، الأحياء ومشاكل التمدين.",
+  "data": "histoire-geographie/l/mudun.json"
+ },
+ {
+  "id": "kharait",
+  "title": "تقنيات رسم الخرائط: تمثيل المعطيات النوعية والكمية",
+  "module": "الجغرافيا: المجال والإنسان",
+  "description": "عناصر الخريطة، تمثيل المعطيات النوعية والكمية.",
+  "data": "histoire-geographie/l/kharait.json"
+ },
+ {
+  "id": "jughrafia",
+  "title": "الجغرافيا: الموضوع – الوظيفة – الأدوات",
+  "module": "الجغرافيا: المجال والإنسان",
+  "description": "تعريف الجغرافيا، فروعها، وظائفها وأدواتها.",
+  "data": "histoire-geographie/l/jughrafia.json"
+ },
+ {
+  "id": "manzuma",
+  "title": "المنظومة البيئية: مفهومها وأسس توازنها",
+  "module": "الجغرافيا: البيئة",
+  "description": "مكونات المنظومة البيئية، السلسلة الغذائية، التوازن والاختلال.",
+  "data": "histoire-geographie/l/manzuma.json"
+ },
+ {
+  "id": "zalazil",
+  "title": "ملف حول كارثة طبيعية: الزلازل في المغرب",
+  "module": "الجغرافيا: البيئة",
+  "description": "أسباب الزلازل، أمثلة مغربية، آثارها والوقاية منها.",
+  "data": "histoire-geographie/l/zalazil.json"
+ },
+ {
+  "id": "ihtibas",
+  "title": "ملف حول كارثة بيئية: الاحتباس الحراري",
+  "module": "الجغرافيا: البيئة",
+  "description": "مفهوم الاحتباس الحراري، أسبابه، نتائجه ومواجهته.",
+  "data": "histoire-geographie/l/ihtibas.json"
+ },
+ {
+  "id": "tadabir-tashri",
+  "title": "الإجراءات والتدابير التشريعية والتقنية",
+  "module": "الجغرافيا: البيئة",
+  "description": "القوانين والاتفاقيات لحماية البيئة، والحلول التقنية.",
+  "data": "histoire-geographie/l/tadabir-tashri.json"
+ },
+ {
+  "id": "tadabir-tarbawi",
+  "title": "الإجراءات والتدابير التربوية",
+  "module": "الجغرافيا: البيئة",
+  "description": "التربية البيئية والتوعية لتغيير السلوك.",
+  "data": "histoire-geographie/l/tadabir-tarbawi.json"
+ },
+ {
+  "id": "tadabir-majal",
+  "title": "الإجراءات والتدابير على مستوى تنظيم المجال",
+  "module": "الجغرافيا: البيئة",
+  "description": "المحميات والمنتزهات الوطنية، التشجير، مخططات التهيئة.",
+  "data": "histoire-geographie/l/tadabir-majal.json"
+ },
+ {
+  "id": "jamiyat",
+  "title": "دور الجمعيات والمنظمات غير الحكومية في حماية البيئة",
+  "module": "الجغرافيا: البيئة",
+  "description": "أدوار المجتمع المدني في حماية البيئة محليا ودوليا.",
+  "data": "histoire-geographie/l/jamiyat.json"
+ }
+]

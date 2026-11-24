@@ -1,0 +1,56 @@
+[
+ {
+  "id": "solides3d",
+  "title": "Les solides de l’espace",
+  "module": "🧊 Expériences en 3D",
+  "description": "Cube, pavé, cylindre, cône, pyramide, boule : volumes et aires.",
+  "sim": "solides3d",
+  "lesson": "espace",
+  "kind": "3D"
+ },
+ {
+  "id": "espace3d",
+  "title": "Droites et plans dans l’espace",
+  "module": "🧊 Expériences en 3D",
+  "description": "Positions relatives de droites et de plans.",
+  "sim": "espace3d",
+  "lesson": "espace",
+  "kind": "3D"
+ },
+ {
+  "id": "fonction",
+  "title": "La courbe d’une fonction",
+  "module": "📈 Expériences en 2D",
+  "description": "Affine, second degré, homographique.",
+  "sim": "fonction",
+  "lesson": "fonctions",
+  "kind": "2D"
+ },
+ {
+  "id": "trigo",
+  "title": "Le cercle trigonométrique",
+  "module": "📈 Expériences en 2D",
+  "description": "cos, sin, tan et angles remarquables.",
+  "sim": "trigo",
+  "lesson": "trigo1",
+  "kind": "2D"
+ },
+ {
+  "id": "vecteurs2d",
+  "title": "Opérations sur les vecteurs",
+  "module": "📈 Expériences en 2D",
+  "description": "Somme, différence, produit par un réel.",
+  "sim": "vecteurs2d",
+  "lesson": "vecteurs",
+  "kind": "2D"
+ },
+ {
+  "id": "droite",
+  "title": "Équation d’une droite",
+  "module": "📈 Expériences en 2D",
+  "description": "Pente et équation réduite.",
+  "sim": "droite",
+  "lesson": "droite",
+  "kind": "2D"
+ }
+]

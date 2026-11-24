@@ -1,0 +1,114 @@
+[
+ {
+  "id": "taqdim-falsafa",
+  "title": "تقديم عام لمجزوءة الفلسفة",
+  "module": "مجزوءة الفلسفة",
+  "description": "إشكالات المجزوءة ومحاورها: ما الفلسفة؟ كيف نشأت؟ لماذا نتفلسف؟",
+  "data": "philosophie/l/taqdim-falsafa.json"
+ },
+ {
+  "id": "nachaa",
+  "title": "نشأة الفلسفة",
+  "module": "مجزوءة الفلسفة",
+  "description": "من التفكير الأسطوري إلى التفكير العقلاني في اليونان.",
+  "data": "philosophie/l/nachaa.json"
+ },
+ {
+  "id": "tatawwur",
+  "title": "محطات في تطور الفلسفة",
+  "module": "مجزوءة الفلسفة",
+  "description": "الفلسفة اليونانية، الوسيطية، الحديثة والمعاصرة.",
+  "data": "philosophie/l/tatawwur.json"
+ },
+ {
+  "id": "islamiya",
+  "title": "الفلسفة الإسلامية",
+  "module": "مجزوءة الفلسفة",
+  "description": "أعلام الفلسفة في العالم الإسلامي وإشكال العلاقة بين الحكمة والشريعة.",
+  "data": "philosophie/l/islamiya.json"
+ },
+ {
+  "id": "gharbiya",
+  "title": "الفلسفة الغربية المعاصرة",
+  "module": "مجزوءة الفلسفة",
+  "description": "العقل والمنهج عند ديكارت، الأنوار، ونقد العقل والقيم في الفلسفة المعاصرة.",
+  "data": "philosophie/l/gharbiya.json"
+ },
+ {
+  "id": "limatha",
+  "title": "لماذا التفلسف؟",
+  "module": "مجزوءة الفلسفة",
+  "description": "قيمة الفلسفة ووظائفها في حياة الفرد والمجتمع.",
+  "data": "philosophie/l/limatha.json"
+ },
+ {
+  "id": "mantiq",
+  "title": "منطق الفلسفة",
+  "module": "مجزوءة الفلسفة",
+  "description": "السؤال، الشك، النقد، المفهوم والحجاج.",
+  "data": "philosophie/l/mantiq.json"
+ },
+ {
+  "id": "qiyam",
+  "title": "الفلسفة والقيم",
+  "module": "مجزوءة الفلسفة",
+  "description": "الحرية، الحوار، التسامح والاختلاف.",
+  "data": "philosophie/l/qiyam.json"
+ },
+ {
+  "id": "taqdim-tabia",
+  "title": "تقديم عام لمجزوءة الطبيعة والثقافة",
+  "module": "مجزوءة الطبيعة والثقافة",
+  "description": "إشكالات المجزوءة: الإنسان بين الطبيعة والثقافة، وعلاقته بالطبيعة.",
+  "data": "philosophie/l/taqdim-tabia.json"
+ },
+ {
+  "id": "tabia-thaqafa",
+  "title": "الطبيعة والثقافة",
+  "module": "مجزوءة الطبيعة والثقافة",
+  "description": "تحديد مفهومي الطبيعة والثقافة والتمييز بينهما.",
+  "data": "philosophie/l/tabia-thaqafa.json"
+ },
+ {
+  "id": "kain-thaqafi",
+  "title": "الإنسان كائن ثقافي",
+  "module": "مجزوءة الطبيعة والثقافة",
+  "description": "ليفي ستروس ومعيار التمييز، الأطفال المتوحشون، دور التربية.",
+  "data": "philosophie/l/kain-thaqafi.json"
+ },
+ {
+  "id": "kain-lughawi",
+  "title": "الإنسان كائن لغوي",
+  "module": "مجزوءة الطبيعة والثقافة",
+  "description": "اللغة خاصية إنسانية: الفرق بين لغة الإنسان وتواصل الحيوان.",
+  "data": "philosophie/l/kain-lughawi.json"
+ },
+ {
+  "id": "muassasa",
+  "title": "المؤسسة كمظهر من مظاهر الثقافة",
+  "module": "مجزوءة الطبيعة والثقافة",
+  "description": "مفهوم المؤسسة، أنواعها ووظائفها.",
+  "data": "philosophie/l/muassasa.json"
+ },
+ {
+  "id": "tamyiz",
+  "title": "التمييز بين الطبيعة والثقافة",
+  "module": "مجزوءة الطبيعة والثقافة",
+  "description": "معايير التمييز بين الطبيعي والثقافي وحدودها.",
+  "data": "philosophie/l/tamyiz.json"
+ },
+ {
+  "id": "nachat",
+  "title": "الطبيعة والنشاط الإنساني",
+  "module": "مجزوءة الطبيعة والثقافة",
+  "description": "كيف يحوّل الإنسان الطبيعة بالعمل والتقنية والعلم.",
+  "data": "philosophie/l/nachat.json"
+ },
+ {
+  "id": "insijam",
+  "title": "من السيطرة على الطبيعة إلى الانسجام معها",
+  "module": "مجزوءة الطبيعة والثقافة",
+  "description": "الأزمة البيئية ونقد السيطرة، العقد الطبيعي، أخلاق المسؤولية.",
+  "data": "philosophie/l/insijam.json"
+ }
+]

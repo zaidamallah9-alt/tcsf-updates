@@ -1,0 +1,335 @@
+<p class="intro">Toute la matière qui nous entoure — l'air, l'eau, les métaux, notre corps — est formée d'<b>atomes</b>. Un atome est si petit qu'on ne peut pas le voir, même au microscope optique. Pourtant, grâce à des expériences ingénieuses, les scientifiques ont réussi à imaginer sa structure : c'est ce qu'on appelle un <b>modèle de l'atome</b>. Ce modèle a évolué pendant plus de 2 000 ans.</p>
+
+<div class="box def">
+  <span class="box-title">Objectifs de la leçon</span>
+  <ul>
+    <li>Connaître les grandes étapes de l'évolution du modèle de l'atome.</li>
+    <li>Connaître les constituants de l'atome, leurs charges et leurs masses.</li>
+    <li>Écrire et exploiter le symbole du noyau <nuc a="A" z="Z">X</nuc>.</li>
+    <li>Définir l'élément chimique, les isotopes et les ions monoatomiques.</li>
+    <li>Calculer la masse d'un atome et comparer les dimensions de l'atome et du noyau.</li>
+    <li>Établir la répartition électronique d'un atome (Z ≤ 18).</li>
+  </ul>
+</div>
+
+<!-- ===================================================== -->
+<h2>Évolution historique du modèle de l'atome</h2>
+
+<p>Un <b>modèle</b> est une représentation simplifiée de la réalité, qui permet d'expliquer les résultats expérimentaux connus. Lorsqu'une nouvelle expérience n'est plus expliquée par le modèle, on le modifie ou on le remplace.</p>
+
+<ul class="timeline">
+  <li><span class="year">~ 400 av. J.-C.</span><div><b>Démocrite</b> (philosophe grec) imagine que la matière est formée de particules minuscules, indivisibles et éternelles : les <b>atomes</b> (du grec <i>atomos</i> = « qu'on ne peut pas couper »). C'est une idée philosophique, sans expérience.</div></li>
+  <li><span class="year">1808</span><div><b>John Dalton</b> (chimiste anglais) reprend l'idée à partir d'expériences de chimie : l'atome est une <b>sphère pleine, indivisible</b>. Les atomes d'un même élément sont identiques ; ceux d'éléments différents ont des masses différentes.</div></li>
+  <li><span class="year">1897 – 1904</span><div><b>Joseph John Thomson</b> découvre l'<b>électron</b>, particule chargée négativement, présente dans toute matière. L'atome n'est donc pas indivisible ! Il propose le modèle du « <b>pudding aux raisins</b> » : une sphère chargée positivement dans laquelle sont incrustés les électrons.</div></li>
+  <li><span class="year">1911</span><div><b>Ernest Rutherford</b>, grâce à l'expérience de la feuille d'or, découvre que l'atome possède un <b>noyau</b> minuscule, positif et très massif, autour duquel tournent les électrons à grande distance : c'est le <b>modèle planétaire</b>. L'atome est essentiellement formé de <b>vide</b>.</div></li>
+  <li><span class="year">1913</span><div><b>Niels Bohr</b> améliore le modèle de Rutherford : les électrons ne peuvent se déplacer que sur certaines <b>orbites (couches) bien définies</b>, chacune correspondant à une énergie déterminée.</div></li>
+  <li><span class="year">1919 – 1932</span><div>Rutherford met en évidence le <b>proton</b> (1919), puis <b>James Chadwick</b> découvre le <b>neutron</b> (1932), particule neutre du noyau.</div></li>
+  <li><span class="year">Depuis 1926</span><div><b>Modèle actuel (quantique)</b> — Schrödinger, Heisenberg… : on ne peut pas connaître la trajectoire exacte d'un électron ; on parle seulement de la <b>probabilité</b> de le trouver dans une région de l'espace. Les électrons forment un <b>nuage électronique</b> autour du noyau.</div></li>
+</ul>
+
+<div data-widget="atom-history"></div>
+
+<h3>L'expérience de Rutherford (1911)</h3>
+<p>Rutherford bombarde une <b>feuille d'or très mince</b> (environ 0,6 µm d'épaisseur) avec des particules <b>α</b> (noyaux d'hélium, chargés positivement). Un écran fluorescent entoure la feuille et permet de repérer l'impact des particules.</p>
+
+<figure>
+  <svg viewBox="0 0 520 200" width="520" height="200" role="img" aria-label="Schéma de l'expérience de Rutherford">
+    <rect x="14" y="78" width="70" height="44" rx="6" fill="#8b93a7"/>
+    <text x="49" y="104" text-anchor="middle" fill="#fff" font-size="12" font-family="Segoe UI, Arial" font-weight="700">Source α</text>
+    <rect x="250" y="30" width="8" height="140" fill="#e0b13a"/>
+    <text x="254" y="22" text-anchor="middle" fill="currentColor" font-size="12" font-family="Segoe UI, Arial">feuille d'or</text>
+    <path d="M440 20 A 190 190 0 0 1 440 180" fill="none" stroke="#1fa971" stroke-width="5" stroke-opacity=".7"/>
+    <text x="470" y="104" fill="currentColor" font-size="12" font-family="Segoe UI, Arial">écran</text>
+    <g stroke="#e5484d" stroke-width="2" fill="none">
+      <path d="M84 92 H 470" stroke-opacity=".8"/>
+      <path d="M84 100 H 476"/>
+      <path d="M84 108 H 470" stroke-opacity=".8"/>
+      <path d="M84 96 H 254 L 430 40" stroke-dasharray="5 4"/>
+      <path d="M84 104 H 254 L 120 160" stroke-dasharray="2 4" stroke-width="2.4"/>
+    </g>
+    <text x="300" y="62" fill="currentColor" font-size="11" font-family="Segoe UI, Arial">quelques-unes déviées</text>
+    <text x="120" y="182" fill="currentColor" font-size="11" font-family="Segoe UI, Arial">très rares : renvoyées</text>
+    <text x="300" y="125" fill="currentColor" font-size="11" font-family="Segoe UI, Arial">la plupart traversent</text>
+  </svg>
+  <figcaption>Principe de l'expérience de Rutherford</figcaption>
+</figure>
+
+<div class="table-wrap"><table>
+  <tr><th class="l">Observation</th><th class="l">Conclusion</th></tr>
+  <tr><td class="l">La grande majorité des particules α traversent la feuille <b>sans être déviées</b>.</td><td class="l">L'atome est formé essentiellement de <b>vide</b> : la matière a une structure <b>lacunaire</b>.</td></tr>
+  <tr><td class="l">Quelques particules sont <b>déviées</b>.</td><td class="l">Elles passent près d'une petite région chargée <b>positivement</b> qui les repousse : le <b>noyau</b>.</td></tr>
+  <tr><td class="l">Très peu de particules (environ 1 sur 10 000) sont <b>renvoyées en arrière</b>.</td><td class="l">Elles ont heurté le noyau : il est <b>très petit</b> et concentre presque toute la <b>masse</b> de l'atome.</td></tr>
+</table></div>
+
+<p><b>À toi de jouer :</b> refais l'expérience ! Lance des particules, observe les trajectoires, puis compare avec ce que prévoyait le modèle de Thomson.</p>
+<div data-widget="rutherford"></div>
+
+<!-- ===================================================== -->
+<h2>Les constituants de l'atome</h2>
+
+<p>D'après le modèle actuel, l'atome est formé de deux parties :</p>
+<ul>
+  <li>un <b>noyau</b> central, chargé positivement, formé de <b>protons</b> et de <b>neutrons</b> ;</li>
+  <li>des <b>électrons</b>, chargés négativement, en mouvement rapide autour du noyau (nuage électronique).</li>
+</ul>
+
+<figure>
+  <svg viewBox="0 0 300 220" width="300" height="220" role="img" aria-label="Structure de l'atome">
+    <defs><radialGradient id="gCloud2"><stop offset="0" stop-color="#3b82f6" stop-opacity=".35"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="150" cy="110" r="100" fill="url(#gCloud2)"/>
+    <g>
+      <circle cx="143" cy="104" r="8" fill="#e5484d"/><circle cx="157" cy="104" r="8" fill="#8b93a7"/>
+      <circle cx="150" cy="116" r="8" fill="#e5484d"/><circle cx="136" cy="117" r="8" fill="#8b93a7"/>
+      <circle cx="164" cy="117" r="8" fill="#8b93a7"/><circle cx="150" cy="96" r="8" fill="#e5484d"/>
+    </g>
+    <g fill="#3b82f6"><circle cx="70" cy="70" r="6"/><circle cx="235" cy="85" r="6"/><circle cx="110" cy="190" r="6"/></g>
+    <g fill="currentColor" font-size="12" font-family="Segoe UI, Arial">
+      <text x="200" y="160">noyau</text><path d="M198 156 L166 124" stroke="currentColor"/>
+      <text x="14" y="50">électron</text><path d="M44 54 L66 66" stroke="currentColor"/>
+    </g>
+    <g font-size="11" font-family="Segoe UI, Arial" fill="currentColor">
+      <circle cx="22" cy="200" r="6" fill="#e5484d"/><text x="32" y="204">proton</text>
+      <circle cx="92" cy="200" r="6" fill="#8b93a7"/><text x="102" y="204">neutron</text>
+    </g>
+  </svg>
+  <figcaption>Structure de l'atome (schéma sans échelle)</figcaption>
+</figure>
+
+<h3>La charge élémentaire</h3>
+<p>Toutes les charges électriques des particules sont des multiples d'une charge appelée <b>charge élémentaire</b>, notée <i>e</i> :</p>
+<div class="formula key"><span><i>e</i> = 1,6 × 10<sup>−19</sup> C</span></div>
+<p class="muted">Le coulomb (C) est l'unité de charge électrique dans le Système international.</p>
+
+<h3>Caractéristiques des particules</h3>
+<table>
+  <tr><th>Particule</th><th>Symbole</th><th>Charge</th><th>Masse (kg)</th></tr>
+  <tr><td>Proton</td><td><span class="m"><i>p</i></span></td><td>+<i>e</i> = +1,6 × 10<sup>−19</sup> C</td><td><span class="m"><i>m</i><sub>p</sub></span> = 1,673 × 10<sup>−27</sup></td></tr>
+  <tr><td>Neutron</td><td><span class="m"><i>n</i></span></td><td>0 (neutre)</td><td><span class="m"><i>m</i><sub>n</sub></span> = 1,675 × 10<sup>−27</sup></td></tr>
+  <tr><td>Électron</td><td><span class="m"><i>e</i><sup>−</sup></span></td><td>−<i>e</i> = −1,6 × 10<sup>−19</sup> C</td><td><span class="m"><i>m</i><sub>e</sub></span> = 9,11 × 10<sup>−31</sup></td></tr>
+</table>
+
+<div class="box note">
+  <span class="box-title">À remarquer</span>
+  <ul>
+    <li>Le proton et le neutron ont presque la même masse : <span class="m"><i>m</i><sub>p</sub> ≈ <i>m</i><sub>n</sub> ≈ 1,67 × 10<sup>−27</sup> kg</span>.</li>
+    <li>L'électron est environ <b>1 836 fois plus léger</b> que le proton : <span class="m"><i>m</i><sub>p</sub> / <i>m</i><sub>e</sub> ≈ 1836</span>.</li>
+  </ul>
+</div>
+
+<h3>Le noyau</h3>
+<p>Les protons et les neutrons sont appelés <b>nucléons</b> (particules du noyau). Si le noyau contient <i>Z</i> protons, sa charge est :</p>
+<div class="formula key"><span><i>Q</i><sub>noyau</sub> = <i>Z</i> · <i>e</i></span></div>
+
+<h3>L'électroneutralité de l'atome</h3>
+<div class="box def">
+  <span class="box-title">Propriété</span>
+  <p>L'atome est <b>électriquement neutre</b> : il contient autant d'électrons que de protons. Si le noyau contient <i>Z</i> protons, le nuage électronique contient <i>Z</i> électrons.</p>
+</div>
+<div class="formula"><span><i>Q</i><sub>atome</sub> = <i>Z</i>·<i>e</i> + <i>Z</i>·(−<i>e</i>) = 0</span></div>
+
+<!-- ===================================================== -->
+<h2>Le symbole du noyau</h2>
+
+<p>Un noyau est représenté par le symbole :</p>
+<div class="formula key"><nuc a="A" z="Z">X</nuc></div>
+<ul>
+  <li><b>X</b> : le symbole de l'élément chimique (H, C, O, Na, Cl…) ;</li>
+  <li><b><i>Z</i></b> : le <b>nombre de charge</b> (ou <b>numéro atomique</b>) = nombre de <b>protons</b> ;</li>
+  <li><b><i>A</i></b> : le <b>nombre de masse</b> = nombre de <b>nucléons</b> (protons + neutrons).</li>
+</ul>
+<p>On en déduit le nombre de neutrons <i>N</i> :</p>
+<div class="formula key"><span><i>A</i> = <i>Z</i> + <i>N</i> &nbsp;&nbsp;⟺&nbsp;&nbsp; <i>N</i> = <i>A</i> − <i>Z</i></span></div>
+
+<div class="box ex">
+  <span class="box-title">Exemples</span>
+  <table>
+    <tr><th>Noyau</th><th>Protons <i>Z</i></th><th>Nucléons <i>A</i></th><th>Neutrons <i>N</i> = <i>A</i> − <i>Z</i></th><th>Électrons de l'atome</th></tr>
+    <tr><td><nuc a="1" z="1">H</nuc></td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+    <tr><td><nuc a="12" z="6">C</nuc></td><td>6</td><td>12</td><td>6</td><td>6</td></tr>
+    <tr><td><nuc a="16" z="8">O</nuc></td><td>8</td><td>16</td><td>8</td><td>8</td></tr>
+    <tr><td><nuc a="23" z="11">Na</nuc></td><td>11</td><td>23</td><td>12</td><td>11</td></tr>
+    <tr><td><nuc a="27" z="13">Al</nuc></td><td>13</td><td>27</td><td>14</td><td>13</td></tr>
+    <tr><td><nuc a="56" z="26">Fe</nuc></td><td>26</td><td>56</td><td>30</td><td>26</td></tr>
+  </table>
+</div>
+
+<p><b>Expérimente :</b> construis toi-même des atomes. Change le nombre de protons (l'élément change), de neutrons (on obtient un isotope) ou d'électrons (on obtient un ion) et observe le symbole, la charge, la masse et la répartition électronique.</p>
+<div data-widget="atom-builder"></div>
+
+<!-- ===================================================== -->
+<h2>Élément chimique et isotopes</h2>
+
+<h3>L'élément chimique</h3>
+<div class="box def">
+  <span class="box-title">Définition</span>
+  <p>Un <b>élément chimique</b> est l'ensemble des entités (atomes ou ions) qui ont le <b>même numéro atomique <i>Z</i></b>. C'est donc <i>Z</i> qui caractérise un élément.</p>
+</div>
+<p>Exemple : tout atome ou ion possédant 6 protons appartient à l'élément <b>carbone</b> (C). Tout atome ou ion possédant 11 protons est de l'élément <b>sodium</b> (Na).</p>
+<p>Au cours d'une transformation chimique, les éléments chimiques se <b>conservent</b> : les noyaux ne sont pas modifiés.</p>
+
+<h3>Les isotopes</h3>
+<div class="box def">
+  <span class="box-title">Définition</span>
+  <p>On appelle <b>isotopes</b> des atomes (ou noyaux) qui ont le <b>même nombre de protons <i>Z</i></b> mais des <b>nombres de neutrons différents</b> (donc des nombres de masse <i>A</i> différents).</p>
+</div>
+<p>Les isotopes appartiennent au même élément chimique et ont les mêmes propriétés chimiques.</p>
+<table>
+  <tr><th>Élément</th><th>Isotopes</th><th>Remarque</th></tr>
+  <tr><td>Hydrogène</td><td><nuc a="1" z="1">H</nuc> &nbsp; <nuc a="2" z="1">H</nuc> &nbsp; <nuc a="3" z="1">H</nuc></td><td>hydrogène, deutérium, tritium</td></tr>
+  <tr><td>Carbone</td><td><nuc a="12" z="6">C</nuc> &nbsp; <nuc a="13" z="6">C</nuc> &nbsp; <nuc a="14" z="6">C</nuc></td><td>le carbone 14 sert à la datation</td></tr>
+  <tr><td>Chlore</td><td><nuc a="35" z="17">Cl</nuc> &nbsp; <nuc a="37" z="17">Cl</nuc></td><td>≈ 75 % et ≈ 25 % dans la nature</td></tr>
+  <tr><td>Uranium</td><td><nuc a="235" z="92">U</nuc> &nbsp; <nuc a="238" z="92">U</nuc></td><td>combustible des centrales nucléaires</td></tr>
+</table>
+
+<!-- ===================================================== -->
+<h2>Les ions monoatomiques</h2>
+<p>Un atome peut <b>perdre</b> ou <b>gagner</b> un ou plusieurs électrons ; il devient alors un <b>ion monoatomique</b>. Le noyau, lui, ne change pas (même <i>Z</i>, même élément).</p>
+<ul>
+  <li><b>Cation</b> (ion positif) : l'atome a <b>perdu</b> des électrons. Ex. : Na<sup>+</sup>, Mg<sup>2+</sup>, Al<sup>3+</sup>.</li>
+  <li><b>Anion</b> (ion négatif) : l'atome a <b>gagné</b> des électrons. Ex. : Cl<sup>−</sup>, O<sup>2−</sup>, S<sup>2−</sup>.</li>
+</ul>
+<p>La charge d'un ion qui possède <i>Z</i> protons et <i>n</i> électrons est :</p>
+<div class="formula key"><span><i>q</i> = (<i>Z</i> − <i>n</i>) · <i>e</i></span></div>
+<div class="box ex">
+  <span class="box-title">Exemples</span>
+  <table>
+    <tr><th>Ion</th><th><i>Z</i></th><th>Électrons <i>n</i></th><th>Charge <i>q</i></th></tr>
+    <tr><td>Na<sup>+</sup></td><td>11</td><td>11 − 1 = 10</td><td>+<i>e</i> = +1,6 × 10<sup>−19</sup> C</td></tr>
+    <tr><td>Mg<sup>2+</sup></td><td>12</td><td>12 − 2 = 10</td><td>+2<i>e</i> = +3,2 × 10<sup>−19</sup> C</td></tr>
+    <tr><td>Cl<sup>−</sup></td><td>17</td><td>17 + 1 = 18</td><td>−<i>e</i> = −1,6 × 10<sup>−19</sup> C</td></tr>
+    <tr><td>O<sup>2−</sup></td><td>8</td><td>8 + 2 = 10</td><td>−2<i>e</i> = −3,2 × 10<sup>−19</sup> C</td></tr>
+  </table>
+</div>
+
+<!-- ===================================================== -->
+<h2>Les dimensions de l'atome</h2>
+<p>L'atome et le noyau sont considérés comme des sphères. Leurs dimensions sont extrêmement petites :</p>
+<table>
+  <tr><th></th><th>Rayon (ordre de grandeur)</th></tr>
+  <tr><td>Atome</td><td><span class="m"><i>r</i><sub>atome</sub> ≈ 10<sup>−10</sup> m</span> (0,1 nm)</td></tr>
+  <tr><td>Noyau</td><td><span class="m"><i>r</i><sub>noyau</sub> ≈ 10<sup>−15</sup> m</span> (1 fm)</td></tr>
+</table>
+<div class="formula key"><span class="frac"><span><i>r</i><sub>atome</sub></span><span><i>r</i><sub>noyau</sub></span></span><span>≈</span><span class="frac"><span>10<sup>−10</sup></span><span>10<sup>−15</sup></span></span><span>= 10<sup>5</sup></span></div>
+<p>Le rayon de l'atome est environ <b>100 000 fois</b> plus grand que celui du noyau. Entre le noyau et les électrons, il n'y a que du <b>vide</b> : on dit que l'atome a une <b>structure lacunaire</b>.</p>
+<div class="box note">
+  <span class="box-title">Pour imaginer</span>
+  <p>Si le noyau avait la taille d'une bille de 1 cm de rayon, l'atome aurait un rayon de 10<sup>5</sup> cm = <b>1 km</b> !</p>
+</div>
+<div data-widget="atom-scale"></div>
+
+<h3>Ordre de grandeur</h3>
+<p>L'<b>ordre de grandeur</b> d'un nombre est la puissance de 10 la plus proche de ce nombre. On écrit le nombre sous la forme <span class="m"><i>a</i> × 10<sup><i>n</i></sup></span> avec <span class="m">1 ≤ <i>a</i> &lt; 10</span> :</p>
+<ul>
+  <li>si <span class="m"><i>a</i> &lt; 5</span>, l'ordre de grandeur est <span class="m">10<sup><i>n</i></sup></span> ;</li>
+  <li>si <span class="m"><i>a</i> ≥ 5</span>, l'ordre de grandeur est <span class="m">10<sup><i>n</i>+1</sup></span>.</li>
+</ul>
+<p>Exemple : le rayon de l'atome d'hydrogène vaut <span class="m">5,3 × 10<sup>−11</sup> m</span> ; comme 5,3 ≥ 5, son ordre de grandeur est <span class="m">10<sup>−10</sup> m</span>.</p>
+
+<!-- ===================================================== -->
+<h2>La masse de l'atome</h2>
+<p>La masse d'un atome est la somme des masses de ses constituants. Pour un atome <nuc a="A" z="Z">X</nuc> (Z protons, N = A − Z neutrons, Z électrons) :</p>
+<div class="formula"><span><i>m</i><sub>atome</sub> = <i>Z</i>·<i>m</i><sub>p</sub> + (<i>A</i> − <i>Z</i>)·<i>m</i><sub>n</sub> + <i>Z</i>·<i>m</i><sub>e</sub></span></div>
+<p>La masse des électrons est <b>négligeable</b> devant celle du noyau (l'électron est 1 836 fois plus léger que le nucléon). Presque toute la masse de l'atome est concentrée dans le noyau :</p>
+<div class="formula"><span><i>m</i><sub>atome</sub> ≈ <i>m</i><sub>noyau</sub> = <i>Z</i>·<i>m</i><sub>p</sub> + (<i>A</i> − <i>Z</i>)·<i>m</i><sub>n</sub></span></div>
+<p>Et comme <span class="m"><i>m</i><sub>p</sub> ≈ <i>m</i><sub>n</sub> = <i>m</i><sub>nucléon</sub> ≈ 1,67 × 10<sup>−27</sup> kg</span> :</p>
+<div class="formula key"><span><i>m</i><sub>atome</sub> ≈ <i>A</i> · <i>m</i><sub>nucléon</sub></span></div>
+
+<div class="box ex">
+  <span class="box-title">Exemple : l'atome de carbone 12</span>
+  <p><nuc a="12" z="6">C</nuc> : <span class="m"><i>m</i> ≈ 12 × 1,67 × 10<sup>−27</sup> ≈ 2,0 × 10<sup>−26</sup> kg</span>.</p>
+  <p>Masse de ses 6 électrons : <span class="m">6 × 9,11 × 10<sup>−31</sup> ≈ 5,5 × 10<sup>−30</sup> kg</span>, soit environ 0,03 % de la masse de l'atome → négligeable.</p>
+</div>
+
+<!-- ===================================================== -->
+<h2>La répartition électronique</h2>
+<p>Dans le modèle simplifié utilisé en Tronc Commun, les électrons se répartissent sur des <b>couches électroniques</b> notées K, L, M… (numérotées <i>n</i> = 1, 2, 3…). Plus une couche est éloignée du noyau, moins ses électrons sont liés au noyau.</p>
+
+<h3>Règles de remplissage</h3>
+<ol>
+  <li>Une couche de numéro <i>n</i> contient au maximum <span class="m">2<i>n</i><sup>2</sup></span> électrons : K (<i>n</i> = 1) → 2 ; L (<i>n</i> = 2) → 8 ; M (<i>n</i> = 3) → 18.</li>
+  <li>Les électrons remplissent les couches <b>dans l'ordre</b> K, puis L, puis M : on ne commence une couche que lorsque la précédente est <b>saturée</b> (pleine). Pour Z ≤ 18, la couche M reçoit au plus 8 électrons.</li>
+</ol>
+<p>La dernière couche occupée est la <b>couche externe</b> ; ses électrons sont les <b>électrons de valence</b>. Les autres couches sont les couches internes.</p>
+
+<table>
+  <tr><th>Atome</th><th><i>Z</i></th><th>Répartition électronique</th><th>Électrons externes</th></tr>
+  <tr><td>H</td><td>1</td><td>(K)<sup>1</sup></td><td>1</td></tr>
+  <tr><td>He</td><td>2</td><td>(K)<sup>2</sup></td><td>2</td></tr>
+  <tr><td>C</td><td>6</td><td>(K)<sup>2</sup>(L)<sup>4</sup></td><td>4</td></tr>
+  <tr><td>O</td><td>8</td><td>(K)<sup>2</sup>(L)<sup>6</sup></td><td>6</td></tr>
+  <tr><td>Ne</td><td>10</td><td>(K)<sup>2</sup>(L)<sup>8</sup></td><td>8</td></tr>
+  <tr><td>Na</td><td>11</td><td>(K)<sup>2</sup>(L)<sup>8</sup>(M)<sup>1</sup></td><td>1</td></tr>
+  <tr><td>Cl</td><td>17</td><td>(K)<sup>2</sup>(L)<sup>8</sup>(M)<sup>7</sup></td><td>7</td></tr>
+  <tr><td>Ar</td><td>18</td><td>(K)<sup>2</sup>(L)<sup>8</sup>(M)<sup>8</sup></td><td>8</td></tr>
+</table>
+<div class="box note">
+  <span class="box-title">Pour les ions</span>
+  <p>On applique les mêmes règles avec le nombre d'électrons de l'ion. Exemple : Na<sup>+</sup> a 10 électrons → (K)<sup>2</sup>(L)<sup>8</sup> ; Cl<sup>−</sup> a 18 électrons → (K)<sup>2</sup>(L)<sup>8</sup>(M)<sup>8</sup>.</p>
+</div>
+
+<!-- ===================================================== -->
+<h2>Exercices d'application</h2>
+
+<div data-widget="quiz" data-src="physique-chimie/modele-atome/quiz.json"></div>
+
+<div class="box ex">
+  <span class="box-title">Exercice 1 — Noyau de magnésium</span>
+  <p>Le noyau de l'atome de magnésium est représenté par <nuc a="24" z="12">Mg</nuc>.</p>
+  <ol>
+    <li>Donner la composition de ce noyau.</li>
+    <li>Calculer la charge du noyau.</li>
+    <li>Combien d'électrons possède l'atome ? Justifier.</li>
+    <li>Écrire sa répartition électronique.</li>
+  </ol>
+  <details class="solution"><summary>Voir la correction</summary><div>
+    <ol>
+      <li><i>Z</i> = 12 protons ; <i>N</i> = <i>A</i> − <i>Z</i> = 24 − 12 = 12 neutrons (24 nucléons).</li>
+      <li><span class="m"><i>Q</i> = <i>Z</i>·<i>e</i> = 12 × 1,6 × 10<sup>−19</sup> = 1,92 × 10<sup>−18</sup> C</span>.</li>
+      <li>L'atome est électriquement neutre : il a autant d'électrons que de protons, soit <b>12 électrons</b>.</li>
+      <li>(K)<sup>2</sup>(L)<sup>8</sup>(M)<sup>2</sup>.</li>
+    </ol>
+  </div></details>
+</div>
+
+<div class="box ex">
+  <span class="box-title">Exercice 2 — Isotopes</span>
+  <p>Parmi les noyaux suivants, lesquels sont isotopes ? <nuc a="14" z="6">C</nuc> ; <nuc a="14" z="7">N</nuc> ; <nuc a="12" z="6">C</nuc> ; <nuc a="16" z="8">O</nuc> ; <nuc a="18" z="8">O</nuc>.</p>
+  <details class="solution"><summary>Voir la correction</summary><div>
+    <p>Les isotopes ont le même <i>Z</i> et des <i>A</i> différents :</p>
+    <ul>
+      <li><nuc a="12" z="6">C</nuc> et <nuc a="14" z="6">C</nuc> sont isotopes (Z = 6) ;</li>
+      <li><nuc a="16" z="8">O</nuc> et <nuc a="18" z="8">O</nuc> sont isotopes (Z = 8).</li>
+    </ul>
+    <p><nuc a="14" z="6">C</nuc> et <nuc a="14" z="7">N</nuc> ont le même <i>A</i> mais des <i>Z</i> différents : ce sont deux éléments différents, ils ne sont <b>pas</b> isotopes.</p>
+  </div></details>
+</div>
+
+<div class="box ex">
+  <span class="box-title">Exercice 3 — Masse et nombre d'atomes</span>
+  <p>On considère l'atome d'aluminium <nuc a="27" z="13">Al</nuc>. Donnée : <span class="m"><i>m</i><sub>nucléon</sub> = 1,67 × 10<sup>−27</sup> kg</span>.</p>
+  <ol>
+    <li>Calculer la masse approchée de l'atome d'aluminium.</li>
+    <li>Combien d'atomes contient une feuille d'aluminium de masse 2,7 g ?</li>
+  </ol>
+  <details class="solution"><summary>Voir la correction</summary><div>
+    <ol>
+      <li><span class="m"><i>m</i><sub>Al</sub> ≈ <i>A</i>·<i>m</i><sub>nucléon</sub> = 27 × 1,67 × 10<sup>−27</sup> ≈ 4,51 × 10<sup>−26</sup> kg</span>.</li>
+      <li><span class="m">N = <span class="frac"><span><i>m</i><sub>feuille</sub></span><span><i>m</i><sub>Al</sub></span></span> = <span class="frac"><span>2,7 × 10<sup>−3</sup></span><span>4,51 × 10<sup>−26</sup></span></span> ≈ 6,0 × 10<sup>22</sup></span> atomes. (Attention : 2,7 g = 2,7 × 10<sup>−3</sup> kg.)</li>
+    </ol>
+  </div></details>
+</div>
+
+<div class="box ex">
+  <span class="box-title">Exercice 4 — Identifier un ion</span>
+  <p>Un ion monoatomique possède 18 électrons et porte la charge <span class="m"><i>q</i> = −3,2 × 10<sup>−19</sup> C</span>. Son noyau contient 16 neutrons.</p>
+  <ol>
+    <li>Combien de charges élémentaires porte cet ion ? Est-ce un cation ou un anion ?</li>
+    <li>Trouver <i>Z</i> et <i>A</i>, puis identifier l'élément (S : Z = 16 ; Cl : Z = 17 ; Ar : Z = 18).</li>
+  </ol>
+  <details class="solution"><summary>Voir la correction</summary><div>
+    <ol>
+      <li><span class="m"><i>q</i> / <i>e</i> = −3,2 × 10<sup>−19</sup> / 1,6 × 10<sup>−19</sup> = −2</span> : l'ion porte 2 charges négatives, c'est un <b>anion</b> (il a gagné 2 électrons).</li>
+      <li><span class="m"><i>Z</i> = 18 − 2 = 16</span> → c'est le <b>soufre</b> ; <span class="m"><i>A</i> = <i>Z</i> + <i>N</i> = 16 + 16 = 32</span>. L'ion est S<sup>2−</sup>, de noyau <nuc a="32" z="16">S</nuc>.</li>
+    </ol>
+  </div></details>
+</div>
