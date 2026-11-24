@@ -1,0 +1,162 @@
+// Version téléphone (Android)
+window.tcsf = {
+  readContent: (rel) => fetch('../content/' + rel).then((r) => (r.ok ? r.text() : null)).catch(() => null),
+  info: async () => ({ appVersion: "2.2.7", contentVersion: 7 }),
+  importUpdate: async () => ({ message: 'Sur le téléphone, installe simplement la nouvelle version de l’application (fichier .apk).' }),
+  onlineUpdate: async () => ({ message: 'Sur le téléphone, installe simplement la nouvelle version de l’application (fichier .apk).' }),
+  onContentChanged: () => {}
+};
+document.documentElement.classList.add('is-mobile');
+// Voix du prof, micro et Wikipédia sur Android (plugins Capacitor)
+(() => {
+  const CP = () => (window.Capacitor && window.Capacitor.Plugins) || {};
+  const get = (host, params) => fetch('https://' + host + '/w/api.php?' + new URLSearchParams(Object.assign({ format: 'json', utf8: '1', origin: '*' }, params))).then((r) => (r.ok ? r.json() : null));
+  window.TCSF_NATIVE = {
+    speak: async (text, lang) => { const t = CP().TextToSpeech; if (!t) throw new Error('no tts'); await t.speak({ text, lang, rate: 1.0, pitch: 1.0, volume: 1.0, category: 'ambient' }); },
+    stop: () => { const t = CP().TextToSpeech; if (t) t.stop().catch(() => {}); },
+    listen: async (lang) => {
+      const s = CP().SpeechRecognition;
+      if (!s) return { error: 'unsupported' };
+      try {
+        const av = await s.available();
+        if (!av || !av.available) return { error: 'nolang' };
+        let p = await s.checkPermissions();
+        if (p.speechRecognition !== 'granted') p = await s.requestPermissions();
+        if (p.speechRecognition !== 'granted') return { error: 'perm' };
+        const r = await s.start({ language: lang, maxResults: 1, partialResults: false, popup: true, prompt: '' });
+        const t = r && r.matches && r.matches[0];
+        return t ? { text: t } : { error: 'empty' };
+      } catch (e) { return { error: /no match|didn.t understand|7/i.test(String(e && e.message)) ? 'empty' : 'fail' }; }
+    },
+    // Rappels du planning (notifications programmées, même si l'application est fermée)
+    notify: {
+      request: async () => { const N = CP().LocalNotifications; if (!N) return false; let p = await N.checkPermissions(); if (p.display !== 'granted') p = await N.requestPermissions(); return p.display === 'granted'; },
+      cancelAll: async () => { const N = CP().LocalNotifications; if (!N) return; const p = await N.getPending(); if (p.notifications && p.notifications.length) await N.cancel({ notifications: p.notifications.map((n) => ({ id: n.id })) }); },
+      schedule: async (list) => {
+        const N = CP().LocalNotifications; if (!N) return;
+        const p = await N.checkPermissions(); if (p.display !== 'granted') return;
+        await N.schedule({ notifications: list.map((r, i) => ({ id: 1000 + i, title: r.title, body: r.body, schedule: { at: r.at, allowWhileIdle: true } })) });
+      }
+    },
+    // notification immédiate (mise à jour arrivée)
+    notifyNow: null,
+    wiki: async (lang, q, simple, toAr) => {
+      const R = window.TCSF_WIKIRANK, host = R.host(lang, simple);
+      try {
+        const s = await get(host, { action: 'query', list: 'search', srsearch: String(q).slice(0, 200), srlimit: '6' });
+        const best = R.pick(q, (s && s.query && s.query.search) || []);
+        if (!best) return { none: true };
+        if (toAr) {
+          const ll = await get(host, { action: 'query', prop: 'langlinks', lllang: 'ar', redirects: '1', titles: best.title });
+          const pg = Object.values((ll && ll.query && ll.query.pages) || {})[0] || {};
+          const at = pg.langlinks && pg.langlinks[0] && (pg.langlinks[0]['*'] || pg.langlinks[0].title);
+          if (!at) return { none: true };
+          const x = await get('ar.wikipedia.org', { action: 'query', prop: 'extracts', exintro: '1', explaintext: '1', exsentences: '3', redirects: '1', titles: at });
+          const t = ((Object.values((x && x.query && x.query.pages) || {})[0] || {}).extract || '').trim();
+          return t ? { title: at, text: t, url: 'https://ar.wikipedia.org/wiki/' + encodeURIComponent(at.replace(/ /g, '_')), source: 'ar.wikipedia.org', ar: true } : { none: true };
+        }
+        let text = '';
+        try {
+          const x = await get(host, { action: 'query', prop: 'extracts', exintro: '1', explaintext: '1', exsentences: simple ? '2' : '4', redirects: '1', titles: best.title });
+          text = (Object.values((x && x.query && x.query.pages) || {})[0] || {}).extract || '';
+        } catch (e) {}
+        if (!text) text = String(best.snippet || '').replace(/<[^>]+>/g, '');
+        return { title: best.title, text: text.trim(), url: 'https://' + host + '/wiki/' + encodeURIComponent(best.title.replace(/ /g, '_')), source: host };
+      } catch (e) { return { offline: true }; }
+    }
+  };
+  window.TCSF_NATIVE.notify.now = async (title, body) => {
+    const N = CP().LocalNotifications; if (!N) return;
+    try { const p = await N.checkPermissions(); if (p.display !== 'granted') return; await N.schedule({ notifications: [{ id: 990, title, body, schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true } }] }); } catch (e) {}
+  };
+
+  // ---- Mises à jour en ligne : téléchargement des fichiers modifiés, puis bascule de la WebView ----
+  const LIVE = {"base":"https://raw.githubusercontent.com/zaidamallah9-alt/tcsf-updates/main","build":7,"appVersion":"2.2.7","owner":"zaidamallah9-alt","repo":"tcsf-updates","branch":"main"};
+  const WV = () => (window.Capacitor && window.Capacitor.registerPlugin ? (window.__tcsfWV = window.__tcsfWV || window.Capacitor.registerPlugin('WebView')) : null);
+  const listeners = [];
+  let busy = false;
+  const semverGte = (a, b) => { const x = String(a).split('.').map(Number), y = String(b || '0').split('.').map(Number); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return true; };
+  const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const b64 = (buf) => new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1] || ''); r.readAsDataURL(new Blob([buf])); });
+  const curManifest = () => fetch('/live-manifest.json', { cache: 'no-store' }).then((r) => r.json()).catch(() => ({ build: LIVE.build, files: {} }));
+  async function basePath() { try { const W = WV(); return ((W && (await W.getServerBasePath())) || {}).path || ''; } catch (e) { return ''; } }
+  // version de l'application installée (APK), notée quand on tourne sur les fichiers d'origine
+  basePath().then((p) => { if (!/\/live\/\d+$/.test(p)) try { localStorage.setItem('tcsf:native', LIVE.appVersion); } catch (e) {} });
+  async function liveCheck() {
+    if (!LIVE.base) return { ok: false, message: 'Serveur de mises à jour non configuré.' };
+    const Fs = CP().Filesystem, W = WV();
+    if (!Fs || !W) return { ok: false, message: 'Mise à jour en ligne indisponible.' };
+    if (busy) return { ok: false, message: 'Vérification déjà en cours.' };
+    busy = true;
+    try {
+      const m = await fetch(LIVE.base + '/android.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null));
+      const cur = await curManifest();
+      if (!m || !m.files || !(m.build > cur.build)) return { ok: true, upToDate: true };
+      const native = localStorage.getItem('tcsf:native') || LIVE.appVersion;
+      if (!semverGte(native, m.minApp)) return { ok: false, message: 'Cette mise à jour demande d’installer la nouvelle version (.apk).' };
+      if (+(localStorage.getItem('tcsf:live-pending') || 0) >= m.build) { listeners.forEach((f) => f({ build: m.build, notes: m.notes || '' })); return { ok: true, updated: true }; }
+      const dir = 'live/' + m.build;
+      const curLive = ((await basePath()).match(/live\/\d+$/) || [null])[0];
+      try { await Fs.rmdir({ path: dir, directory: 'DATA', recursive: true }); } catch (e) {}
+      for (const [rel, sum] of Object.entries(m.files)) {
+        if (rel.includes('..')) continue;
+        const to = dir + '/' + rel;
+        if (cur.files && cur.files[rel] === sum && curLive) {
+          try { await Fs.mkdir({ path: to.replace(/\/[^/]+$/, ''), directory: 'DATA', recursive: true }); } catch (e) {}
+          try { await Fs.copy({ from: curLive + '/' + rel, to, directory: 'DATA', toDirectory: 'DATA' }); continue; } catch (e) {}
+        }
+        let buf = null;
+        if (cur.files && cur.files[rel] === sum) { try { buf = await fetch('/' + rel).then((r) => (r.ok ? r.arrayBuffer() : null)); } catch (e) {} }
+        if (!buf || hex(await crypto.subtle.digest('SHA-1', buf)) !== sum) {
+          buf = await fetch(LIVE.base + '/blobs/' + sum).then((r) => { if (!r.ok) throw new Error('fichier manquant ' + rel); return r.arrayBuffer(); });
+          if (hex(await crypto.subtle.digest('SHA-1', buf)) !== sum) throw new Error('fichier abîmé ' + rel);
+        }
+        await Fs.writeFile({ path: to, data: await b64(buf), directory: 'DATA', recursive: true });
+      }
+      await Fs.writeFile({ path: dir + '/live-manifest.json', data: JSON.stringify(m), directory: 'DATA', encoding: 'utf8', recursive: true });
+      localStorage.setItem('tcsf:live-pending', String(m.build));
+      listeners.forEach((f) => f({ build: m.build, notes: m.notes || '' }));
+      return { ok: true, updated: true, build: m.build };
+    } catch (e) { return { ok: false, message: 'Mise à jour en ligne impossible : ' + (e && e.message || e) }; }
+    finally { busy = false; }
+  }
+  async function liveApply() {
+    const Fs = CP().Filesystem, W = WV();
+    const b = +(localStorage.getItem('tcsf:live-pending') || 0);
+    if (!Fs || !W || !b) return false;
+    const { uri } = await Fs.getUri({ path: 'live/' + b, directory: 'DATA' });
+    await W.setServerBasePath({ path: decodeURIComponent(uri.replace(/^file:\/\//, '')) });
+    await W.persistServerBasePath();
+    return true;
+  }
+  // accès : liste publique des empreintes de codes acceptés (dépôt GitHub)
+  async function accessList() {
+    if (!LIVE.owner) return { error: 'noserver' };
+    const urls = [
+      ['https://api.github.com/repos/' + LIVE.owner + '/' + LIVE.repo + '/contents/access.json?ref=' + LIVE.branch, { Accept: 'application/vnd.github.raw' }],
+      [LIVE.base + '/access.json?t=' + Date.now(), {}]
+    ];
+    let nf = false;
+    for (const [u, h] of urls) {
+      try { const r = await fetch(u, { headers: h, cache: 'no-store' }); if (r.status === 404) { nf = true; continue; } if (r.ok) return await r.json(); } catch (e) {}
+    }
+    return nf ? { v: 1, hashes: [] } : { error: 'offline' };
+  }
+  Object.assign(window.tcsf, {
+    accessList, accessOwner: async () => false,
+    liveCheck, liveApply,
+    onLiveReady: (cb) => listeners.push(cb),
+    info: async () => { const m = await curManifest(); return { appVersion: "2.2.7", contentVersion: 7, build: m.build, notes: m.notes || '' }; }
+  });
+  if (LIVE.base) {
+    // au démarrage : appliquer une mise à jour déjà téléchargée, sinon vérifier (puis toutes les heures)
+    setTimeout(async () => {
+      const cur = await curManifest();
+      const pend = +(localStorage.getItem('tcsf:live-pending') || 0);
+      if (pend > cur.build) { try { localStorage.setItem('tcsf:live-seen', '0'); if (await liveApply()) return; } catch (e) {} }
+      liveCheck();
+    }, 8000);
+    setInterval(liveCheck, 60 * 60 * 1000);
+    document.addEventListener('resume', () => liveCheck());
+  }
+})();

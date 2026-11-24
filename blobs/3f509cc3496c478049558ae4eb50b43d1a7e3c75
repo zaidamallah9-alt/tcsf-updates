@@ -1,0 +1,434 @@
+// Accès privé : l'application ne s'ouvre que pour les personnes acceptées par le propriétaire (Zaid Amallah).
+// Chaque appareil a un code (TC-XXXX-XXXX). L'élève l'envoie au propriétaire, qui l'accepte depuis son PC ;
+// la liste publique (access.json sur GitHub) ne contient que des empreintes SHA-256 des codes, pas de noms.
+(() => {
+  const T = window.tcsf || {};
+  if (!T.accessList) return; // aperçu navigateur : pas de verrou
+  const KEY = 'tcsf:access';
+  const ADMIN_KEY = 'tcsf:admin-name';
+  let OWNER_NAME = 'Zaid Amallah'; // remplacé par le nom d'utilisateur choisi par l'administrateur (access.json)
+  const AB = 'ABCDEFGHJKLMNPQRSUVWXYZ23456789'; // sans T, I, O, 0, 1 (pas de confusion)
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} };
+  const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const newCode = () => { const r = crypto.getRandomValues(new Uint8Array(8)); const s = [...r].map((b) => AB[b % AB.length]).join(''); return `TC-${s.slice(0, 4)}-${s.slice(4)}`; };
+  async function hash(code) {
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('tcsf:' + code));
+    return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  // ---- demandes d'accès envoyées automatiquement à l'administrateur (canal privé ntfy.sh, sans compte) ----
+  const REQ0 = 'https://ntfy.sh/tcsf-demandes-bac89a4bd20d9d2d4f286cb3';
+  let reqP = null; // en mode test (captures), canal séparé
+  const reqUrl = () => (reqP = reqP || (T.info ? T.info().then((i) => (i && i.test ? REQ0 + '-test' : REQ0)).catch(() => REQ0) : Promise.resolve(REQ0)));
+  const device = () => (window.TCSF_NATIVE ? 'téléphone' : 'PC');
+  async function sendRequest(force) {
+    if (st.ok) return false;
+    let last = 0; try { last = +(localStorage.getItem('tcsf:req-sent') || 0); } catch {}
+    if (!force && Date.now() - last < 3 * 3600 * 1000) return true; // renvoyée toutes les 3 h tant qu'elle n'est pas acceptée
+    try {
+      const r = await fetch(await reqUrl(), { method: 'POST', body: JSON.stringify({ t: 'req', code: st.code, name: st.name, device: device(), at: new Date().toISOString() }) });
+      if (!r.ok) return false;
+      localStorage.setItem('tcsf:req-sent', String(Date.now()));
+      return true;
+    } catch { return false; }
+  }
+  async function fetchRequests() {
+    const r = await fetch((await reqUrl()) + '/json?poll=1&since=24h', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const out = {};
+    for (const line of (await r.text()).split('\n')) {
+      try { const m = JSON.parse(line); const d = JSON.parse(m.message || '{}'); if (d.t === 'req' && /^TC-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(d.code)) out[d.code] = { code: d.code, name: String(d.name || '').slice(0, 50), device: d.device || '', at: d.at || new Date(m.time * 1000).toISOString() }; } catch {}
+    }
+    return Object.values(out);
+  }
+
+  // ---- présence (« en ligne ») et planning des invités, visibles par l'administrateur ----
+  const presUrl = async () => (await reqUrl()) + '-p';
+  const b64 = (buf) => { let s = ''; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); };
+  async function pack(obj) {
+    const s = new Blob([JSON.stringify(obj)]).stream().pipeThrough(new CompressionStream('gzip'));
+    return b64(await new Response(s).arrayBuffer());
+  }
+  async function unpack(str) {
+    const bin = Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
+    const s = new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return JSON.parse(await new Response(s).text());
+  }
+  // résumé du planning de l'élève (emploi du temps, examens, séances)
+  function planSummary() {
+    let p = null; try { p = JSON.parse(localStorage.getItem('tcsf:planner')); } catch {}
+    if (!p || (!Object.keys(p.edt || {}).length && !(p.exams || []).length)) return null;
+    const items = ((p.plan && p.plan.items) || []).map((x) => [x.date, x.start, x.end, x.subject, x.kind, x.lesson || '', p.done && p.done[x.task] ? 1 : 0]);
+    return { edt: p.edt || {}, exams: (p.exams || []).map((e) => [e.subject, e.date, e.time || '', (e.lessons || []).length]), items, stars: p.stars || 0, titles: (p.plan && p.plan.titles) || {} };
+  }
+  async function heartbeat() {
+    if (!st.ok || document.visibilityState === 'hidden') return;
+    const base = { code: st.code, name: st.name || '', device: device(), at: new Date().toISOString() };
+    try { await fetch(await presUrl(), { method: 'POST', body: JSON.stringify(Object.assign({ t: 'hb' }, base)) }); } catch {}
+    // planning : envoyé quand il change (ou toutes les 6 h)
+    try {
+      const s = planSummary(); if (!s) return;
+      const z = await pack(s);
+      const key = z.length + ':' + z.slice(-40);
+      let last = {}; try { last = JSON.parse(localStorage.getItem('tcsf:plan-sent')) || {}; } catch {}
+      if (last.key === key && Date.now() - (last.at || 0) < 6 * 3600 * 1000) return;
+      if (z.length > 3800) return; // limite d'un message
+      const r = await fetch(await presUrl(), { method: 'POST', body: JSON.stringify(Object.assign({ t: 'plan', z }, base)) });
+      if (r.ok) localStorage.setItem('tcsf:plan-sent', JSON.stringify({ key, at: Date.now() }));
+    } catch {}
+  }
+  let hbTimer = 0;
+  function startHeartbeat() {
+    if (hbTimer) return;
+    heartbeat(); hbTimer = setInterval(heartbeat, 2 * 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') heartbeat(); });
+  }
+  // côté administrateur : dernière présence et dernier planning de chaque invité
+  const LAST = 'tcsf:last-seen';
+  let seenMap = (() => { try { return JSON.parse(localStorage.getItem(LAST)) || {}; } catch { return {}; } })();
+  const plans = {};
+  async function fetchPresence() {
+    const r = await fetch((await presUrl()) + '/json?poll=1&since=12h', { cache: 'no-store' });
+    if (!r.ok) return;
+    for (const line of (await r.text()).split('\n')) {
+      try {
+        const m = JSON.parse(line); const d = JSON.parse(m.message || '{}');
+        if (!/^TC-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(d.code || '')) continue;
+        const at = d.at && Date.parse(d.at) <= Date.now() + 60000 ? d.at : new Date(m.time * 1000).toISOString();
+        if (!seenMap[d.code] || seenMap[d.code].at < at) seenMap[d.code] = { at, device: d.device || '' };
+        if (d.t === 'plan' && d.z && (!plans[d.code] || plans[d.code].at < at)) plans[d.code] = { at, z: d.z };
+      } catch {}
+    }
+    try { localStorage.setItem(LAST, JSON.stringify(seenMap)); } catch {}
+  }
+  const ago = (iso) => {
+    const s = Math.max(0, (Date.now() - Date.parse(iso)) / 1000);
+    if (s < 180) return null; // en ligne
+    if (s < 3600) return `il y a ${Math.round(s / 60)} min`;
+    if (s < 86400) return `il y a ${Math.round(s / 3600)} h`;
+    return `le ${new Date(iso).toLocaleDateString('fr-FR')} à ${new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  };
+  const presenceHTML = (code) => {
+    const s = seenMap[code];
+    if (!s) return '<span class="acc-pres off">⚪ jamais vu</span>';
+    const a = ago(s.at);
+    return a ? `<span class="acc-pres off">⚪ vu ${a}</span>` : `<span class="acc-pres on">🟢 en ligne</span>`;
+  };
+  const SUBJ = { mathematiques: 'Maths', 'physique-chimie': 'PC', svt: 'SVT', francais: 'Français', arabe: 'Arabe', anglais: 'Anglais', 'education-islamique': 'Islamique', 'histoire-geographie': 'HG', philosophie: 'Philo', informatique: 'Info', eps: 'EPS' };
+  const KINDS = { learn: '👨‍🏫 Comprendre', exo: '✍️ Exercices', memo: '🧠 Mémoriser', blanc: '📝 Examen blanc', veille: '🌙 Veille', jour: '🔁 Cours du jour', libre: '💪 Libre' };
+  async function showPlan(code, name) {
+    const p = plans[code];
+    const o = document.createElement('div'); o.className = 'live-modal acc-planview';
+    let body = '<p class="muted">Pas encore de planning reçu (il arrive quand l’invité ouvre l’application).</p>';
+    if (p) {
+      try {
+        const s = await unpack(p.z);
+        const days = {}; s.items.forEach((x) => (days[x[0]] = days[x[0]] || []).push(x));
+        const done = s.items.filter((x) => x[6]).length;
+        body = `<p class="w-small muted">Reçu ${ago(p.at) || 'à l’instant'} · ⭐ ${s.stars} · séances faites ${done}/${s.items.length}</p>
+          ${s.exams.length ? `<h4>📝 Examens</h4><ul>${s.exams.map((e) => `<li><b>${esc(SUBJ[e[0]] || e[0])}</b> — ${esc(e[1])}${e[2] ? ' à ' + esc(e[2]) : ''} (${e[3]} leçon·s)</li>`).join('')}</ul>` : ''}
+          <h4>📅 Programme</h4>${Object.keys(days).sort().map((d) => `<div class="acc-pday"><b>${esc(new Date(d + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }))}</b>${days[d].map((x) => `<div class="acc-pitem${x[6] ? ' done' : ''}"><span>${String(Math.floor(x[1] / 60)).padStart(2, '0')}:${String(x[1] % 60).padStart(2, '0')}</span> ${x[6] ? '✅' : '⬜'} ${esc(SUBJ[x[3]] || x[3])} — ${esc(KINDS[x[4]] || x[4])}${x[5] ? ' · <small>' + esc(s.titles[x[3] + '/' + x[5]] || x[5]) + '</small>' : ''}</div>`).join('')}</div>`).join('') || '<p class="muted">Aucune séance.</p>'}`;
+      } catch { body = '<p class="acc-warn">Planning illisible.</p>'; }
+    }
+    o.innerHTML = `<div class="live-card acc-plan-card"><h3>📅 Planning de ${esc(name)}</h3><div class="acc-plan-body">${body}</div><div class="live-btns"><button type="button" class="btn primary">Fermer</button></div></div>`;
+    o.querySelector('.btn').addEventListener('click', () => o.remove());
+    o.addEventListener('click', (e) => { if (e.target === o) o.remove(); });
+    document.body.appendChild(o);
+  }
+
+  let st = load();
+  if (!st.code) { st.code = newCode(); save(st); }
+  if (!st.ok) document.documentElement.classList.add('acc-locked'); // rien n'est visible avant la vérification
+
+  // ---- vérification auprès du serveur : true / false / null (pas d'Internet) ----
+  async function accepted() {
+    const l = await T.accessList().catch(() => ({ error: 'offline' }));
+    if (!l || l.error || !Array.isArray(l.hashes)) return null;
+    if (l.admin && l.admin.name) OWNER_NAME = String(l.admin.name).slice(0, 40);
+    return l.hashes.includes(await hash(st.code));
+  }
+
+  // ---- écran verrouillé ----
+  let lockEl = null, timer = 0;
+  function lock(reason) {
+    document.documentElement.classList.add('acc-locked');
+    if (!lockEl) { lockEl = document.createElement('div'); lockEl.className = 'acc-lock'; document.body.appendChild(lockEl); }
+    const M = window.TCSF_MASCOT;
+    const msg = `Salut ${OWNER_NAME} ! Je voudrais accéder à l’application Tronc Commun Scientifique Français.\nMon nom : ${st.name || ''}\nMon code : ${st.code}`;
+    lockEl.innerHTML = `<div class="acc-card">
+      <div class="acc-ic">${M ? M.svg(86) : '🔒'}</div>
+      <h2>Invitation requise 🔒</h2>
+      ${reason === 'revoked' ? '<p class="acc-warn">Ton accès a été retiré par l’administrateur.</p>' : ''}
+      <p>Cette application est privée. Pour y entrer comme <b>invité</b>, demande l’accès à l’administrateur <b>${esc(OWNER_NAME)}</b>. Dès qu’il t’accepte, l’application s’ouvre.</p>
+      <p class="acc-ar" dir="rtl" lang="ar">تطبيق خاص: أرسل رمزك إلى المسؤول <b>${esc(OWNER_NAME)}</b> ليقبلك كمدعو، ثم يُفتح التطبيق.</p>
+      <div class="acc-code-box"><span class="w-small">Ton code d’accès</span><div class="acc-code">${esc(st.code)}</div></div>
+      <p class="acc-sent">📨 Ta demande est envoyée automatiquement à ${esc(OWNER_NAME)}. Dès qu’il t’accepte, l’application s’ouvre toute seule.</p>
+      <p class="w-small muted">ℹ️ Une fois invité, l’administrateur peut voir quand tu es en ligne et ton planning de révision.</p>
+      <form class="acc-name"><input class="lv-input" name="n" maxlength="50" placeholder="Ton prénom (facultatif)" value="${esc(st.name || '')}" autocomplete="name"><button class="btn" type="submit">OK</button></form>
+      <div class="acc-btns"><button type="button" class="btn primary acc-wa">💬 Envoyer sur WhatsApp</button><button type="button" class="btn acc-copy">📋 Copier</button><button type="button" class="btn acc-check">🔄 Vérifier</button></div>
+      <p class="acc-status w-small" role="status"></p>
+    </div>`;
+    const status = lockEl.querySelector('.acc-status');
+    // la demande part tout de suite (le prénom est facultatif ; s'il est ajouté, on renvoie la demande)
+    sendRequest(false).then((ok) => { if (!ok && status && !status.textContent) status.textContent = '📶 Demande pas encore envoyée (Internet ?). Je réessaie tout seul.'; });
+    const nf = lockEl.querySelector('.acc-name');
+    nf.addEventListener('submit', async (e) => { e.preventDefault(); st.name = nf.n.value.trim().slice(0, 50); save(st); const ok = await sendRequest(true); status.textContent = ok ? '✅ Demande envoyée avec ton prénom.' : '📶 Pas d’Internet : je réessaie tout seul.'; });
+    lockEl.querySelector('.acc-copy')?.addEventListener('click', async () => { try { await navigator.clipboard.writeText(msg); status.textContent = '✅ Code copié. Colle-le dans un message à ' + OWNER_NAME + '.'; } catch { status.textContent = 'Recopie ce code : ' + st.code; } });
+    lockEl.querySelector('.acc-wa')?.addEventListener('click', () => { const a = document.createElement('a'); a.href = 'https://wa.me/?text=' + encodeURIComponent(msg); a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); });
+    lockEl.querySelector('.acc-check')?.addEventListener('click', () => check(true));
+    clearInterval(timer);
+    timer = setInterval(() => { check(false); sendRequest(false); }, 60000);
+    async function check(manual) {
+      if (status && manual) status.textContent = 'Vérification…';
+      const ok = await accepted();
+      if (ok) return unlock(true);
+      if (!status) return;
+      status.textContent = ok === null ? '📶 Pas de connexion au serveur. Vérifie ton Internet puis réessaie.' : manual ? '⏳ Pas encore accepté. Après l’acceptation, il faut parfois attendre 1 à 2 minutes.' : status.textContent;
+    }
+  }
+  function unlock(celebrate) {
+    clearInterval(timer);
+    st.ok = true; st.at = new Date().toISOString(); save(st);
+    startHeartbeat();
+    document.documentElement.classList.remove('acc-locked');
+    if (!lockEl) return;
+    if (celebrate) {
+      lockEl.querySelector('.acc-card').innerHTML = `<div class="acc-ic">${window.TCSF_MASCOT ? window.TCSF_MASCOT.svg(90) : '🎉'}</div><h2>Bienvenue ${esc(st.name)} ! 🎉</h2><p>${OWNER_NAME} t’a accepté. Bonnes révisions !</p>`;
+      try { if (window.TCSF_SFX) window.TCSF_SFX.fanfare(); if (window.TCSF_Q) window.TCSF_Q.burst(lockEl.querySelector('.acc-card')); } catch {}
+      setTimeout(() => { lockEl.classList.add('out'); setTimeout(() => { lockEl.remove(); lockEl = null; }, 400); }, 2200);
+    } else { lockEl.remove(); lockEl = null; }
+  }
+
+  // ---- panneau latéral de l'administrateur : demandes, invités, accès retirés ----
+  const DEL = 'tcsf:admin-deleted', DISM = 'tcsf:req-dismissed', SEEN_REQ = 'tcsf:req-notified';
+  const getSet = (k) => { try { return new Set(JSON.parse(localStorage.getItem(k)) || []); } catch { return new Set(); } };
+  const putSet = (k, s) => { try { localStorage.setItem(k, JSON.stringify([...s])); } catch {} };
+  const deleted = () => getSet(DEL);
+  const setDeleted = (s) => putSet(DEL, s);
+  let sideEl = null, tabEl = null, pending = [], members = null;
+  // demandes en attente = reçues, pas encore acceptées, pas refusées
+  async function loadPending() {
+    const [reqs, list] = await Promise.all([fetchRequests().catch(() => null), T.adminList().catch(() => ({ error: 'offline' }))]);
+    if (list && !list.error) members = list.items;
+    if (!reqs) return pending;
+    const active = new Set((members || []).filter((x) => x.active).map((x) => x.code));
+    const dism = getSet(DISM);
+    pending = reqs.filter((r) => !active.has(r.code) && !dism.has(r.code)).sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    return pending;
+  }
+  function paintTab() {
+    if (!tabEl) return;
+    const n = pending.length;
+    tabEl.querySelector('.acc-badge').textContent = n;
+    tabEl.querySelector('.acc-badge').hidden = !n;
+    tabEl.classList.toggle('ring', n > 0);
+  }
+  // vérification toutes les 45 s ; notification pour chaque nouvelle demande
+  async function pollRequests() {
+    await Promise.all([loadPending(), fetchPresence().catch(() => {})]);
+    const seen = getSet(SEEN_REQ);
+    const fresh = pending.filter((r) => !seen.has(r.code));
+    if (fresh.length) {
+      fresh.forEach((r) => seen.add(r.code)); putSet(SEEN_REQ, seen);
+      const t = fresh.length === 1 ? `🔔 Nouvelle demande : ${fresh[0].name}` : `🔔 ${fresh.length} nouvelles demandes d’accès`;
+      try { if ('Notification' in window) { const go = () => new Notification(t, { body: 'Ouvre le panneau « Invités » pour accepter ou refuser.' }); if (Notification.permission === 'granted') go(); else Notification.requestPermission().then((p) => p === 'granted' && go()); } } catch {}
+      try { if (window.TCSF_SFX) window.TCSF_SFX.good(); } catch {}
+      if (window.TCSF_MASCOT) window.TCSF_MASCOT.say(t);
+    }
+    paintTab();
+    if (sideEl && !sideEl.hidden) renderSide();
+  }
+  function sideTab() {
+    if (tabEl) return;
+    tabEl = document.createElement('button');
+    tabEl.type = 'button'; tabEl.className = 'acc-side-tab'; tabEl.title = 'Invités et demandes d’accès';
+    tabEl.innerHTML = '<span>👥</span><b>Invités</b><span class="acc-badge" hidden>0</span>';
+    tabEl.addEventListener('click', () => askPass(() => { if (sideEl && !sideEl.hidden) { sideEl.hidden = true; return; } adminModal(); }));
+    document.body.appendChild(tabEl);
+    pollRequests(); setInterval(pollRequests, 45000);
+  }
+  async function adminModal() {
+    if (!sideEl) {
+      sideEl = document.createElement('aside'); sideEl.className = 'acc-side';
+      document.body.appendChild(sideEl);
+    }
+    sideEl.hidden = false;
+    renderSide(true);
+  }
+  async function renderSide(reload) {
+    const o = sideEl;
+    o.innerHTML = `<div class="acc-side-head"><h3>👥 Invités</h3><button type="button" class="chip-btn acc-close" title="Fermer">✕</button></div>
+      <p class="acc-amsg w-small" role="status"></p>
+      <h4 class="acc-h">🆕 Nouvelles demandes <span class="tag">${pending.length}</span></h4>
+      <div class="acc-reqs">${pending.length ? pending.map((r) => `<div class="acc-req"><div><b>${esc(r.name || 'Sans nom')}</b><br><small class="muted">${esc(r.device)} · ${esc(String(r.at).slice(0, 16).replace('T', ' '))} · <code>${esc(r.code)}</code></small></div>
+        <div class="acc-acts"><button type="button" class="btn primary" data-c="${esc(r.code)}" data-n="${esc(r.name)}" data-a="app">✅ Accepter</button><button type="button" class="chip-btn danger" data-c="${esc(r.code)}" data-a="no">✖ Refuser</button></div></div>`).join('') : '<p class="muted">Aucune nouvelle demande.</p>'}</div>
+      <details class="acc-manual"><summary>➕ Ajouter avec un code reçu</summary><form class="acc-add"><input class="lv-input" name="c" placeholder="TC-XXXX-XXXX" required><input class="lv-input" name="n" placeholder="Nom (facultatif)"><button class="btn primary" type="submit">✅ Accepter</button></form></details>
+      <div class="acc-list"><p class="muted">Chargement…</p></div>`;
+    const msg = o.querySelector('.acc-amsg'), listEl = o.querySelector('.acc-list');
+    o.querySelector('.acc-close').addEventListener('click', () => { o.hidden = true; });
+    const act = async (b) => {
+      const c = b.dataset.c, a = b.dataset.a;
+      if (a === 'del' && !confirm(`Supprimer définitivement ${c} ? Son application sera bloquée.`)) return;
+      if (a === 'plan') { showPlan(c, b.dataset.n); return; }
+      if (a === 'no') { const s = getSet(DISM); s.add(c); putSet(DISM, s); pending = pending.filter((x) => x.code !== c); paintTab(); renderSide(); return; }
+      b.disabled = true; msg.textContent = 'Envoi à GitHub…';
+      const res = a === 'app' ? await T.adminApprove(c, b.dataset.n) : await T.adminRevoke(c);
+      if (!res.error) { const s = deleted(); if (a === 'del') s.add(c); else s.delete(c); setDeleted(s); if (a === 'app') { pending = pending.filter((x) => x.code !== c); paintTab(); } }
+      msg.textContent = res.error ? '❌ ' + res.error : a === 'del' ? '🗑 Invité supprimé.' : a === 'rev' ? '⛔ Accès retiré.' : '✅ Accepté : son application s’ouvre dans 1 à 2 minutes.';
+      renderSide(true);
+    };
+    o.querySelectorAll('.acc-reqs [data-c]').forEach((b) => b.addEventListener('click', () => act(b)));
+    o.querySelector('.acc-add').addEventListener('submit', async (e) => {
+      e.preventDefault(); const f = e.target; const b = f.querySelector('button'); b.disabled = true; msg.textContent = 'Envoi à GitHub…';
+      const code = String(f.c.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^TC/, '').replace(/^(.{4})(.{4}).*$/, 'TC-$1-$2');
+      const fromReq = pending.find((x) => x.code === code);
+      const res = await T.adminApprove(f.c.value, f.n.value.trim() || (fromReq && fromReq.name) || 'Invité');
+      b.disabled = false; msg.textContent = res.error ? '❌ ' + res.error : `✅ ${res.code} accepté.`;
+      if (!res.error) { const s = deleted(); s.delete(res.code); setDeleted(s); pending = pending.filter((x) => x.code !== res.code); paintTab(); renderSide(true); }
+    });
+    const row = (x, actions) => `<tr><td><b>${esc(x.name)}</b> ${presenceHTML(x.code)}<br><small class="muted">invité depuis le ${esc(String(x.date || '').slice(0, 10))}${seenMap[x.code] && seenMap[x.code].device ? ' · ' + esc(seenMap[x.code].device) : ''} · <code>${esc(x.code)}</code></small></td><td class="acc-acts">${actions}</td></tr>`;
+    {
+      const r = reload || !members ? await T.adminList() : { items: members };
+      if (r.error) { listEl.innerHTML = `<p class="acc-warn">${esc(r.error)}</p><p class="w-small">Vérifie ta connexion Internet.</p>`; return; }
+      members = r.items;
+      const del = deleted();
+      const items = r.items.filter((x) => x.code !== 'TC-TEST-2PXA' && !(del.has(x.code) && !x.active));
+      const lastAt = (c) => (seenMap[c] ? Date.parse(seenMap[c].at) : 0);
+      const on = items.filter((x) => x.active).sort((a, b) => lastAt(b.code) - lastAt(a.code)), off = items.filter((x) => !x.active);
+      const online = on.filter((x) => seenMap[x.code] && !ago(seenMap[x.code].at)).length;
+      listEl.innerHTML = `<h4 class="acc-h">✅ Invités dans l’application <span class="tag">${on.length}</span>${online ? ` <span class="tag acc-on-tag">🟢 ${online} en ligne</span>` : ''}</h4>
+        ${on.length ? `<table class="acc-table">${on.map((x) => row(x, `<button type="button" class="chip-btn" data-c="${esc(x.code)}" data-n="${esc(x.name)}" data-a="plan">📅 Planning</button><button type="button" class="chip-btn" data-c="${esc(x.code)}" data-a="rev">⛔ Retirer</button><button type="button" class="chip-btn danger" data-c="${esc(x.code)}" data-a="del">🗑 Supprimer</button>`)).join('')}</table>` : '<p class="muted">Aucun invité pour le moment.</p>'}
+        ${off.length ? `<details class="acc-off"><summary>⛔ Accès retirés (${off.length})</summary><table class="acc-table">${off.map((x) => row(x, `<button type="button" class="chip-btn" data-c="${esc(x.code)}" data-n="${esc(x.name)}" data-a="app">↩ Remettre</button><button type="button" class="chip-btn danger" data-c="${esc(x.code)}" data-a="del">🗑 Supprimer</button>`)).join('')}</table></details>` : ''}`;
+      listEl.querySelectorAll('[data-c]').forEach((b) => b.addEventListener('click', () => act(b)));
+    }
+  }
+
+  // ---- mot de passe administrateur (gardé sur ce PC seulement, sous forme d'empreinte PBKDF2) ----
+  const PASS_KEY = 'tcsf:admin-pass';
+  const hex = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
+  async function derive(pass, saltHex) {
+    const salt = new Uint8Array(saltHex.match(/../g).map((h) => parseInt(h, 16)));
+    const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+    return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, k, 256));
+  }
+  async function setPass(pass) { const salt = hex(crypto.getRandomValues(new Uint8Array(16))); try { localStorage.setItem(PASS_KEY, JSON.stringify({ salt, hash: await derive(pass, salt) })); } catch {} }
+  async function checkPass(pass) { try { const p = JSON.parse(localStorage.getItem(PASS_KEY)); return !!p && (await derive(pass, p.salt)) === p.hash; } catch { return false; } }
+  const hasPass = () => { try { return !!localStorage.getItem(PASS_KEY); } catch { return false; } };
+  let unlockedAt = 0; // le mot de passe reste valable 10 minutes
+  function askPass(then) {
+    if (Date.now() - unlockedAt < 10 * 60 * 1000) return then();
+    if (!hasPass()) return adminSetup(then);
+    document.querySelector('.acc-pass')?.remove();
+    const o = document.createElement('div'); o.className = 'live-modal acc-pass';
+    o.innerHTML = `<div class="live-card"><h3>🔐 Espace administrateur</h3><form class="acc-form"><label>Mot de passe<input class="lv-input" name="p" type="password" required autocomplete="current-password"></label><button class="btn primary" type="submit">Entrer</button></form><p class="acc-status w-small" role="status"></p><div class="live-btns"><button type="button" class="btn ghost">Annuler</button></div></div>`;
+    document.body.appendChild(o);
+    const f = o.querySelector('form'); setTimeout(() => f.p.focus(), 50);
+    o.querySelector('.btn.ghost').addEventListener('click', () => o.remove());
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (await checkPass(f.p.value)) { unlockedAt = Date.now(); o.remove(); then(); }
+      else { o.querySelector('.acc-status').textContent = '❌ Mot de passe incorrect.'; f.p.value = ''; f.p.focus(); }
+    });
+  }
+
+  // ---- première ouverture sur le PC du propriétaire : il choisit son nom d'utilisateur et devient l'administrateur ----
+  function showAdmin(name) {
+    const vl = document.getElementById('versionLine');
+    if (vl) setTimeout(() => { if (!/Admin/.test(vl.textContent)) vl.textContent += ` · 👑 Admin : ${name}`; }, 800);
+  }
+  // publier le nom sur GitHub pour que les invités le voient (si l'application installée le permet)
+  async function syncAdmin(name) {
+    if (!T.adminSetName || !T.adminGet) return { local: true };
+    try { const g = await T.adminGet(); if (g && g.admin && g.admin.name === name) return { ok: true }; return await T.adminSetName(name); } catch (e) { return { error: String(e) }; }
+  }
+  function adminSetup(after) {
+    const o = document.createElement('div');
+    o.className = 'acc-lock';
+    const M = window.TCSF_MASCOT;
+    o.innerHTML = `<div class="acc-card"><div class="acc-ic">${M ? M.svg(86) : '👑'}</div>
+      <h2>Bienvenue ! 👑</h2>
+      <p>C’est la <b>première ouverture</b> de l’application sur ce PC : tu en es l’<b>administrateur</b>. Choisis ton nom d’utilisateur.</p>
+      <p class="acc-ar" dir="rtl" lang="ar">أنت المسؤول عن التطبيق. اختر اسم المستخدم الخاص بك. كل من يأتي بعدك سيكون مدعوا ويحتاج إلى موافقتك.</p>
+      <form class="acc-form"><label>Ton nom d’utilisateur (administrateur)<input class="lv-input" name="n" maxlength="40" required placeholder="ex. Zaid Amallah" value="${esc(localStorage.getItem(ADMIN_KEY) || 'Zaid Amallah')}"></label>
+        <label>Ton mot de passe administrateur (6 caractères minimum)<input class="lv-input" name="p" type="password" minlength="6" required autocomplete="new-password"></label>
+        <label>Répète le mot de passe<input class="lv-input" name="p2" type="password" minlength="6" required autocomplete="new-password"></label>
+        <button class="btn primary" type="submit">Devenir administrateur →</button></form>
+      <p class="w-small">Les personnes qui ouvriront l’application après toi seront des <b>invités</b> : leurs demandes arrivent toutes seules dans le bouton « 👥 Invités » à droite de l’écran.</p>
+      <p class="acc-status w-small" role="status"></p></div>`;
+    document.body.appendChild(o);
+    const f = o.querySelector('form'), status = o.querySelector('.acc-status');
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = f.n.value.trim(); if (name.length < 2) return;
+      if (f.p.value.length < 6) { status.textContent = 'Le mot de passe doit avoir au moins 6 caractères.'; return; }
+      if (f.p.value !== f.p2.value) { status.textContent = 'Les deux mots de passe ne sont pas identiques.'; f.p2.focus(); return; }
+      f.querySelector('button').disabled = true; status.textContent = 'Enregistrement…';
+      await setPass(f.p.value);
+      try { localStorage.setItem(ADMIN_KEY, name); } catch {}
+      await syncAdmin(name);
+      showAdmin(name);
+      o.querySelector('.acc-card').innerHTML = `<div class="acc-ic">${M ? M.svg(90) : '🎉'}</div><h2>Bonjour ${esc(name)} ! 🎉</h2><p>Tu es l’administrateur. Les demandes des invités arrivent dans le bouton « 👥 Invités » à droite de l’écran.</p>`;
+      try { if (window.TCSF_SFX) window.TCSF_SFX.fanfare(); if (window.TCSF_Q) window.TCSF_Q.burst(o.querySelector('.acc-card')); } catch {}
+      unlockedAt = Infinity;
+      setTimeout(() => { o.classList.add('out'); setTimeout(() => { o.remove(); if (after) after(); }, 400); }, 2400);
+    });
+  }
+
+  // ---- à chaque ouverture sur le PC de l'administrateur : mot de passe ----
+  function adminLogin(name) {
+    document.documentElement.classList.add('acc-locked');
+    const o = document.createElement('div');
+    o.className = 'acc-lock';
+    const M = window.TCSF_MASCOT;
+    o.innerHTML = `<div class="acc-card"><div class="acc-ic">${M ? M.svg(80) : '🔐'}</div>
+      <h2>Connexion administrateur 🔐</h2>
+      <p>Bonjour <b>${esc(name)}</b> ! Entre ton mot de passe pour ouvrir l’application.</p>
+      <form class="acc-form"><label>Mot de passe<input class="lv-input" name="p" type="password" required autocomplete="current-password"></label><button class="btn primary" type="submit">Entrer →</button></form>
+      <p class="acc-status w-small" role="status"></p>
+      <p class="w-small muted">Mot de passe oublié ? Demande à Claude de remettre l’application à zéro.</p></div>`;
+    document.body.appendChild(o);
+    const f = o.querySelector('form'), status = o.querySelector('.acc-status');
+    setTimeout(() => f.p.focus(), 80);
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (await checkPass(f.p.value)) {
+        unlockedAt = Infinity; // connecté pour toute la session
+        document.documentElement.classList.remove('acc-locked');
+        o.classList.add('out'); setTimeout(() => o.remove(), 400);
+      } else { status.textContent = '❌ Mot de passe incorrect.'; f.p.value = ''; f.p.focus(); }
+    });
+  }
+  // remise à zéro demandée par le serveur (access.json « resetAt ») : on efface les données d'accès de cet appareil
+  function applyReset(l) {
+    if (!l || !l.resetAt) return false;
+    let seen = ''; try { seen = localStorage.getItem('tcsf:reset-seen') || ''; } catch {}
+    if (seen === l.resetAt) return false;
+    try { ['tcsf:access', ADMIN_KEY, PASS_KEY, 'tcsf:admin-deleted'].forEach((k) => localStorage.removeItem(k)); localStorage.setItem('tcsf:reset-seen', l.resetAt); } catch {}
+    st = { code: newCode() }; save(st);
+    document.documentElement.classList.add('acc-locked');
+    return true;
+  }
+
+  // ---- démarrage ----
+  (async () => {
+    applyReset(await T.accessList().catch(() => null));
+    const askOwner = () => (T.accessOwner ? T.accessOwner().catch(() => false) : Promise.resolve(false));
+    let owner = await askOwner();
+    if (!owner && T.adminList) { await new Promise((r) => setTimeout(r, 1500)); owner = await askOwner(); } // 2ᵉ essai (démarrage lent)
+    const vl = document.getElementById('versionLine');
+    if (owner) {
+      document.documentElement.classList.remove('acc-locked');
+      if (T.adminList) sideTab(); // panneau « 👥 Invités » sur le côté de l'écran
+      let name = ''; try { name = localStorage.getItem(ADMIN_KEY) || ''; } catch {}
+      if (!name || !hasPass()) adminSetup(); else { showAdmin(name); syncAdmin(name); adminLogin(name); }
+      return;
+    }
+    if (vl) setTimeout(() => { vl.textContent += ` · Code d’accès ${st.code}`; }, 800);
+    if (!st.ok) { lock(); const ok = await accepted(); if (ok) unlock(true); else lock(); return; }
+    // déjà accepté : on vérifie en arrière-plan (si l'accès a été retiré → verrou)
+    startHeartbeat();
+    const ok = await accepted();
+    if (ok === false) { st.ok = false; save(st); lock('revoked'); }
+  })();
+  window.TCSF_ACCESS = { code: () => st.code, adminModal, showPlan, fetchPresence, presenceHTML };
+})();
