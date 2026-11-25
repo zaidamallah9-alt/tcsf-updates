@@ -1,0 +1,36 @@
+// Onglet latéral « Leçons » : accès rapide aux leçons du Parcours (3.0), matière par matière.
+(() => {
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const read = async (rel) => { try { const t = window.tcsf ? await window.tcsf.readContent(rel) : await fetch('../content/' + rel).then((r) => (r.ok ? r.text() : null)); return t ? JSON.parse(t) : null; } catch { return null; } };
+  let tab = null, side = null;
+  function build() {
+    tab = document.createElement('button');
+    tab.type = 'button'; tab.className = 'acc-side-tab cl-tab'; tab.title = 'Toutes les leçons du Parcours';
+    tab.innerHTML = '<span>🗺️</span><b>Leçons</b>';
+    tab.addEventListener('click', () => (side.hidden ? open() : (side.hidden = true)));
+    side = document.createElement('aside');
+    side.className = 'acc-side cl-side'; side.hidden = true;
+    document.body.append(tab, side);
+    window.addEventListener('hashchange', () => { side.hidden = true; });
+  }
+  async function open() {
+    side.hidden = false;
+    side.innerHTML = `<div class="acc-side-head"><h3>🗺️ Les leçons du Parcours</h3><button type="button" class="chip-btn acc-close" title="Fermer">✕</button></div>
+      <p class="w-small muted">Touche une matière, puis une leçon pour la commencer directement.</p><div class="cl-list">Chargement…</div>`;
+    side.querySelector('.acc-close').onclick = () => (side.hidden = true);
+    const subjects = ((await read('subjects.json')) || []).filter((s) => s.status === 'ready' && (s.categories || []).some((c) => c.mode === 'cours' && c.status === 'ready'));
+    const st = (window.TCSF_DUO && window.TCSF_DUO.state()) || { crowns: {} };
+    const list = side.querySelector('.cl-list');
+    list.innerHTML = subjects.map((s) => `<details class="cl-subj" data-s="${esc(s.id)}" style="--c1:${esc((s.color || [])[0] || '#4f6bed')}">
+      <summary><span class="cl-dot"></span>${esc(s.title)}<small class="muted cl-n"></small></summary><div class="cl-cats">…</div></details>`).join('');
+    list.querySelectorAll('.cl-subj').forEach((d) => d.addEventListener('toggle', async () => {
+      if (!d.open || d.dataset.ok) return; d.dataset.ok = 1;
+      const s = subjects.find((x) => x.id === d.dataset.s), c = s.categories.find((x) => x.mode === 'cours');
+      const lessons = ((await read(c.lessons)) || []).filter((l) => !l.status || l.status === 'ready');
+      const done = lessons.filter((l) => st.crowns[s.id + '/' + l.id]).length;
+      d.querySelector('.cl-n').textContent = ` · ${done}/${lessons.length} 👑`;
+      d.querySelector('.cl-cats').innerHTML = `<a class="cl-path" href="#/m/${encodeURIComponent(s.id)}">🗺️ Voir le parcours</a>` + lessons.map((l) => `<a href="#/s/${encodeURIComponent(s.id)}/${encodeURIComponent(l.id)}">${st.crowns[s.id + '/' + l.id] ? '👑' : '⭐'} ${esc(l.title)}</a>`).join('');
+    }));
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
