@@ -1,0 +1,491 @@
+[
+ {
+  "id": "atome3d",
+  "title": "L’atome en 3D",
+  "module": "🧊 Expériences en 3D",
+  "description": "Noyau (protons, neutrons) et électrons sur les couches K, L, M, pour Z = 1 à 18.",
+  "sim": "atome3d",
+  "lesson": "modele-atome",
+  "kind": "3D"
+ },
+ {
+  "id": "molecule3d",
+  "title": "Les molécules en 3D",
+  "module": "🧊 Expériences en 3D",
+  "description": "H₂O, NH₃, CH₄, CO₂, éthène, éthanol… avec les doublets non liants.",
+  "sim": "molecule3d",
+  "lesson": "geometrie-molecules",
+  "kind": "3D"
+ },
+ {
+  "id": "cristal3d",
+  "title": "Le cristal de chlorure de sodium",
+  "module": "🧊 Expériences en 3D",
+  "description": "Empilement des ions Na⁺ et Cl⁻ dans l’espace.",
+  "sim": "cristal3d",
+  "lesson": "classification",
+  "kind": "3D"
+ },
+ {
+  "id": "terrelune3d",
+  "title": "La Terre et la Lune",
+  "module": "🧊 Expériences en 3D",
+  "description": "Orbite de la Lune et forces d’attraction gravitationnelle.",
+  "sim": "terrelune3d",
+  "lesson": "gravitation",
+  "kind": "3D"
+ },
+ {
+  "id": "plan3d",
+  "title": "Le plan incliné en 3D",
+  "module": "🧊 Expériences en 3D",
+  "description": "Poids, réaction normale et frottement ; le bloc glisse-t-il ?",
+  "sim": "plan3d",
+  "lesson": "equilibre-3-forces",
+  "kind": "3D"
+ },
+ {
+  "id": "circuit3d",
+  "title": "Un circuit électrique en 3D",
+  "module": "🧊 Expériences en 3D",
+  "description": "Interrupteur, lampe, résistance et électrons en mouvement.",
+  "sim": "circuit3d",
+  "lesson": "courant-continu",
+  "kind": "3D"
+ },
+ {
+  "id": "gravitation",
+  "title": "Interaction gravitationnelle",
+  "module": "📐 Mécanique (2D)",
+  "description": "Masses, distance et force F = G·mA·mB/d².",
+  "sim": "gravitation",
+  "lesson": "gravitation",
+  "kind": "2D"
+ },
+ {
+  "id": "pesanteur",
+  "title": "Le poids sur différents astres",
+  "module": "📐 Mécanique (2D)",
+  "description": "P = m·g et variation de g avec l’altitude.",
+  "sim": "pesanteur",
+  "lesson": "gravitation",
+  "kind": "2D"
+ },
+ {
+  "id": "vecteur",
+  "title": "Représenter une force",
+  "module": "📐 Mécanique (2D)",
+  "description": "Vecteur force à l’échelle.",
+  "sim": "vecteur",
+  "lesson": "actions-mecaniques",
+  "kind": "2D"
+ },
+ {
+  "id": "chrono",
+  "title": "Chronophotographie",
+  "module": "📐 Mécanique (2D)",
+  "description": "Nature du mouvement et vitesse instantanée.",
+  "sim": "chrono",
+  "lesson": "mouvement",
+  "kind": "2D"
+ },
+ {
+  "id": "inertie",
+  "title": "Mobile autoporteur",
+  "module": "📐 Mécanique (2D)",
+  "description": "Principe d’inertie et centre d’inertie.",
+  "sim": "inertie",
+  "lesson": "inertie",
+  "kind": "2D"
+ },
+ {
+  "id": "barycentre",
+  "title": "Centre d’inertie de deux masses",
+  "module": "📐 Mécanique (2D)",
+  "description": "Relation barycentrique.",
+  "sim": "barycentre",
+  "lesson": "inertie",
+  "kind": "2D"
+ },
+ {
+  "id": "deuxforces",
+  "title": "Équilibre sous deux forces",
+  "module": "📐 Mécanique (2D)",
+  "description": "Anneau tiré par deux dynamomètres.",
+  "sim": "deuxforces",
+  "lesson": "equilibre-2-forces",
+  "kind": "2D"
+ },
+ {
+  "id": "ressort",
+  "title": "Loi de Hooke",
+  "module": "📐 Mécanique (2D)",
+  "description": "Tension d’un ressort et raideur k.",
+  "sim": "ressort",
+  "lesson": "equilibre-2-forces",
+  "kind": "2D"
+ },
+ {
+  "id": "archimede",
+  "title": "Poussée d’Archimède",
+  "module": "📐 Mécanique (2D)",
+  "description": "Corps immergé dans différents liquides.",
+  "sim": "archimede",
+  "lesson": "equilibre-2-forces",
+  "kind": "2D"
+ },
+ {
+  "id": "troisforces",
+  "title": "Équilibre sous trois forces",
+  "module": "📐 Mécanique (2D)",
+  "description": "Solide suspendu à deux fils, triangle des forces.",
+  "sim": "troisforces",
+  "lesson": "equilibre-3-forces",
+  "kind": "2D"
+ },
+ {
+  "id": "planincline",
+  "title": "Plan incliné avec frottement",
+  "module": "📐 Mécanique (2D)",
+  "description": "Angle de frottement et équilibre.",
+  "sim": "planincline",
+  "lesson": "equilibre-3-forces",
+  "kind": "2D"
+ },
+ {
+  "id": "moments",
+  "title": "Théorème des moments",
+  "module": "📐 Mécanique (2D)",
+  "description": "Barre en équilibre autour d’un axe.",
+  "sim": "moments",
+  "lesson": "equilibre-rotation",
+  "kind": "2D"
+ },
+ {
+  "id": "echelle",
+  "title": "L’échelle des longueurs",
+  "module": "📐 Mécanique (2D)",
+  "description": "Du noyau d’atome à l’Univers : ordres de grandeur.",
+  "sim": "echelle",
+  "lesson": "gravitation",
+  "kind": "2D"
+ },
+ {
+  "id": "pression",
+  "title": "La notion de pression",
+  "module": "📐 Mécanique (2D)",
+  "description": "P = F / S : même force, surfaces différentes.",
+  "sim": "pression",
+  "lesson": "actions-mecaniques",
+  "kind": "2D"
+ },
+ {
+  "id": "mru",
+  "title": "Mouvement rectiligne uniforme",
+  "module": "📐 Mécanique (2D)",
+  "description": "Équation horaire x = v·t + x₀ et courbe x(t).",
+  "sim": "mru",
+  "lesson": "mouvement",
+  "kind": "2D"
+ },
+ {
+  "id": "rotation",
+  "title": "Point d’un solide en rotation",
+  "module": "📐 Mécanique (2D)",
+  "description": "θ, s = R·θ, v = R·ω et période.",
+  "sim": "rotation",
+  "lesson": "mouvement",
+  "kind": "2D"
+ },
+ {
+  "id": "torsion",
+  "title": "Pendule de torsion",
+  "module": "📐 Mécanique (2D)",
+  "description": "Couple de torsion M = C·θ.",
+  "sim": "torsion",
+  "lesson": "equilibre-rotation",
+  "kind": "2D"
+ },
+ {
+  "id": "noeuds",
+  "title": "Loi des nœuds",
+  "module": "⚡ Électricité (2D)",
+  "description": "Courants dans un montage en dérivation.",
+  "sim": "noeuds",
+  "lesson": "courant-continu",
+  "kind": "2D"
+ },
+ {
+  "id": "amperemetre",
+  "title": "Ampèremètre à aiguille",
+  "module": "⚡ Électricité (2D)",
+  "description": "Lecture et choix du calibre.",
+  "sim": "amperemetre",
+  "lesson": "courant-continu",
+  "kind": "2D"
+ },
+ {
+  "id": "oscillo",
+  "title": "Oscilloscope",
+  "module": "⚡ Électricité (2D)",
+  "description": "Tension continue et tension alternative.",
+  "sim": "oscillo",
+  "lesson": "tension",
+  "kind": "2D"
+ },
+ {
+  "id": "mailles",
+  "title": "Additivité des tensions",
+  "module": "⚡ Électricité (2D)",
+  "description": "Circuit série et voltmètres.",
+  "sim": "mailles",
+  "lesson": "tension",
+  "kind": "2D"
+ },
+ {
+  "id": "resistances",
+  "title": "Association de résistances",
+  "module": "⚡ Électricité (2D)",
+  "description": "Série et dérivation.",
+  "sim": "resistances",
+  "lesson": "conducteurs-ohmiques",
+  "kind": "2D"
+ },
+ {
+  "id": "caracteristique",
+  "title": "Caractéristiques de dipôles",
+  "module": "⚡ Électricité (2D)",
+  "description": "Conducteur ohmique, lampe, diode, Zener, CTN, LDR.",
+  "sim": "caracteristique",
+  "lesson": "dipoles-passifs",
+  "kind": "2D"
+ },
+ {
+  "id": "potentiometre",
+  "title": "Montage potentiométrique",
+  "module": "⚡ Électricité (2D)",
+  "description": "Tension réglable.",
+  "sim": "potentiometre",
+  "lesson": "dipoles-passifs",
+  "kind": "2D"
+ },
+ {
+  "id": "pile",
+  "title": "Caractéristique d’une pile",
+  "module": "⚡ Électricité (2D)",
+  "description": "U = E − r·I et point de fonctionnement.",
+  "sim": "pile",
+  "lesson": "dipole-actif",
+  "kind": "2D"
+ },
+ {
+  "id": "transistor",
+  "title": "Le transistor NPN",
+  "module": "⚡ Électricité (2D)",
+  "description": "Bloqué, linéaire, saturé.",
+  "sim": "transistor",
+  "lesson": "transistor",
+  "kind": "2D"
+ },
+ {
+  "id": "ampliop",
+  "title": "L’amplificateur opérationnel",
+  "module": "⚡ Électricité (2D)",
+  "description": "Inverseur, non inverseur, suiveur, comparateur.",
+  "sim": "ampliop",
+  "lesson": "ampli-op",
+  "kind": "2D"
+ },
+ {
+  "id": "electrisation",
+  "title": "Électrisation par frottement",
+  "module": "⚡ Électricité (2D)",
+  "description": "Transfert d’électrons et attraction d’un pendule.",
+  "sim": "electrisation",
+  "lesson": "courant-continu",
+  "kind": "2D"
+ },
+ {
+  "id": "diviseur",
+  "title": "Le diviseur de tension",
+  "module": "⚡ Électricité (2D)",
+  "description": "U₂ = U·R₂ / (R₁ + R₂).",
+  "sim": "diviseur",
+  "lesson": "conducteurs-ohmiques",
+  "kind": "2D"
+ },
+ {
+  "id": "tensionsvar",
+  "title": "Tensions variables",
+  "module": "⚡ Électricité (2D)",
+  "description": "Période, fréquence, tension maximale et efficace.",
+  "sim": "tensionsvar",
+  "lesson": "tension",
+  "kind": "2D"
+ },
+ {
+  "id": "recepteur",
+  "title": "Récepteur actif",
+  "module": "⚡ Électricité (2D)",
+  "description": "Électrolyseur et moteur : U = E′ + r′·I.",
+  "sim": "recepteur",
+  "lesson": "dipole-actif",
+  "kind": "2D"
+ },
+ {
+  "id": "tests",
+  "title": "Tests d’identification",
+  "module": "🧪 Chimie (2D)",
+  "description": "Eau, CO₂, glucose, amidon, ions chlorure.",
+  "sim": "tests",
+  "lesson": "especes-chimiques",
+  "kind": "2D"
+ },
+ {
+  "id": "decantation",
+  "title": "Extraction par solvant",
+  "module": "🧪 Chimie (2D)",
+  "description": "Ampoule à décanter et choix du solvant.",
+  "sim": "decantation",
+  "lesson": "extraction",
+  "kind": "2D"
+ },
+ {
+  "id": "ccm-menthe",
+  "title": "Chromatographie (huile essentielle)",
+  "module": "🧪 Chimie (2D)",
+  "description": "Rf et identification.",
+  "sim": "ccm",
+  "set": "menthe",
+  "lesson": "extraction",
+  "kind": "2D"
+ },
+ {
+  "id": "ccm-colorants",
+  "title": "Chromatographie (colorants)",
+  "module": "🧪 Chimie (2D)",
+  "description": "Séparer les colorants d’un sirop.",
+  "sim": "ccm",
+  "set": "colorants",
+  "lesson": "extraction",
+  "kind": "2D"
+ },
+ {
+  "id": "reflux",
+  "title": "Chauffage à reflux",
+  "module": "🧪 Chimie (2D)",
+  "description": "Synthèse sans perte de matière.",
+  "sim": "reflux",
+  "lesson": "synthese",
+  "kind": "2D"
+ },
+ {
+  "id": "ccm-synthese",
+  "title": "Chromatographie (produit de synthèse)",
+  "module": "🧪 Chimie (2D)",
+  "description": "Contrôler la pureté d’un produit.",
+  "sim": "ccm",
+  "set": "synthese",
+  "lesson": "synthese",
+  "kind": "2D"
+ },
+ {
+  "id": "lewis",
+  "title": "Lewis et géométrie",
+  "module": "🧪 Chimie (2D)",
+  "description": "Doublets liants et non liants.",
+  "sim": "lewis",
+  "lesson": "geometrie-molecules",
+  "kind": "2D"
+ },
+ {
+  "id": "periodique",
+  "title": "Tableau périodique",
+  "module": "🧪 Chimie (2D)",
+  "description": "Périodes, groupes, familles, ions.",
+  "sim": "periodique",
+  "lesson": "classification",
+  "kind": "2D"
+ },
+ {
+  "id": "hydrodistillation",
+  "title": "L’hydrodistillation",
+  "module": "🧪 Chimie (2D)",
+  "description": "Extraire une huile essentielle par la vapeur d’eau.",
+  "sim": "hydrodistillation",
+  "lesson": "extraction",
+  "kind": "2D"
+ },
+ {
+  "id": "cyclecuivre",
+  "title": "Le cycle du cuivre",
+  "module": "🧪 Chimie (2D)",
+  "description": "L’élément cuivre se conserve d’une réaction à l’autre.",
+  "sim": "cyclecuivre",
+  "lesson": "modele-atome",
+  "kind": "2D"
+ },
+ {
+  "id": "transformation",
+  "title": "Une transformation chimique",
+  "module": "🧪 Chimie (2D)",
+  "description": "Fer + soufre : réactif limitant et conservation de la masse.",
+  "sim": "transformation",
+  "lesson": "transformation",
+  "kind": "2D"
+ },
+ {
+  "id": "isotopes",
+  "title": "Isotopes et abondance naturelle",
+  "module": "🧪 Chimie (2D)",
+  "description": "Masse molaire moyenne d’un élément.",
+  "sim": "isotopes",
+  "lesson": "modele-atome",
+  "kind": "2D"
+ },
+ {
+  "id": "concentration",
+  "title": "Concentration d’une solution",
+  "module": "🧪 Chimie (2D)",
+  "description": "Cm = m / V et C = n / V.",
+  "sim": "concentration",
+  "lesson": "concentration",
+  "kind": "2D"
+ },
+ {
+  "id": "mole",
+  "title": "La mole",
+  "module": "🧪 Chimie (2D)",
+  "description": "Masse, quantité de matière, nombre d’entités.",
+  "sim": "mole",
+  "lesson": "mole",
+  "kind": "2D"
+ },
+ {
+  "id": "dilution",
+  "title": "Dissolution et dilution",
+  "module": "🧪 Chimie (2D)",
+  "description": "Préparer une solution.",
+  "sim": "dilution",
+  "lesson": "concentration",
+  "kind": "2D"
+ },
+ {
+  "id": "equilibrer",
+  "title": "Équilibrer une équation",
+  "module": "🧪 Chimie (2D)",
+  "description": "Conservation des éléments et des charges.",
+  "sim": "equilibrer",
+  "lesson": "transformation",
+  "kind": "2D"
+ },
+ {
+  "id": "avancement",
+  "title": "Tableau d’avancement",
+  "module": "🧪 Chimie (2D)",
+  "description": "Réactif limitant et état final.",
+  "sim": "avancement",
+  "lesson": "bilan-matiere",
+  "kind": "2D"
+ }
+]
