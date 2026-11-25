@@ -1,0 +1,67 @@
+// Profil de l'élève : photo (choisie dans le téléphone), XP, série, couronnes par matière, dernières leçons, succès.
+// Utilisé par l'onglet « 👤 Profil » (pour soi) et par le panneau « Invités » de l'administrateur (profil reçu).
+(() => {
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const AV = 'tcsf:avatar';
+  const SUBJ = { mathematiques: ['Maths', '#ec4899'], 'physique-chimie': ['PC', '#f59e0b'], svt: ['SVT', '#22c55e'], informatique: ['Info', '#06b6d4'], francais: ['Français', '#6366f1'], anglais: ['Anglais', '#0ea5e9'], arabe: ['Arabe', '#a855f7'], philosophie: ['Philo', '#64748b'], 'histoire-geographie': ['HG', '#b45309'], 'education-islamique': ['Islamique', '#059669'] };
+  const LEAGUES = ['Bronze', 'Argent', 'Or', 'Saphir', 'Rubis', 'Émeraude', 'Améthyste', 'Perle', 'Obsidienne', 'Diamant'];
+  const avatar = () => { try { return localStorage.getItem(AV) || ''; } catch { return ''; } };
+  const myName = () => { try { return (JSON.parse(localStorage.getItem('tcsf:access')) || {}).name || localStorage.getItem('tcsf:admin-name') || 'Moi'; } catch { return 'Moi'; } };
+  // résumé compact (envoyé à l'administrateur par le canal privé de présence)
+  function summary() {
+    const S = (window.TCSF_DUO && window.TCSF_DUO.state()) || {};
+    const cr = {}; Object.keys(S.crowns || {}).forEach((k) => { const s = k.split('/')[0]; cr[s] = (cr[s] || 0) + 1; });
+    let foc = 0, stars = 0; try { const p = JSON.parse(localStorage.getItem('tcsf:planner')) || {}; foc = Object.values(p.focus || {}).reduce((a, b) => a + b, 0); stars = p.stars || 0; } catch {}
+    return { n: myName(), xp: S.xp || 0, st: S.streak || 0, best: S.best || 0, gems: S.gems || 0, les: S.lessons || 0, pf: S.perfects || 0, cr, ach: S.ach || [], hist: (S.hist || []).slice(0, 15), mis: (S.mistakes || []).length, foc, stars, wk: (S.week && S.week.xp) || 0, days: (S.days || []).slice(-28) };
+  }
+  // photo de profil : réduite en 160 px (affichage) et 56 px (envoi)
+  async function pickPhoto() {
+    const inp = Object.assign(document.createElement('input'), { type: 'file', accept: 'image/*' });
+    const f = await new Promise((ok) => { inp.onchange = () => ok(inp.files && inp.files[0]); inp.click(); });
+    if (!f) return null;
+    const url = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(f); });
+    const img = new Image(); img.src = url; await img.decode();
+    const crop = (n, q) => { const c = document.createElement('canvas'); c.width = c.height = n; const s = Math.min(img.width, img.height); c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, n, n); return c.toDataURL('image/jpeg', q); };
+    const big = crop(160, 0.8), small = crop(56, 0.6);
+    try { localStorage.setItem(AV, big); localStorage.setItem(AV + '-s', small); } catch {}
+    try { window.dispatchEvent(new Event('tcsf:avatar')); } catch {}
+    return big;
+  }
+  const initials = (n) => String(n || '?').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  const hue = (n) => { let h = 0; for (const c of String(n)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+  const avatarHTML = (src, name, size = 88) => src ? `<img class="pf-av" src="${esc(src)}" alt="" style="width:${size}px;height:${size}px">` : `<span class="pf-av pf-ini" style="width:${size}px;height:${size}px;font-size:${size * 0.38}px;background:hsl(${hue(name)} 70% 55%)">${esc(initials(name))}</span>`;
+  // carte de profil complète
+  function html(p, o = {}) {
+    const lg = LEAGUES[Math.min(LEAGUES.length - 1, Math.floor((p.xp || 0) / 500))];
+    const days = new Set(p.days || []);
+    const cal = [...Array(28)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - 27 + i); const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; return `<i class="${days.has(k) ? 'on' : ''}" title="${k}"></i>`; }).join('');
+    const subs = Object.entries(p.cr || {}).sort((a, b) => b[1] - a[1]);
+    return `<div class="pf">
+      <div class="pf-top">${avatarHTML(o.avatar, p.n)}${o.edit ? '<button type="button" class="pf-cam" title="Changer la photo">📷</button>' : ''}
+        <div class="pf-id"><h3>${esc(o.name || p.n)}</h3><p class="muted">🏆 Ligue ${lg} · ${p.wk || 0} XP cette semaine${o.seen ? ' · ' + o.seen : ''}</p></div></div>
+      <div class="pf-tiles"><div><b>⚡ ${p.xp}</b><small>XP total</small></div><div><b>🔥 ${p.st}</b><small>série (record ${p.best})</small></div><div><b>📚 ${p.les}</b><small>leçons faites</small></div><div><b>🎯 ${p.pf}</b><small>sans faute</small></div><div><b>⏱️ ${Math.round((p.foc || 0) / 6) / 10} h</b><small>en Focus</small></div><div><b>🧠 ${p.mis}</b><small>erreurs à revoir</small></div></div>
+      <h4>📅 Activité · 4 dernières semaines</h4><div class="pf-cal">${cal}</div>
+      <h4>👑 Couronnes par matière</h4>${subs.length ? subs.map(([s, n]) => `<div class="pf-sub"><span style="--c:${(SUBJ[s] || [0, '#64748b'])[1]}">${esc((SUBJ[s] || [s])[0])}</span><div class="pf-bar"><i style="width:${Math.min(100, n * 7)}%;background:${(SUBJ[s] || [0, '#64748b'])[1]}"></i></div><b>${n} 👑</b></div>`).join('') : '<p class="muted">Pas encore de leçon terminée dans le Parcours.</p>'}
+      <h4>🕘 Dernières leçons</h4>${(p.hist || []).length ? `<ul class="pf-hist">${p.hist.map(([k, t, d, acc]) => `<li><span style="background:${(SUBJ[k.split('/')[0]] || [0, '#64748b'])[1]}">${esc((SUBJ[k.split('/')[0]] || [k.split('/')[0]])[0])}</span><b>${esc(t)}</b><small>${esc(d)} · ${acc} %</small></li>`).join('')}</ul>` : '<p class="muted">Aucune leçon pour le moment.</p>'}
+      <h4>🏅 Succès (${(p.ach || []).length})</h4><p>${(p.ach || []).map((a) => `<span class="tag">${esc(a)}</span>`).join(' ') || '<span class="muted">Aucun succès pour l’instant.</span>'}</p>
+    </div>`;
+  }
+  // onglet « 👤 Profil »
+  function mine(host) {
+    const draw = () => {
+      host.innerHTML = html(summary(), { avatar: avatar(), edit: true });
+      host.querySelector('.pf-cam').onclick = async () => { const a = await pickPhoto(); if (a) { draw(); try { window.TCSF_SFX && window.TCSF_SFX.good(); } catch {} } };
+      if (avatar()) {
+        // retirer la photo : on revient au rond avec les initiales
+        host.querySelector('.pf-id').insertAdjacentHTML('beforeend', '<button type="button" class="chip-btn pf-del">🗑 Supprimer la photo</button>');
+        host.querySelector('.pf-del').onclick = () => {
+          try { localStorage.removeItem(AV); localStorage.removeItem(AV + '-s'); } catch {}
+          try { window.dispatchEvent(new Event('tcsf:avatar')); } catch {}
+          draw();
+        };
+      }
+    };
+    draw();
+  }
+  window.TCSF_PROFILE = { summary, html, mine, avatarHTML, avatarSmall: () => { try { return localStorage.getItem(AV + '-s') || ''; } catch { return ''; } } };
+})();
