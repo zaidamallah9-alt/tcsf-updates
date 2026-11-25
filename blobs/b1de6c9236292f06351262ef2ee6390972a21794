@@ -1,0 +1,1188 @@
+// Widgets interactifs utilisables dans les fichiers de leçon :
+//   <div data-widget="atom-history"></div>      modèles historiques animés
+//   <div data-widget="rutherford"></div>        simulation de l'expérience de Rutherford
+//   <div data-widget="atom-builder"></div>      construire un atome / ion / isotope
+//   <div data-widget="atom-scale"></div>        zoom de l'atome au noyau
+//   <div data-widget="quiz" data-src="chemin/quiz.json"></div>
+window.TCSF_WIDGETS = (() => {
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#888';
+  const P_COL = '#e5484d', N_COL = '#8b93a7', E_COL = '#3b82f6';
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const ELEMENTS = [null,
+    ['H', 'Hydrogène', 1], ['He', 'Hélium', 4], ['Li', 'Lithium', 7], ['Be', 'Béryllium', 9], ['B', 'Bore', 11],
+    ['C', 'Carbone', 12], ['N', 'Azote', 14], ['O', 'Oxygène', 16], ['F', 'Fluor', 19], ['Ne', 'Néon', 20],
+    ['Na', 'Sodium', 23], ['Mg', 'Magnésium', 24], ['Al', 'Aluminium', 27], ['Si', 'Silicium', 28], ['P', 'Phosphore', 31],
+    ['S', 'Soufre', 32], ['Cl', 'Chlore', 35], ['Ar', 'Argon', 40], ['K', 'Potassium', 39], ['Ca', 'Calcium', 40]];
+
+  // ---------- utilitaires ----------
+  function h(tag, attrs = {}, html = '') {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'class') e.className = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+    }
+    if (html) e.innerHTML = html;
+    return e;
+  }
+  function sci(x, d = 2) {
+    if (x === 0) return '0';
+    const n = Math.floor(Math.log10(Math.abs(x)));
+    let a = x / 10 ** n;
+    let s = a.toFixed(d).replace('.', ',');
+    if (s.replace('-', '').startsWith('10')) { a /= 10; s = a.toFixed(d).replace('.', ','); return `${s} × 10<sup>${String(n + 1).replace('-', '−')}</sup>`; }
+    return n === 0 ? s : `${s} × 10<sup>${String(n).replace('-', '−')}</sup>`;
+  }
+  const nucHTML = (A, Z, X) => `<span class="nuc"><span class="az"><span>${A}</span><span>${Z}</span></span><span class="x">${X}</span></span>`;
+
+  function makeCanvas(container, ratio, minH = 220, maxH = 420) {
+    const canvas = h('canvas', { class: 'w-canvas' });
+    container.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    const st = { w: 0, h: 0 };
+    const fit = () => {
+      const w = Math.max(260, canvas.parentElement.clientWidth);
+      const hh = Math.max(minH, Math.min(maxH, w * ratio));
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(hh * dpr);
+      canvas.style.height = hh + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      st.w = w; st.h = hh;
+    };
+    fit();
+    new ResizeObserver(fit).observe(container);
+    return { canvas, ctx, st };
+  }
+  // Boucle d'animation qui s'arrête quand le widget quitte la page.
+  function loop(el, fn) {
+    const t0 = performance.now();
+    const step = (now) => {
+      if (!el.isConnected) return;
+      fn((now - t0) / 1000);
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  function ball(ctx, x, y, r, color, label) {
+    const g = ctx.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(.25, color); g.addColorStop(1, shade(color, -40));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    if (label && r >= 6) { ctx.fillStyle = '#fff'; ctx.font = `700 ${Math.round(r * 1.2)}px Segoe UI, Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, x, y + .5); }
+  }
+  function shade(hex, amt) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = (s) => Math.max(0, Math.min(255, ((n >> s) & 255) + amt));
+    return `rgb(${c(16)},${c(8)},${c(0)})`;
+  }
+  function header(el, title, hint) {
+    el.classList.add('widget');
+    el.appendChild(h('div', { class: 'w-head' }, `<span class="w-badge">Interactif</span><b>${title}</b>${hint ? `<span class="w-hint">${hint}</span>` : ''}`));
+  }
+  // Noyau compact (spirale) : liste de particules p/n
+  function nucleusLayout(Z, N) {
+    const parts = [];
+    const total = Z + N;
+    let p = 0, n = 0;
+    for (let i = 0; i < total; i++) {
+      const wantP = (p + 0.5) / Z <= (n + 0.5) / Math.max(N, 1) || n >= N;
+      if (wantP && p < Z) { parts.push('p'); p++; } else { parts.push('n'); n++; }
+    }
+    return parts.map((k, i) => ({ k, r: Math.sqrt(i + .5), a: i * 2.39996 }));
+  }
+  function drawNucleus(ctx, cx, cy, Z, N, s, t = 0) {
+    const L = nucleusLayout(Z, N);
+    for (let i = L.length - 1; i >= 0; i--) {
+      const q = L[i];
+      const j = reduceMotion ? 0 : Math.sin(t * 9 + i * 1.7) * s * .06;
+      ball(ctx, cx + Math.cos(q.a) * q.r * s * .95 + j, cy + Math.sin(q.a) * q.r * s * .95 - j, s, q.k === 'p' ? P_COL : N_COL, s >= 7 ? (q.k === 'p' ? '+' : '') : '');
+    }
+  }
+  function shells(n) {
+    const caps = [2, 8, 8, 2];
+    const out = [];
+    for (const c of caps) { if (n <= 0) break; out.push(Math.min(c, n)); n -= c; }
+    return out;
+  }
+
+  // =====================================================================
+  // 1) Modèles historiques animés
+  // =====================================================================
+  const MODELS = [
+    { year: '~400 av. J.-C.', who: 'Démocrite', title: 'Des grains insécables', text: "La matière est faite de minuscules particules indivisibles, en mouvement dans le vide : les <b>atomes</b> (<i>atomos</i> = insécable). C'est une idée philosophique, sans expérience.", news: 'Première idée de l’atome' },
+    { year: '1808', who: 'Dalton', title: 'La sphère pleine', text: "L'atome est une <b>sphère pleine et indivisible</b>. Tous les atomes d'un même élément sont identiques ; les atomes d'éléments différents ont des masses différentes.", news: 'Modèle basé sur la chimie' },
+    { year: '1904', who: 'Thomson', title: 'Le pudding aux raisins', text: "Thomson découvre l'<b>électron</b> (1897) : l'atome n'est pas indivisible ! Il l'imagine comme une sphère <b>positive</b> dans laquelle les électrons <b>négatifs</b> sont incrustés.", news: "Découverte de l'électron" },
+    { year: '1911', who: 'Rutherford', title: 'Le modèle planétaire', text: "Un <b>noyau</b> minuscule, positif et très massif au centre ; les électrons tournent autour, très loin. L'atome est surtout formé de <b>vide</b> (structure lacunaire).", news: 'Découverte du noyau' },
+    { year: '1913', who: 'Bohr', title: 'Les couches électroniques', text: "Les électrons ne tournent que sur certaines <b>orbites (couches) K, L, M…</b>, chacune correspondant à une énergie bien définie. Ici : l'atome de sodium (K)²(L)⁸(M)¹.", news: 'Couches quantifiées' },
+    { year: 'Aujourd’hui', who: 'Modèle actuel', title: 'Le nuage électronique', text: "On ne peut pas suivre la trajectoire d'un électron : on connaît seulement la <b>probabilité</b> de le trouver à un endroit. Plus le nuage est dense, plus l'électron a de chances d'y être.", news: 'Modèle quantique' }
+  ];
+  const DEMO_PARTS = Array.from({ length: 16 }, (_, i) => ({ fx: .3 + (i * .37) % .9, fy: .4 + (i * .53) % .8, px: i * 1.3, py: i * 2.1, r: .1 + (i % 4) * .025, c: ['#8b93a7', '#c08a4a', '#6aa36f', '#7a8ccf'][i % 4] }));
+  const CLOUD = Array.from({ length: 1400 }, () => {
+    const u = Math.random(), a = Math.random() * Math.PI * 2;
+    return { r: Math.min(1.25, -Math.log(1 - u * .985) * .32), a, s: Math.random() };
+  });
+
+  function drawModel(ctx, i, w, hh, t) {
+    const cx = w / 2, cy = hh / 2, R = Math.min(w, hh) * .38;
+    const text = css('--text');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    if (i === 0) {
+      ctx.strokeStyle = css('--line'); ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.arc(cx, cy, R * 1.15, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+      DEMO_PARTS.forEach((p) => {
+        const x = cx + Math.sin(t * p.fx + p.px) * R * .85, y = cy + Math.cos(t * p.fy + p.py) * R * .85;
+        ball(ctx, x, y, R * p.r, p.c);
+      });
+      ctx.fillStyle = text; ctx.font = 'italic 600 15px Segoe UI, Arial'; ctx.fillText('atomos', cx, cy + R * 1.15 + 14 > hh - 8 ? hh - 10 : cy + R * 1.15 + 14);
+    } else if (i === 1) {
+      const y = cy + Math.sin(t * 1.6) * 6;
+      ctx.fillStyle = 'rgba(0,0,0,.12)'; ctx.beginPath(); ctx.ellipse(cx, cy + R + 8, R * .8 - Math.sin(t * 1.6) * 6, 8, 0, 0, 7); ctx.fill();
+      ball(ctx, cx, y, R * .9, '#8a96ad');
+      ball(ctx, cx + R * 1.35, cy + R * .45 + Math.sin(t * 1.6 + 1) * 5, R * .38, '#c08a4a');
+      ball(ctx, cx - R * 1.35, cy + R * .55 + Math.sin(t * 1.6 + 2) * 5, R * .28, '#6aa36f');
+    } else if (i === 2) {
+      const g = ctx.createRadialGradient(cx - R * .3, cy - R * .3, R * .2, cx, cy, R);
+      g.addColorStop(0, '#ffd6da'); g.addColorStop(1, '#f19aa2');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+      ctx.fillStyle = '#c0313a'; ctx.font = '700 18px Segoe UI, Arial';
+      for (let k = 0; k < 14; k++) { const a = k * 2.4, r = R * (.25 + (k % 4) * .18); ctx.fillText('+', cx + Math.cos(a) * r, cy + Math.sin(a) * r); }
+      for (let k = 0; k < 9; k++) {
+        const a = k * 0.7 + 0.3, r = R * (.12 + (k % 3) * .27);
+        const jx = reduceMotion ? 0 : Math.sin(t * 7 + k) * 3, jy = reduceMotion ? 0 : Math.cos(t * 6 + k * 2) * 3;
+        ball(ctx, cx + Math.cos(a) * r + jx, cy + Math.sin(a) * r + jy, 9, E_COL, '−');
+      }
+    } else if (i === 3) {
+      ctx.strokeStyle = text; ctx.globalAlpha *= .35; ctx.lineWidth = 1.3;
+      for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.ellipse(cx, cy, R * 1.1, R * .38, k * Math.PI / 3, 0, 7); ctx.stroke(); }
+      ctx.globalAlpha /= .35;
+      ball(ctx, cx, cy, 6, P_COL);
+      for (let k = 0; k < 3; k++) {
+        const th = t * (1.6 + k * .4) + k * 2, rot = k * Math.PI / 3;
+        const ex = R * 1.1 * Math.cos(th), ey = R * .38 * Math.sin(th);
+        ball(ctx, cx + ex * Math.cos(rot) - ey * Math.sin(rot), cy + ex * Math.sin(rot) + ey * Math.cos(rot), 7, E_COL);
+      }
+      ctx.fillStyle = css('--muted'); ctx.font = '12px Segoe UI, Arial'; ctx.fillText('noyau (agrandi)', cx, cy + 22);
+    } else if (i === 4) {
+      const radii = [R * .42, R * .72, R * 1.02], counts = [2, 8, 1], names = ['K', 'L', 'M'];
+      radii.forEach((r, k) => {
+        ctx.strokeStyle = text; ctx.globalAlpha *= .3; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke(); ctx.globalAlpha /= .3;
+        ctx.fillStyle = css('--accent'); ctx.font = '700 13px Segoe UI, Arial'; ctx.fillText(names[k], cx + r * .72 + 10, cy - r * .72 - 4);
+        for (let e = 0; e < counts[k]; e++) {
+          const a = t * (1.4 - k * .35) + e * Math.PI * 2 / counts[k];
+          ball(ctx, cx + Math.cos(a) * r, cy + Math.sin(a) * r, 6.5, E_COL);
+        }
+      });
+      drawNucleus(ctx, cx, cy, 11, 12, Math.max(3.2, R * .045), t);
+    } else {
+      const frame = Math.floor(t * 12);
+      ctx.fillStyle = E_COL;
+      CLOUD.forEach((p, k) => {
+        if (((k * 7919 + frame * 104729) % 97) / 97 > .55) return;
+        const x = cx + Math.cos(p.a) * p.r * R, y = cy + Math.sin(p.a) * p.r * R;
+        ctx.globalAlpha = .55; ctx.fillRect(x, y, 2, 2);
+      });
+      ctx.globalAlpha = 1;
+      ball(ctx, cx, cy, 5, P_COL);
+    }
+  }
+
+  function atomHistory(el) {
+    header(el, 'Évolution du modèle de l’atome', 'Clique sur une date ou utilise ← →');
+    const tl = h('div', { class: 'w-timeline', role: 'tablist' });
+    const stage = h('div', { class: 'w-stage' });
+    const info = h('div', { class: 'w-info' });
+    const ctrl = h('div', { class: 'w-controls' });
+    el.append(tl, stage, info, ctrl);
+    const { ctx, st } = makeCanvas(stage, .5, 230, 340);
+    let cur = 0, prev = -1, switchAt = 0, auto = false, autoTimer = null, now = 0;
+    const btns = MODELS.map((m, i) => {
+      const b = h('button', { class: 'w-step', role: 'tab', onclick: () => go(i) }, `<span>${m.year}</span><b>${m.who}</b>`);
+      tl.appendChild(b); return b;
+    });
+    const prevB = h('button', { class: 'btn', onclick: () => go((cur + MODELS.length - 1) % MODELS.length) }, '← Précédent');
+    const playB = h('button', { class: 'btn', onclick: () => setAuto(!auto) }, '▶ Lecture auto');
+    const nextB = h('button', { class: 'btn primary', onclick: () => go((cur + 1) % MODELS.length) }, 'Suivant →');
+    ctrl.append(prevB, playB, nextB);
+    el.tabIndex = 0;
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); go((cur + 1) % MODELS.length); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); go((cur + MODELS.length - 1) % MODELS.length); }
+    });
+    function setAuto(v) {
+      auto = v; playB.textContent = v ? '❚❚ Pause' : '▶ Lecture auto';
+      clearInterval(autoTimer);
+      if (v) autoTimer = setInterval(() => { if (!el.isConnected) return clearInterval(autoTimer); go((cur + 1) % MODELS.length, true); }, 6000);
+    }
+    function go(i, fromAuto) {
+      if (!fromAuto && auto) setAuto(false);
+      if (i === cur && prev !== -1) return;
+      prev = cur; cur = i; switchAt = now;
+      btns.forEach((b, k) => { b.classList.toggle('active', k === i); b.classList.toggle('past', k < i); b.setAttribute('aria-selected', k === i); });
+      const m = MODELS[i];
+      info.innerHTML = `<div class="w-info-top"><span class="w-year">${m.year}</span><span class="w-news">${m.news}</span></div><h4>${m.who} — ${m.title}</h4><p>${m.text}</p>`;
+      info.classList.remove('pop'); void info.offsetWidth; info.classList.add('pop');
+    }
+    go(0); prev = -1;
+    loop(el, (t) => {
+      now = t;
+      ctx.clearRect(0, 0, st.w, st.h);
+      const k = Math.min(1, (t - switchAt) / .45);
+      if (prev >= 0 && k < 1) { ctx.globalAlpha = 1 - k; drawModel(ctx, prev, st.w, st.h, t); }
+      ctx.globalAlpha = prev >= 0 ? k : 1;
+      ctx.save(); ctx.translate(st.w / 2, st.h / 2); const sc = .85 + .15 * (prev >= 0 ? k : 1); ctx.scale(sc, sc); ctx.translate(-st.w / 2, -st.h / 2);
+      drawModel(ctx, cur, st.w, st.h, t);
+      ctx.restore(); ctx.globalAlpha = 1;
+    });
+  }
+
+  // =====================================================================
+  // 2) Simulation de l'expérience de Rutherford
+  // =====================================================================
+  function rutherford(el) {
+    header(el, "L'expérience de Rutherford", 'Lance des particules α sur la feuille d’or');
+    const stage = h('div', { class: 'w-stage dark' });
+    const stats = h('div', { class: 'w-stats' });
+    const ctrl = h('div', { class: 'w-controls' });
+    const note = h('p', { class: 'w-note' });
+    el.append(stage, stats, ctrl, note);
+    const { ctx, st } = makeCanvas(stage, .46, 240, 340);
+
+    let model = 'rutherford', burst = false, showAtoms = true;
+    let parts = [], trails = [];
+    const count = { pass: 0, dev: 0, back: 0 };
+    const SPACING = 34, D = .3, V = 4.2;
+    const foilX = () => st.w * .55;
+    const nuclei = () => { const a = []; for (let y = SPACING / 2; y < st.h; y += SPACING) a.push(y); return a; };
+
+    function fire(n = 1) {
+      for (let i = 0; i < n; i++) {
+        const y = st.h * .12 + Math.random() * st.h * .76;
+        parts.push({ x: 70, y, vx: V, vy: 0, path: [[70, y]], done: false });
+      }
+    }
+    const bFire = h('button', { class: 'btn primary', onclick: () => fire(1) }, '🎯 Lancer 1 particule');
+    const bBurst = h('button', { class: 'btn', onclick: () => { burst = !burst; bBurst.textContent = burst ? '❚❚ Arrêter le faisceau' : '⚡ Faisceau continu'; } }, '⚡ Faisceau continu');
+    const bModel = h('button', { class: 'btn', onclick: () => {
+      model = model === 'rutherford' ? 'thomson' : 'rutherford';
+      bModel.textContent = model === 'rutherford' ? 'Voir la prévision de Thomson' : 'Revenir au modèle de Rutherford';
+      reset(); updNote();
+    } }, 'Voir la prévision de Thomson');
+    const bAtoms = h('button', { class: 'btn ghost', onclick: () => { showAtoms = !showAtoms; bAtoms.textContent = showAtoms ? 'Masquer les atomes' : 'Montrer les atomes'; } }, 'Masquer les atomes');
+    const bReset = h('button', { class: 'btn ghost', onclick: () => reset() }, '↺ Réinitialiser');
+    ctrl.append(bFire, bBurst, bModel, bAtoms, bReset);
+
+    function reset() { parts = []; trails = []; count.pass = count.dev = count.back = 0; updStats(); }
+    function updNote() {
+      note.innerHTML = model === 'rutherford'
+        ? "Modèle de <b>Rutherford</b> : le noyau positif, minuscule, repousse les particules α (positives) qui passent tout près. Dans la réalité, à peine <b>1 particule sur 10 000</b> rebondit ; ici l'effet est un peu exagéré pour qu'on le voie."
+        : "Prévision du modèle de <b>Thomson</b> : la charge positive est étalée dans tout l'atome, donc les particules α devraient <b>toutes traverser presque sans déviation</b>. Les rebonds observés par Rutherford ont prouvé que ce modèle était faux !";
+    }
+    function updStats() {
+      const tot = count.pass + count.dev + count.back;
+      const pc = (x) => (tot ? ((x / tot) * 100).toFixed(1).replace('.', ',') : '0') + ' %';
+      stats.innerHTML = `
+        <div><span class="dot" style="background:#22c55e"></span><b>${count.pass}</b> traversent <small>${pc(count.pass)}</small></div>
+        <div><span class="dot" style="background:#f59e0b"></span><b>${count.dev}</b> déviées <small>${pc(count.dev)}</small></div>
+        <div><span class="dot" style="background:#ef4444"></span><b>${count.back}</b> renvoyées <small>${pc(count.back)}</small></div>
+        <div><b>${tot}</b> particules lancées</div>`;
+    }
+    updStats(); updNote();
+
+    let lastBurst = 0;
+    loop(el, (t) => {
+      const W = st.w, H = st.h, fx = foilX();
+      if (burst && t - lastBurst > .07) { fire(1); lastBurst = t; }
+      // physique
+      const ys = nuclei();
+      for (const p of parts) {
+        if (p.done) continue;
+        // pas de temps adaptatif : très fin près d'un noyau
+        let tt = 0;
+        for (let guard = 0; tt < 1 - 1e-9 && guard < 5000; guard++) {
+          let dt = .125;
+          if (model === 'rutherford' && Math.abs(p.x - fx) < 60) {
+            const ny = ys.reduce((b, y) => (Math.abs(y - p.y) < Math.abs(b - p.y) ? y : b), ys[0]);
+            const dx = p.x - fx, dy = p.y - ny, r2 = dx * dx + dy * dy + .0005, r = Math.sqrt(r2);
+            dt = Math.min(.125, Math.max(.0005, r / 40));
+            const a = (D * V * V / 2) / r2;
+            p.vx += a * dx / r * dt; p.vy += a * dy / r * dt;
+          }
+          if (model === 'thomson' && Math.abs(p.x - fx) < 3) p.vy += (Math.random() - .5) * .004;
+          dt = Math.min(dt, 1 - tt);
+          p.x += p.vx * dt; p.y += p.vy * dt; tt += dt;
+        }
+        p.path.push([p.x, p.y]);
+        if (p.x > W + 5 || p.x < -5 || p.y < -5 || p.y > H + 5) {
+          p.done = true;
+          const ang = Math.abs(Math.atan2(p.vy, p.vx)) * 180 / Math.PI;
+          const kind = ang < 6 ? 'pass' : ang < 90 ? 'dev' : 'back';
+          count[kind]++; updStats();
+          trails.push({ path: p.path, kind, born: t });
+        }
+      }
+      parts = parts.filter((p) => !p.done);
+      if (trails.length > 140) trails.splice(0, trails.length - 140);
+
+      // dessin
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#0f1424'; ctx.fillRect(0, 0, W, H);
+      // écran fluorescent
+      ctx.strokeStyle = 'rgba(34,197,94,.35)'; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(fx, H / 2, Math.min(W * .42, fx - 10), -Math.PI * .95, Math.PI * .95); ctx.stroke();
+      // source
+      ctx.fillStyle = '#4b5470'; ctx.fillRect(8, H / 2 - 30, 62, 60);
+      ctx.fillStyle = '#fff'; ctx.font = '700 12px Segoe UI, Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('Source α', 39, H / 2);
+      // feuille d'or
+      ctx.fillStyle = 'rgba(224,177,58,.22)'; ctx.fillRect(fx - 9, 0, 18, H);
+      ys.forEach((y) => {
+        if (showAtoms) {
+          if (model === 'rutherford') {
+            ctx.strokeStyle = 'rgba(147,197,253,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(fx, y, SPACING / 2 - 1, 0, 7); ctx.stroke();
+            ctx.fillStyle = '#ff6b70'; ctx.beginPath(); ctx.arc(fx, y, 2.2, 0, 7); ctx.fill();
+          } else {
+            ctx.fillStyle = 'rgba(241,154,162,.35)'; ctx.beginPath(); ctx.arc(fx, y, SPACING / 2 - 1, 0, 7); ctx.fill();
+          }
+        }
+      });
+      ctx.fillStyle = '#e0b13a'; ctx.font = '700 12px Segoe UI, Arial'; ctx.fillText("feuille d'or", fx, 12);
+      // traces
+      const col = { pass: '34,197,94', dev: '245,158,11', back: '239,68,68' };
+      for (const tr of trails) {
+        const age = t - tr.born, al = Math.max(tr.kind === 'pass' ? .05 : .25, 1 - age / (tr.kind === 'pass' ? 2 : 8));
+        ctx.strokeStyle = `rgba(${col[tr.kind]},${al})`; ctx.lineWidth = tr.kind === 'pass' ? 1 : 2;
+        ctx.beginPath(); tr.path.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
+      }
+      for (const p of parts) {
+        ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); p.path.slice(-25).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
+        ball(ctx, p.x, p.y, 4, '#fbbf24');
+      }
+    });
+  }
+
+  // =====================================================================
+  // 3) Constructeur d'atome
+  // =====================================================================
+  function atomBuilder(el) {
+    header(el, "Construis ton atome", 'Ajoute ou retire des protons, neutrons et électrons');
+    const wrap = h('div', { class: 'w-builder' });
+    const left = h('div', { class: 'w-b-left' });
+    const stage = h('div', { class: 'w-stage' });
+    const right = h('div', { class: 'w-b-right' });
+    const toast = h('div', { class: 'w-toast' });
+    left.append(stage, toast);
+    wrap.append(left, right);
+    el.appendChild(wrap);
+    const presets = h('div', { class: 'w-presets' });
+    el.appendChild(presets);
+    const { ctx, st } = makeCanvas(stage, .85, 260, 360);
+
+    const s = { Z: 6, N: 6, E: 6 };
+    const counters = {};
+    const defs = [
+      ['Z', 'Protons', P_COL, 1, 20, 'p'],
+      ['N', 'Neutrons', N_COL, 0, 30, 'n'],
+      ['E', 'Électrons', E_COL, 0, 20, 'e⁻']
+    ];
+    const ctrls = h('div', { class: 'w-counters' });
+    defs.forEach(([key, label, color, min, max]) => {
+      const val = h('output', { class: 'w-count-val' });
+      const minus = h('button', { class: 'w-round', 'aria-label': 'Retirer un ' + label.toLowerCase(), onclick: () => change(key, -1) }, '−');
+      const plus = h('button', { class: 'w-round', 'aria-label': 'Ajouter un ' + label.toLowerCase(), onclick: () => change(key, +1) }, '+');
+      const row = h('div', { class: 'w-counter' }, `<span class="dot" style="background:${color}"></span><span class="w-count-label">${label}</span>`);
+      row.append(minus, val, plus);
+      ctrls.appendChild(row);
+      counters[key] = { val, min, max };
+    });
+    const out = h('div', { class: 'w-out' });
+    right.append(ctrls, out);
+
+    const PRESETS = [
+      ['Hydrogène', 1, 0, 1], ['Deutérium', 1, 1, 1], ['Carbone 12', 6, 6, 6], ['Carbone 14', 6, 8, 6],
+      ['Oxygène', 8, 8, 8], ['Sodium', 11, 12, 11], ['Ion Na⁺', 11, 12, 10], ['Ion Cl⁻', 17, 18, 18], ['Ion O²⁻', 8, 8, 10], ['Argon', 18, 22, 18]
+    ];
+    presets.innerHTML = '<span class="muted">Exemples :</span>';
+    PRESETS.forEach(([n, Z, N, E]) => presets.appendChild(h('button', { class: 'chip-btn', onclick: () => { Object.assign(s, { Z, N, E }); flash(n); render(); } }, n)));
+
+    let toastT;
+    function flash(msg) {
+      toast.innerHTML = msg; toast.classList.add('show');
+      clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+    function change(key, d) {
+      const c = counters[key];
+      const v = s[key] + d;
+      if (v < c.min || v > c.max) return flash(v < c.min ? (key === 'Z' ? 'Il faut au moins 1 proton !' : 'Déjà à zéro') : 'Limite atteinte (Z ≤ 20 au programme)');
+      const oldEl = ELEMENTS[s.Z][1];
+      s[key] = v;
+      if (key === 'Z') flash(`Nouvel élément : <b>${ELEMENTS[s.Z][1]}</b> — c'est Z qui définit l'élément !`);
+      else if (key === 'N') flash(`Toujours du <b>${oldEl}</b> : on a fait un autre <b>isotope</b> (A = ${s.Z + s.N}).`);
+      else flash(s.E === s.Z ? 'Autant d’électrons que de protons : <b>atome neutre</b>' : s.E < s.Z ? 'Électrons perdus → <b>cation</b> (ion positif)' : 'Électrons gagnés → <b>anion</b> (ion négatif)');
+      render();
+    }
+    function render() {
+      for (const k of ['Z', 'N', 'E']) counters[k].val.textContent = s[k];
+      const [X, name, commonA] = ELEMENTS[s.Z];
+      const A = s.Z + s.N, q = s.Z - s.E;
+      const ionSym = q === 0 ? X : `${X}<sup>${Math.abs(q) > 1 ? Math.abs(q) : ''}${q > 0 ? '+' : '−'}</sup>`;
+      const kind = q === 0 ? 'Atome neutre' : q > 0 ? `Cation (a perdu ${q} électron${q > 1 ? 's' : ''})` : `Anion (a gagné ${-q} électron${q < -1 ? 's' : ''})`;
+      const sh = shells(s.E);
+      const rep = sh.length ? sh.map((n, i) => `(${'KLMN'[i]})<sup>${n}</sup>`).join('') : '—';
+      const mN = s.Z * 1.673e-27 + s.N * 1.675e-27, mE = s.E * 9.11e-31;
+      const pct = (mE / (mN + mE)) * 100;
+      const weird = Math.abs(q) > 3 ? '<p class="w-warn">Ion très peu probable dans la nature (charge trop grande).</p>' : '';
+      const iso = A === commonA ? '' : `<p class="w-tip">Isotope de ${name.toLowerCase()} (l'isotope le plus courant a A = ${commonA}).</p>`;
+      out.innerHTML = `
+        <div class="w-symbol">${nucHTML(A, s.Z, X)}<div><b>${name}</b><span>${kind} : ${ionSym}</span></div></div>
+        <table class="w-table">
+          <tr><td>Nombre de charge</td><td><i>Z</i> = ${s.Z}</td></tr>
+          <tr><td>Nombre de masse</td><td><i>A</i> = <i>Z</i> + <i>N</i> = ${A}</td></tr>
+          <tr><td>Neutrons</td><td><i>N</i> = <i>A</i> − <i>Z</i> = ${s.N}</td></tr>
+          <tr><td>Charge du noyau</td><td>${sci(s.Z * 1.6e-19)} C</td></tr>
+          <tr><td>Charge totale</td><td>${q === 0 ? '0 (neutre)' : `${q > 0 ? '+' : '−'}${Math.abs(q) > 1 ? Math.abs(q) : ''}<i>e</i> = ${sci(q * 1.6e-19)} C`}</td></tr>
+          <tr><td>Masse ≈ <i>A</i>·<i>m</i><sub>nucléon</sub></td><td>${sci(A * 1.67e-27)} kg</td></tr>
+          <tr><td>Répartition électronique</td><td>${rep}</td></tr>
+        </table>
+        <div class="w-massbar" title="Part de la masse des électrons"><span style="width:${Math.max(.6, pct)}%"></span></div>
+        <p class="w-small">Les électrons représentent seulement <b>${pct.toFixed(3).replace('.', ',')} %</b> de la masse → négligeable.</p>
+        ${iso}${weird}`;
+    }
+    render();
+
+    loop(el, (t) => {
+      const W = st.w, H = st.h, cx = W / 2, cy = H / 2;
+      ctx.clearRect(0, 0, W, H);
+      const sh = shells(s.E);
+      const maxR = Math.min(W, H) * .46;
+      const nucS = Math.max(4, Math.min(9, 40 / Math.sqrt(s.Z + s.N)));
+      const nucR = Math.sqrt(s.Z + s.N) * nucS;
+      const base = nucR + 16, gap = sh.length ? (maxR - base) / Math.max(sh.length, 1) : 0;
+      sh.forEach((n, k) => {
+        const r = base + gap * (k + .7);
+        ctx.strokeStyle = css('--text'); ctx.globalAlpha = .25; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+        ctx.fillStyle = css('--accent'); ctx.font = '700 12px Segoe UI, Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('KLMN'[k], cx + r * .707 + 9, cy - r * .707 - 9);
+        for (let e = 0; e < n; e++) {
+          const a = (reduceMotion ? 0 : t * (1.2 - k * .25)) + e * Math.PI * 2 / n;
+          ball(ctx, cx + Math.cos(a) * r, cy + Math.sin(a) * r, 6.5, E_COL, '−');
+        }
+      });
+      drawNucleus(ctx, cx, cy, s.Z, s.N, nucS, t);
+    });
+  }
+
+  // =====================================================================
+  // 4) Zoom : de l'atome au noyau
+  // =====================================================================
+  function atomScale(el) {
+    header(el, "Zoom : de l'atome au noyau", 'Fais glisser le curseur pour zoomer');
+    const stage = h('div', { class: 'w-stage dark' });
+    const slider = h('input', { type: 'range', min: '0', max: '1000', value: '0', class: 'w-range', 'aria-label': 'Zoom' });
+    const lab = h('div', { class: 'w-zoomlab' });
+    const cmp = h('div', { class: 'w-compare' });
+    el.append(stage, slider, lab, cmp);
+    const { ctx, st } = makeCanvas(stage, .5, 230, 320);
+    const RA = 1e-10, RN = 1e-15;
+    let z = 0, target = 0;
+    slider.addEventListener('input', () => { target = +slider.value / 1000; });
+
+    const OBJ = [['une bille', 1, 'cm'], ['une balle de tennis', 3.3, 'cm'], ['un ballon de football', 11, 'cm']];
+    cmp.innerHTML = '<p><b>Et si le noyau était…</b></p>';
+    const res = h('p', { class: 'w-compare-res' });
+    const row = h('div', { class: 'w-presets' });
+    OBJ.forEach(([n, r]) => row.appendChild(h('button', { class: 'chip-btn', onclick: () => {
+      const km = (r * 1e5) / 1e5; // cm × 10^5 → km
+      res.innerHTML = `Si le noyau était <b>${n}</b> de rayon ${String(r).replace('.', ',')} cm, l'atome aurait un rayon de ${String(r).replace('.', ',')} × 10<sup>5</sup> cm ≈ <b>${km.toLocaleString('fr-FR')} km</b> ! Entre les deux : du vide.`;
+    } }, n)));
+    cmp.append(row, res);
+    row.firstChild.click();
+
+    loop(el, (t) => {
+      z += (target - z) * .12;
+      const W = st.w, H = st.h, cx = W / 2, cy = H / 2;
+      const view = 2.6e-10 / 10 ** (z * 4.8); // largeur du champ de vision (m)
+      const px = W / view;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#0f1424'; ctx.fillRect(0, 0, W, H);
+      const ra = RA * px;
+      // nuage
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, ra);
+      g.addColorStop(0, 'rgba(59,130,246,.55)'); g.addColorStop(.6, 'rgba(59,130,246,.18)'); g.addColorStop(1, 'rgba(59,130,246,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, Math.min(ra, W * 4), 0, 7); ctx.fill();
+      if (ra < W * 2) { ctx.strokeStyle = 'rgba(147,197,253,.6)'; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.arc(cx, cy, ra, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+      const rn = RN * px;
+      if (rn >= 2.5) drawNucleus(ctx, cx, cy, 6, 6, rn / 3.6, t);
+      else { ctx.fillStyle = '#ff6b70'; ctx.globalAlpha = Math.max(.15, rn / 2.5); ctx.beginPath(); ctx.arc(cx, cy, 1.2, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+      // échelle
+      ctx.fillStyle = '#cbd5e1'; ctx.font = '12px Segoe UI, Arial'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText('Champ de vision : ' + sci(view, 1).replace(/<sup>(.*?)<\/sup>/, (_, e) => [...e].map((c) => '⁰¹²³⁴⁵⁶⁷⁸⁹'[c] || (c === '−' ? '⁻' : c)).join('')) + ' m', 12, H - 12);
+      ctx.textAlign = 'right';
+      ctx.fillText('Zoom × ' + Math.round(10 ** (z * 4.8)).toLocaleString('fr-FR'), W - 12, H - 12);
+      ctx.textAlign = 'center';
+      if (rn < 2.5) ctx.fillText('le noyau est encore invisible à cette échelle…', cx, 20);
+      else if (ra > W * 1.5) ctx.fillText("on ne voit plus le bord de l'atome : il est très loin !", cx, 20);
+      lab.innerHTML = `Rayon de l'atome : <b>10<sup>−10</sup> m</b> &nbsp;·&nbsp; rayon du noyau : <b>10<sup>−15</sup> m</b> &nbsp;·&nbsp; rapport : <b>10<sup>5</sup></b>`;
+    });
+  }
+
+  // =====================================================================
+  // 5) Quiz (questions dans un fichier JSON du contenu)
+  // =====================================================================
+  async function quiz(el, api) {
+    header(el, 'Teste-toi !', 'Choisis une réponse pour chaque question');
+    const data = (await api.readJSON(el.dataset.src)) || [];
+    if (!data.length) { el.appendChild(h('p', { class: 'muted' }, 'Quiz indisponible.')); return; }
+    const box = h('div', { class: 'w-quiz' });
+    el.appendChild(box);
+    let i = 0, score = 0, answered = false;
+    const show = () => {
+      if (i >= data.length) {
+        const pct = Math.round((score / data.length) * 100);
+        const msg = pct === 100 ? 'Parfait ! 🎉' : pct >= 70 ? 'Très bien ! 👏' : pct >= 50 ? 'Pas mal, relis la fiche.' : 'Relis la leçon et réessaie 💪';
+        box.innerHTML = `<div class="w-quiz-end"><div class="w-score">${score} / ${data.length}</div><p>${msg}</p></div>`;
+        box.appendChild(h('button', { class: 'btn primary', onclick: () => { i = 0; score = 0; show(); } }, '↺ Recommencer'));
+        return;
+      }
+      const q = data[i]; answered = false;
+      box.innerHTML = `<div class="w-quiz-top"><span>Question ${i + 1} / ${data.length}</span><span>Score : ${score}</span></div>
+        <div class="w-quiz-bar"><span style="width:${(i / data.length) * 100}%"></span></div>
+        <p class="w-q">${q.q}</p>`;
+      const opts = h('div', { class: 'w-opts' });
+      const fb = h('div', { class: 'w-fb' });
+      const order = q.choices.map((_, k) => k).sort(() => Math.random() - 0.5); // choix mélangés
+      order.forEach((k) => opts.appendChild(h('button', { class: 'w-opt', 'data-k': k, onclick: (e) => {
+        if (answered) return; answered = true;
+        const ok = k === q.answer; if (ok) score++;
+        [...opts.children].forEach((b) => { b.disabled = true; if (+b.dataset.k === q.answer) b.classList.add('ok'); });
+        if (!ok) e.currentTarget.classList.add('ko');
+        fb.innerHTML = `<b>${ok ? '✔ Bonne réponse !' : '✘ Mauvaise réponse.'}</b> ${q.explain || ''}`;
+        fb.className = 'w-fb ' + (ok ? 'ok' : 'ko');
+        const next = h('button', { class: 'btn primary', onclick: () => { i++; show(); } }, i + 1 < data.length ? 'Question suivante →' : 'Voir mon score');
+        box.appendChild(next); next.focus();
+      } }, q.choices[k])));
+      box.append(opts, fb);
+    };
+    show();
+  }
+
+  // =====================================================================
+  // 6) Atome cliquable (structure)
+  // =====================================================================
+  const PARTS_INFO = {
+    noyau: { t: 'Le noyau', c: '#7c3aed', d: "Au centre de l'atome. Chargé <b>positivement</b> (charge <i>Z</i>·<i>e</i>). Minuscule (rayon ≈ 10<sup>−15</sup> m) mais il contient presque <b>toute la masse</b> de l'atome. Il est formé de protons et de neutrons." },
+    proton: { t: 'Le proton', c: P_COL, d: 'Dans le noyau. Charge <b>+<i>e</i> = +1,6 × 10<sup>−19</sup> C</b>. Masse <i>m</i><sub>p</sub> ≈ 1,67 × 10<sup>−27</sup> kg. Leur nombre est <b><i>Z</i></b>.' },
+    neutron: { t: 'Le neutron', c: N_COL, d: 'Dans le noyau. <b>Neutre</b> (charge 0). Masse <i>m</i><sub>n</sub> ≈ 1,67 × 10<sup>−27</sup> kg (presque comme le proton).' },
+    electron: { t: "L'électron", c: E_COL, d: 'Autour du noyau (nuage électronique). Charge <b>−<i>e</i> = −1,6 × 10<sup>−19</sup> C</b>. Très léger : <i>m</i><sub>e</sub> ≈ 9,11 × 10<sup>−31</sup> kg (1836 fois moins qu’un proton). Un atome a <b>autant d’électrons que de protons</b>.' },
+    vide: { t: 'Le vide', c: '#64748b', d: "Entre le noyau et les électrons, il n'y a <b>rien</b> : l'atome est essentiellement vide (structure <b>lacunaire</b>). Rayon de l’atome ≈ 10<sup>−10</sup> m, soit 100 000 fois celui du noyau." }
+  };
+  function atomExplorer(el) {
+    header(el, "Explore l'atome", 'Clique sur chaque partie de l’atome');
+    const wrap = h('div', { class: 'w-explorer' });
+    const pv = (x, y, k) => `<circle class="ex-hit" data-k="${k}" cx="${x}" cy="${y}" r="11" fill="${k === 'proton' ? P_COL : N_COL}" stroke="#fff" stroke-width="1.5"/>`;
+    const nuc = [[-8, -6, 'proton'], [8, -6, 'neutron'], [0, 6, 'proton'], [-12, 8, 'neutron'], [12, 8, 'proton'], [0, -16, 'neutron']].map(([x, y, k]) => pv(150 + x, 150 + y, k)).join('');
+    wrap.innerHTML = `
+      <svg viewBox="0 0 300 300" class="ex-svg" role="img" aria-label="Atome cliquable">
+        <defs><radialGradient id="exCloud"><stop offset="0" stop-color="#3b82f6" stop-opacity=".18"/><stop offset="1" stop-color="#3b82f6" stop-opacity=".02"/></radialGradient></defs>
+        <circle class="ex-hit" data-k="vide" cx="150" cy="150" r="140" fill="url(#exCloud)" stroke="#3b82f6" stroke-opacity=".25" stroke-dasharray="4 5"/>
+        <circle cx="150" cy="150" r="62" fill="none" stroke="currentColor" stroke-opacity=".25"/>
+        <circle cx="150" cy="150" r="108" fill="none" stroke="currentColor" stroke-opacity=".25"/>
+        <g class="ex-orbit o1"><circle class="ex-hit" data-k="electron" cx="212" cy="150" r="9" fill="${E_COL}"/><circle class="ex-hit" data-k="electron" cx="88" cy="150" r="9" fill="${E_COL}"/></g>
+        <g class="ex-orbit o2"><circle class="ex-hit" data-k="electron" cx="150" cy="42" r="9" fill="${E_COL}"/><circle class="ex-hit" data-k="electron" cx="243" cy="204" r="9" fill="${E_COL}"/><circle class="ex-hit" data-k="electron" cx="57" cy="204" r="9" fill="${E_COL}"/><circle class="ex-hit" data-k="electron" cx="150" cy="258" r="9" fill="${E_COL}"/></g>
+        <circle class="ex-hit" data-k="noyau" cx="150" cy="150" r="30" fill="#7c3aed" fill-opacity=".12" stroke="#7c3aed" stroke-dasharray="3 3"/>
+        ${nuc}
+      </svg>
+      <div class="ex-panel"><p class="muted">👆 Clique sur un <b>proton</b>, un <b>neutron</b>, un <b>électron</b>, le <b>noyau</b> ou le <b>vide</b>.</p><div class="ex-found"></div></div>`;
+    el.appendChild(wrap);
+    const panel = wrap.querySelector('.ex-panel');
+    const seen = new Set();
+    wrap.querySelector('svg').addEventListener('click', (e) => {
+      const k = e.target.closest('.ex-hit')?.dataset.k;
+      if (!k) return;
+      seen.add(k);
+      const p = PARTS_INFO[k];
+      wrap.querySelectorAll('.ex-hit').forEach((c) => c.classList.toggle('sel', c.dataset.k === k));
+      panel.innerHTML = `<h4 style="color:${p.c}">${p.t}</h4><p>${p.d}</p>
+        <div class="ex-found">${Object.keys(PARTS_INFO).map((x) => `<span class="${seen.has(x) ? 'on' : ''}">${seen.has(x) ? '✔' : '○'} ${PARTS_INFO[x].t.replace(/^(Le |L’|L')/, '')}</span>`).join('')}</div>
+        ${seen.size === 5 ? '<p class="w-tip">Bravo, tu as exploré tout l’atome ! 🎉</p>' : ''}`;
+      panel.classList.remove('pop'); void panel.offsetWidth; panel.classList.add('pop');
+    });
+  }
+
+  // =====================================================================
+  // 7) Curseur sur le noyau : charge (data-mode="charge") ou masse (data-mode="masse")
+  // =====================================================================
+  function nucleusSlider(el) {
+    const mode = el.dataset.mode === 'masse' ? 'masse' : 'charge';
+    header(el, mode === 'charge' ? 'La charge du noyau' : "La masse de l'atome", 'Fais glisser le curseur');
+    const wrap = h('div', { class: 'w-ns' });
+    const stage = h('div', { class: 'w-stage' });
+    const side = h('div', { class: 'w-ns-side' });
+    wrap.append(stage, side);
+    el.appendChild(wrap);
+    const max = 30;
+    const range = h('input', { type: 'range', min: '1', max: String(max), value: mode === 'charge' ? '6' : '12', class: 'w-range', 'aria-label': mode === 'charge' ? 'Nombre de protons' : 'Nombre de nucléons' });
+    const out = h('div', { class: 'w-ns-out' });
+    side.append(range, out);
+    const { ctx, st } = makeCanvas(stage, .75, 200, 260);
+    const render = () => {
+      const v = +range.value;
+      if (mode === 'charge') {
+        const el2 = ELEMENTS[Math.min(v, 20)];
+        out.innerHTML = `<p class="w-big"><i>Z</i> = ${v} proton${v > 1 ? 's' : ''}</p>
+          <div class="formula key"><span><i>Q</i> = <i>Z</i>·<i>e</i> = ${v} × 1,6 × 10<sup>−19</sup> = ${sci(v * 1.6e-19)} C</span></div>
+          <p class="w-small">${v <= 20 ? `Élément : <b>${el2[1]}</b> (${el2[0]})` : ''} · Les neutrons ne changent pas la charge.</p>`;
+      } else {
+        const m = v * 1.67e-27;
+        out.innerHTML = `<p class="w-big"><i>A</i> = ${v} nucléon${v > 1 ? 's' : ''}</p>
+          <div class="formula key"><span><i>m</i> ≈ <i>A</i>·<i>m</i><sub>nucléon</sub> = ${v} × 1,67 × 10<sup>−27</sup> ≈ ${sci(m)} kg</span></div>
+          <p class="w-small">Les électrons ne comptent presque pas : chaque électron pèse 1836 fois moins qu'un nucléon.</p>`;
+      }
+    };
+    range.addEventListener('input', render);
+    render();
+    loop(el, (t) => {
+      const v = +range.value;
+      const Z = mode === 'charge' ? v : Math.ceil(v / 2), N = mode === 'charge' ? Math.round(v * 1.1) : Math.floor(v / 2);
+      ctx.clearRect(0, 0, st.w, st.h);
+      const s = Math.max(5, Math.min(12, 60 / Math.sqrt(Z + N)));
+      drawNucleus(ctx, st.w / 2, st.h / 2, Z, N, s, t);
+      ctx.fillStyle = css('--muted'); ctx.font = '12px Segoe UI, Arial'; ctx.textAlign = 'center';
+      ctx.fillText(mode === 'charge' ? `${Z} protons (+)  ·  ${N} neutrons` : `${Z} protons + ${N} neutrons = ${v} nucléons`, st.w / 2, st.h - 10);
+    });
+  }
+
+  // =====================================================================
+  // 8) Exercices par niveaux : Facile → Moyen → Difficile   (+ 9) Examens)
+  //    data-src = fichier JSON, data-part = clé de la partie
+  //    Types : qcm {choices, answer, why?[]}, calc {answer, tol, unit}, direct {accept[], display}
+  // =====================================================================
+  const STR = {
+    fr: {
+      levels: ['Facile', 'Moyen', 'Difficile'], exos: 'Exercices', train: 'Entraîne-toi', mix: 'QCM · calculs · questions directes',
+      types: { qcm: 'QCM', calc: 'Calcul', direct: 'Question directe' }, q: 'Question', score: 'Score', partScore: 'Score de la partie', firstTry: '(bonnes réponses du premier coup)',
+      intro: ['Les bases : si tu as lu la fiche, ça doit passer tout seul.', 'On applique. Réussis-les toutes pour débloquer la suite.', 'Niveau expert : il faut maîtriser la leçon à 100 %.'],
+      good: '✔ Bonne réponse !', bad: "✘ Ce n'est pas correct.", why: "Pourquoi c'est faux :", answer: 'Bonne réponse :', expl: 'Explication :',
+      next: 'Question suivante →', endLevel: 'Terminer le niveau', retry: '↺ Réessayer', validate: 'Valider', yours: 'Ta réponse',
+      num: 'nombre (ex : 1,6)', numHelp: 'Pour une puissance de 10, écris le nombre dans la 1<sup>re</sup> case et l’exposant dans la petite case : <b>1,6</b> × 10<sup><b>-19</b></sup>. Laisse la petite case vide s’il n’y a pas de puissance de 10.',
+      numErr: 'Écris un nombre dans la 1<sup>re</sup> case (ex : <b>2,08</b>) et, si besoin, l’exposant dans la petite case (ex : <b>-18</b>).',
+      notMatch: (v) => `ta réponse « ${v} » ne correspond pas à ce qui est demandé.`, notChoice: (c) => `« ${c} » ne correspond pas à la question.`,
+      pow: 'le nombre est bon mais la <b>puissance de 10</b> est fausse.', sign: 'attention au <b>signe</b> de ton résultat.', calcWrong: 'ton résultat ne correspond pas : reprends le calcul étape par étape.',
+      lockPerfect: 'Réussis le niveau Moyen sans aucune faute (100 %) pour débloquer.', lockPrev: 'Termine le niveau précédent pour débloquer.',
+      unlocked: (n) => `Bravo ! Le niveau <b>${n}</b> est débloqué. 🎉`, goTo: (n) => `Passer au niveau ${n} →`, needPerfect: (e, n) => `Tu as terminé ce niveau avec ${e} erreur(s). Pour débloquer <b>${n}</b>, il faut un <b>sans-faute</b> : relis la leçon et recommence !`,
+      master: '🏆 Incroyable ! Tu maîtrises cette leçon à 100 %.', redoPerfect: 'Niveau terminé ! Refais-le pour viser le sans-faute.', again: '↺ Recommencer ce niveau', done: 'Niveau déjà réussi ✔', redo: '↺ Refaire ce niveau',
+      exam: { title: 'Examen blanc', intro: 'Questions tirées au hasard dans les leçons. Une seule tentative par question, puis correction.', lessons: 'Leçons', all: 'Toutes les leçons', count: 'Nombre de questions', level: 'Niveau', mixed: 'Mélangé', start: 'Commencer l’examen', time: 'Temps', note: 'Note', mistakes: 'Tes erreurs à revoir', none: 'Aucune erreur, bravo ! 🎉', restart: '↺ Nouvel examen', finish: 'Voir ma note', empty: 'Aucune question disponible.' }
+    },
+    ar: {
+      levels: ['سهل', 'متوسط', 'صعب'], exos: 'تمارين', train: 'تدرّب', mix: 'اختيار من متعدد · حساب · أسئلة مباشرة',
+      types: { qcm: 'اختيار من متعدد', calc: 'حساب', direct: 'سؤال مباشر' }, q: 'السؤال', score: 'النتيجة', partScore: 'نتيجة الدرس', firstTry: '(الإجابات الصحيحة من المحاولة الأولى)',
+      intro: ['الأساسيات: إذا قرأت الخلاصة فستنجح بسهولة.', 'مستوى التطبيق: أجب عن جميع الأسئلة لفتح المستوى الموالي.', 'مستوى الخبراء: يتطلب إتقان الدرس بنسبة 100%.'],
+      good: '✔ إجابة صحيحة!', bad: '✘ الإجابة غير صحيحة.', why: 'لماذا هي خاطئة:', answer: 'الإجابة الصحيحة:', expl: 'التوضيح:',
+      next: '← السؤال الموالي', endLevel: 'إنهاء المستوى', retry: '↺ أعد المحاولة', validate: 'تحقّق', yours: 'إجابتك',
+      num: 'العدد', numHelp: 'اكتب العدد في الخانة الأولى، والأس في الخانة الصغيرة إن وُجدت قوة للعدد 10.', numErr: 'اكتب عددا في الخانة الأولى.',
+      notMatch: (v) => `إجابتك «${v}» لا تطابق المطلوب.`, notChoice: (c) => `«${c}» لا يجيب عن السؤال.`,
+      pow: 'العدد صحيح لكن قوة العدد 10 خاطئة.', sign: 'انتبه إلى الإشارة.', calcWrong: 'النتيجة غير صحيحة: أعد الحساب خطوة بخطوة.',
+      lockPerfect: 'أنجز المستوى المتوسط دون أي خطأ (100%) لفتح هذا المستوى.', lockPrev: 'أنهِ المستوى السابق لفتح هذا المستوى.',
+      unlocked: (n) => `أحسنت! تم فتح مستوى <b>${n}</b>. 🎉`, goTo: (n) => `← انتقل إلى مستوى ${n}`, needPerfect: (e, n) => `أنهيت هذا المستوى بـ ${e} خطأ. لفتح مستوى <b>${n}</b> يجب أن تجيب دون أي خطأ: راجع الدرس وأعد المحاولة!`,
+      master: '🏆 رائع! أنت تتقن هذا الدرس بنسبة 100%.', redoPerfect: 'أنهيت المستوى! أعده لتحصل على العلامة الكاملة.', again: '↺ أعد هذا المستوى', done: 'تم إنجاز هذا المستوى ✔', redo: '↺ أعد هذا المستوى',
+      exam: { title: 'امتحان تجريبي', intro: 'أسئلة مختارة عشوائيا من الدروس. محاولة واحدة لكل سؤال ثم التصحيح.', lessons: 'الدروس', all: 'جميع الدروس', count: 'عدد الأسئلة', level: 'المستوى', mixed: 'مختلط', start: 'ابدأ الامتحان', time: 'الوقت', note: 'النقطة', mistakes: 'أخطاؤك للمراجعة', none: 'لا أخطاء، أحسنت! 🎉', restart: '↺ امتحان جديد', finish: 'اعرض نقطتي', empty: 'لا توجد أسئلة متاحة.' }
+    },
+    en: {
+      levels: ['Easy', 'Medium', 'Hard'], exos: 'Practice', train: 'Train', mix: 'Multiple choice · short answers',
+      types: { qcm: 'Multiple choice', calc: 'Number', direct: 'Short answer' }, q: 'Question', score: 'Score', partScore: 'Lesson score', firstTry: '(right at the first try)',
+      intro: ['The basics: if you read the key points, this is easy.', 'Apply what you learnt. Get them all right to unlock the next level.', 'Expert level: you need to master the lesson 100%.'],
+      good: '✔ Correct!', bad: '✘ Not correct.', why: 'Why it is wrong:', answer: 'Correct answer:', expl: 'Explanation:',
+      next: 'Next question →', endLevel: 'Finish the level', retry: '↺ Try again', validate: 'Check', yours: 'Your answer',
+      num: 'number', numHelp: 'Write the number in the first box and, if needed, the power of 10 in the small box.', numErr: 'Write a number in the first box.',
+      notMatch: (v) => `your answer “${v}” does not match what is asked.`, notChoice: (c) => `“${c}” does not answer the question.`,
+      pow: 'the number is right but the power of 10 is wrong.', sign: 'check the sign.', calcWrong: 'your result is not correct.',
+      lockPerfect: 'Finish the Medium level with no mistakes (100%) to unlock.', lockPrev: 'Finish the previous level to unlock.',
+      unlocked: (n) => `Well done! The <b>${n}</b> level is unlocked. 🎉`, goTo: (n) => `Go to the ${n} level →`, needPerfect: (e, n) => `You finished with ${e} mistake(s). To unlock <b>${n}</b> you need a <b>perfect score</b>: review the lesson and try again!`,
+      master: '🏆 Amazing! You master this lesson 100%.', redoPerfect: 'Level finished! Do it again for a perfect score.', again: '↺ Restart this level', done: 'Level already passed ✔', redo: '↺ Do this level again',
+      exam: { title: 'Mock exam', intro: 'Random questions from the lessons. One attempt per question, then the correction.', lessons: 'Lessons', all: 'All lessons', count: 'Number of questions', level: 'Level', mixed: 'Mixed', start: 'Start the exam', time: 'Time', note: 'Mark', mistakes: 'Your mistakes to review', none: 'No mistakes, well done! 🎉', restart: '↺ New exam', finish: 'See my mark', empty: 'No questions available.' }
+    }
+  };
+  const langOf = (el) => (el.closest('[lang]')?.getAttribute('lang') || 'fr').slice(0, 2);
+  const S_ = (el) => STR[langOf(el)] || STR.fr;
+  const LEVELS = [
+    { id: 'facile', i: 0, icon: '🟢', need: 'all' },
+    { id: 'moyen', i: 1, icon: '🟠', need: 'all' },
+    { id: 'difficile', i: 2, icon: '🔴', need: 'perfect' }
+  ];
+  // Normalisation des réponses écrites (français, anglais, arabe)
+  const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[ً-ٰٟـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي')
+    .replace(/[’'`«»"“”]/g, ' ').replace(/[.!?;:،؟,]+/g, ' ')
+    .replace(/(^|\s)(le|la|les|l|un|une|des|du|de|d|the|a|an|to)(?=\s|$)/g, ' ').replace(/(^|\s)ال(?=\S{2,})/g, '$1').replace(/\s+/g, ' ').trim();
+  const normFormula = (s) => norm(s).replace(/[\s()_{}]/g, '').replace(/[×·.x]/g, '*');
+  // Accepte : 14 · 2,08 · 2.08 · 2,08e-18 · 2,08E-18 · 2,08×10^-18 · 2,08x10^-18 · 2,08*10^-18
+  //           2,08.10^-18 · 2,08·10-18 · 2,08×10⁻¹⁸ · 2,08x10**-18 · 10^-10 · 10⁻¹⁰ (+ unité finale ignorée)
+  const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '⁺': '+' };
+  function parseNum(s) {
+    let t = String(s).trim().replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s+/g, '').replace(/[−–—]/g, '-').replace(/\*\*/g, '^')
+      .replace(/puissance/gi, '^').replace(/[ˆ＾]/g, '^')
+      .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+/g, (r) => '^' + [...r].map((c) => SUP[c]).join(''));
+    t = t.replace(/\^+/g, '^').replace(/(n·m|n\.m|n\/kg|n\/m|n|j|w|mv|v|ma|µa|ua|a|kΩ|Ω|ohms?|hz|ms|rad\/s|rad|mol\/l|mmol|mol|g\/mol|g\/l|ml|l|m\/s|km\/h|km|cm\^3|m\^3|°c|div|entités)$/i, '')
+      .replace(/(kg|g|m|cm|c|s|%|µm|nm|atomes?|protons?|neutrons?|électrons?|electrons?|nucléons?|nucleons?|ans|couches|particules|°)$/i, '');
+    const num = (x) => parseFloat(x.replace(',', '.'));
+    let m = t.match(/^([+-]?(?:\d+(?:[.,]\d+)?|[.,]\d+))(?:(?:[x×*·.]10\^?|10\^)([+-]?\d+)|e([+-]?\d+))?$/i);
+    if (m) return num(m[1]) * 10 ** parseInt(m[2] ?? m[3] ?? '0', 10);
+    m = t.match(/^([+-])?10\^([+-]?\d+)$/);
+    if (m) return (m[1] === '-' ? -1 : 1) * 10 ** parseInt(m[2], 10);
+    m = t.match(/^([+-]?\d+)\/(\d+)$/); // fraction simple : 3/4
+    if (m && +m[2] !== 0) return parseInt(m[1], 10) / parseInt(m[2], 10);
+    return NaN;
+  }
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k)) || null; } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+  };
+  const escHTML = (v) => String(v).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  function correctText(q) {
+    if (q.type === 'qcm') return q.choices[q.answer];
+    if (q.type === 'code') return window.TCSF_PY ? window.TCSF_PY.codeHTML(q.solution || '') : `<pre>${escHTML(q.solution || '')}</pre>`;
+    if (q.type === 'calc') return (q.display || sci(q.answer, q.digits ?? 2)) + (q.unit ? ' ' + q.unit : '');
+    return q.display || q.accept[0];
+  }
+  function whyCalc(q, x, S) {
+    const r = x / q.answer;
+    if (q.answer !== 0 && Number.isFinite(r) && r !== 0) {
+      const l = Math.log10(Math.abs(r));
+      if (Math.abs(l - Math.round(l)) < 0.01 && Math.round(l) !== 0) return S.pow;
+      if (r < 0) return S.sign;
+    }
+    return q.whyWrong || S.calcWrong;
+  }
+  function burst(host) {
+    const c = h('div', { class: 'confetti' });
+    for (let i = 0; i < 40; i++) c.appendChild(h('i', { style: `left:${Math.random() * 100}%;background:hsl(${Math.random() * 360},90%,60%);animation-delay:${Math.random() * .6}s` }));
+    host.appendChild(c);
+    setTimeout(() => c.remove(), 2600);
+  }
+
+  // Affiche une question dans `zoneHost` ; appelle onAnswer(ok, actions, fb) à chaque réponse.
+  function askQuestion(zoneHost, q, S, onAnswer) {
+    const zone = h('div', { class: 'lv-zone' });
+    const fb = h('div', { class: 'w-fb' });
+    const actions = h('div', { class: 'lv-actions' });
+    zoneHost.append(zone, fb, actions);
+    const verdict = (ok, given) => {
+      if (ok) {
+        fb.className = 'w-fb ok';
+        fb.innerHTML = `<b>${S.good}</b> ${q.explain || ''}`;
+      } else if (q.type === 'code') {
+        // programme faux : on explique pourquoi ; la solution reste cachée (on peut corriger et revérifier)
+        fb.className = 'w-fb ko';
+        fb.innerHTML = `<b>${S.bad}</b>${given ? `<div>${given}</div>` : ''}<details class="py-sol"><summary>👀 Voir une solution</summary>${correctText(q)}${q.explain ? `<p>${q.explain}</p>` : ''}</details>`;
+      } else {
+        fb.className = 'w-fb ko';
+        fb.innerHTML = `<b>${S.bad}</b>
+          ${given ? `<p><b>${S.why}</b> ${given}</p>` : ''}
+          <p><b>${S.answer}</b> ${correctText(q)}</p>
+          ${q.explain ? `<p><b>${S.expl}</b> ${q.explain}</p>` : ''}`;
+      }
+      actions.innerHTML = '';
+      onAnswer(ok, actions, fb);
+    };
+    // exercice de programmation : on écrit du code Python, l'application l'exécute et le corrige
+    if (q.type === 'code' && window.TCSF_PY) {
+      window.TCSF_PY.task(zone, q, (ok, why) => verdict(ok, why));
+      return;
+    }
+    if (q.type === 'qcm') {
+      const opts = h('div', { class: 'w-opts' });
+      // les choix sont mélangés à chaque affichage : la bonne réponse n'est jamais toujours au même endroit
+      const order = q.choices.map((_, k) => k);
+      for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+      const btns = {};
+      order.forEach((k) => {
+        const c = q.choices[k];
+        const b = h('button', { class: 'w-opt', onclick: (e) => {
+          [...opts.children].forEach((x) => (x.disabled = true));
+          const ok = k === q.answer;
+          e.currentTarget.classList.add(ok ? 'ok' : 'ko');
+          if (!ok) btns[q.answer].classList.add('ok');
+          verdict(ok, ok ? '' : (q.why && q.why[k]) || S.notChoice(c));
+        } }, c);
+        btns[k] = b;
+        opts.appendChild(b);
+      });
+      zone.appendChild(opts);
+      return;
+    }
+    const form = h('form', { class: 'lv-form' });
+    const inp = h('input', { class: 'lv-input', type: 'text', autocomplete: 'off', spellcheck: 'false', placeholder: S.yours, dir: 'auto' });
+    const unit = q.unit ? h('span', { class: 'lv-unit' }, q.unit) : null;
+    const ok = h('button', { class: 'btn primary', type: 'submit' }, S.validate);
+    let exp = null;
+    if (q.type === 'calc') {
+      inp.placeholder = S.num;
+      inp.classList.add('lv-mant');
+      inp.setAttribute('dir', 'ltr');
+      if (q.sci !== false) {
+        exp = h('input', { class: 'lv-input lv-exp', type: 'text', autocomplete: 'off', spellcheck: 'false', inputmode: 'numeric', placeholder: 'n', dir: 'ltr', 'aria-label': 'Exposant de 10' });
+        exp.addEventListener('input', () => { exp.value = exp.value.replace(/[−–]/g, '-').replace(/[^0-9+-]/g, ''); });
+        const sup = h('span', { class: 'lv-sup' }); sup.appendChild(exp);
+        const grp = h('span', { class: 'lv-sci', dir: 'ltr' });
+        grp.append(inp, h('span', { class: 'lv-pow' }, '× 10'), sup);
+        form.append(grp);
+      } else form.append(inp);
+    } else form.append(inp);
+    if (unit) form.append(unit);
+    form.append(ok);
+    zone.append(form);
+    if (q.type === 'calc' && exp) zone.appendChild(h('p', { class: 'w-small' }, S.numHelp));
+    setTimeout(() => inp.focus(), 30);
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const v = inp.value.trim();
+      const ev = exp ? exp.value.trim() : '';
+      if (!v && !ev) { inp.focus(); return; }
+      const lock = (b) => { inp.disabled = b; ok.disabled = b; if (exp) exp.disabled = b; };
+      lock(true);
+      if (q.type === 'calc') {
+        let x = parseNum(v || '1');
+        if (ev) x = /^[+-]?\d+$/.test(ev) ? x * 10 ** parseInt(ev, 10) : NaN;
+        if (Number.isNaN(x)) { lock(false); fb.className = 'w-fb ko'; fb.innerHTML = S.numErr; return; }
+        const good = Math.abs(x - q.answer) <= Math.abs(q.answer) * Math.max(q.tol ?? 0.02, 1e-9) + 1e-12 * (q.answer === 0 ? 1 : 0) + 1e-300;
+        verdict(good, good ? '' : whyCalc(q, x, S));
+      } else {
+        const n = q.formula ? normFormula(v) : norm(v);
+        const good = q.accept.some((a) => (q.formula ? normFormula(a) : norm(a)) === n);
+        verdict(good, good ? '' : (q.whyWrong || S.notMatch(escHTML(v))));
+      }
+    });
+  }
+
+  async function levels(el, api) {
+    const all = (await api.readJSON(el.dataset.src)) || {};
+    const part = all[el.dataset.part];
+    if (!part) return;
+    const S = S_(el);
+    const lab = (L) => S.levels[L.i];
+    el.classList.add('widget', 'w-levels');
+    const key = 'tcsf:' + el.dataset.src + ':' + el.dataset.part;
+    const saved = store.get(key) || {};
+    const state = {};
+    LEVELS.forEach((L) => { state[L.id] = saved[L.id] && saved[L.id].done ? { done: true, perfect: saved[L.id].perfect, best: saved[L.id].best } : { done: false }; });
+
+    const head = h('div', { class: 'w-head' }, `<span class="w-badge">${S.exos}</span><b>${S.train}</b><span class="w-hint">${S.mix}</span>`);
+    const tabs = h('div', { class: 'lv-tabs' });
+    const scoreEl = h('div', { class: 'lv-score' });
+    const body = h('div', { class: 'lv-body' });
+    el.append(head, tabs, scoreEl, body);
+    const unlocked = (L) => {
+      if (L.i === 0) return true;
+      const ps = state[LEVELS[L.i - 1].id];
+      return ps.done && (L.need !== 'perfect' || ps.perfect);
+    };
+    let current = LEVELS.find((L) => !state[L.id].done && unlocked(L))?.id || 'facile';
+    const lockMsg = (L) => (L.need === 'perfect' ? S.lockPerfect : S.lockPrev);
+    function save() {
+      const o = {};
+      LEVELS.forEach((L) => { if (state[L.id].done) o[L.id] = { done: true, perfect: state[L.id].perfect, best: state[L.id].best }; });
+      store.set(key, o);
+    }
+    function drawTabs() {
+      tabs.innerHTML = '';
+      LEVELS.forEach((L) => {
+        const s = state[L.id], open = unlocked(L);
+        const b = h('button', { class: `lv-tab ${L.id} ${current === L.id ? 'active' : ''} ${open ? '' : 'locked'}`, title: open ? '' : lockMsg(L) },
+          `${open ? L.icon : '🔒'} ${lab(L)}${s.done ? ' <span class="lv-ok">✔</span>' : ''}`);
+        b.addEventListener('click', () => {
+          if (!open) { body.querySelector('.lv-lockmsg')?.remove(); body.prepend(h('div', { class: 'lv-lockmsg' }, '🔒 ' + lockMsg(L))); return; }
+          current = L.id; startLevel(L, s.done);
+        });
+        tabs.appendChild(b);
+      });
+      const total = LEVELS.reduce((a, L) => a + (part[L.id] || []).length, 0);
+      const got = LEVELS.reduce((a, L) => a + (state[L.id].best || 0), 0);
+      scoreEl.innerHTML = `${S.partScore} : <b>${got} / ${total}</b> <span class="muted">${S.firstTry}</span>`;
+    }
+    function startLevel(L, review) {
+      const qs = part[L.id] || [];
+      const run = { first: qs.map(() => null), i: 0 };
+      drawTabs();
+      const show = () => {
+        if (run.i >= qs.length) return finish();
+        const q = qs[run.i];
+        body.innerHTML = `
+          <div class="lv-top"><span class="lv-pill ${L.id}">${L.icon} ${lab(L)}</span><span>${S.q} ${run.i + 1} / ${qs.length}</span>
+            <span class="lv-type">${S.types[q.type]}</span></div>
+          <div class="w-quiz-bar"><span style="width:${(run.i / qs.length) * 100}%"></span></div>
+          ${run.i === 0 ? `<p class="w-small">${S.intro[L.i]}</p>` : ''}
+          <p class="w-q">${q.q}</p>`;
+        askQuestion(body, q, S, (ok, actions) => {
+          if (run.first[run.i] === null) run.first[run.i] = ok;
+          if (ok) {
+            const nx = h('button', { class: 'btn primary', onclick: () => { run.i++; show(); } }, run.i + 1 < qs.length ? S.next : S.endLevel);
+            actions.appendChild(nx); nx.focus();
+          } else actions.appendChild(h('button', { class: 'btn', onclick: () => show() }, S.retry));
+        });
+      };
+      const finish = () => {
+        const firstOk = run.first.filter(Boolean).length;
+        const perfect = firstOk === qs.length;
+        const s = state[L.id];
+        s.done = true; s.perfect = s.perfect || perfect; s.best = Math.max(s.best || 0, firstOk);
+        save(); drawTabs();
+        const next = LEVELS[L.i + 1];
+        let msg, btn = null;
+        if (!next) msg = perfect ? S.master : S.redoPerfect;
+        else if (unlocked(next)) {
+          msg = S.unlocked(lab(next));
+          btn = h('button', { class: 'btn primary', onclick: () => { current = next.id; startLevel(next); } }, S.goTo(lab(next)));
+        } else msg = S.needPerfect(qs.length - firstOk, lab(next));
+        body.innerHTML = `<div class="w-quiz-end"><div class="w-score">${firstOk} / ${qs.length}</div><p>${msg}</p></div>`;
+        const act = h('div', { class: 'lv-actions center' });
+        if (btn) act.appendChild(btn);
+        act.appendChild(h('button', { class: 'btn', onclick: () => startLevel(L) }, S.again));
+        body.appendChild(act);
+        if (perfect && !next) burst(body);
+        window.dispatchEvent(new CustomEvent('tcsf:activity', { detail: { act: 'exo', src: el.dataset.src } }));
+      };
+      if (review) {
+        body.innerHTML = `<div class="w-quiz-end"><div class="w-score">${state[L.id].best || 0} / ${qs.length}</div><p>${S.done}</p></div>`;
+        const act = h('div', { class: 'lv-actions center' });
+        act.appendChild(h('button', { class: 'btn primary', onclick: () => startLevel(L) }, S.redo));
+        body.appendChild(act);
+      } else show();
+    }
+    drawTabs();
+    const curL = LEVELS.find((L) => L.id === current);
+    startLevel(curL, state[curL.id].done);
+  }
+
+  // =====================================================================
+  // 9) Examen blanc : questions tirées au hasard dans les leçons d'une matière
+  // =====================================================================
+  async function exam(el, api) {
+    const S = STR[api.lang] || STR.fr;
+    const E = S.exam;
+    el.classList.add('widget', 'w-levels');
+    if (api.lang === 'ar') el.setAttribute('dir', 'rtl');
+    const datas = await Promise.all(api.lessons.map(async (l) => ({ l, d: await api.readJSON(l.data) })));
+    const pool = [];
+    datas.forEach(({ l, d }) => { if (!d || !d.exercises) return; LEVELS.forEach((L) => (d.exercises[L.id] || []).forEach((q) => pool.push({ q, lesson: l, level: L }))); });
+    el.innerHTML = `<div class="w-head"><span class="w-badge">${S.exos}</span><b>${E.title}</b></div>`;
+    const body = h('div', { class: 'lv-body' });
+    el.appendChild(body);
+    if (!pool.length) { body.innerHTML = `<p class="muted">${E.empty}</p>`; return; }
+    const modules = [...new Set(api.lessons.map((l) => l.module || l.partie).filter(Boolean))];
+    // choix libre : on coche les unités et/ou les leçons voulues (plusieurs à la fois)
+    const PK = ({ fr: { all: 'Tout cocher', none: 'Tout décocher', need: 'Coche au moins une leçon.', sel: (n) => `${n} leçon(s) choisie(s)`, other: 'Autres leçons' },
+      ar: { all: 'تحديد الكل', none: 'إلغاء الكل', need: 'اختر درسا واحدا على الأقل.', sel: (n) => `${n} درس(دروس) مختارة`, other: 'دروس أخرى' },
+      en: { all: 'Select all', none: 'Clear all', need: 'Tick at least one lesson.', sel: (n) => `${n} lesson(s) selected`, other: 'Other lessons' } })[api.lang] || {};
+    const pickKey = 'tcsf:exam-pick:' + (api.lessons[0] ? String(api.lessons[0].data).split('/')[0] : '');
+    function setup() {
+      const groups = modules.map((m) => [m, api.lessons.filter((l) => (l.module || l.partie) === m)]);
+      const loose = api.lessons.filter((l) => !(l.module || l.partie));
+      if (loose.length) groups.push([PK.other, loose]);
+      let saved = null; try { saved = JSON.parse(localStorage.getItem(pickKey)); } catch {}
+      const on = (id) => !saved || saved.includes(id);
+      body.innerHTML = `<p>${E.intro}</p>
+        <div class="ex-pick"><div class="ex-pick-top"><b>${E.lessons}</b><span class="ex-pick-n w-small"></span><span class="ex-pick-btns"><button type="button" class="chip-btn" data-all>☑ ${PK.all}</button><button type="button" class="chip-btn" data-none>☐ ${PK.none}</button></span></div>
+          <div class="ex-mods">${groups.map(([m, ls], gi) => `<fieldset class="ex-mod"><legend><label><input type="checkbox" data-g="${gi}"> <b>${escHTML(m)}</b></label></legend>
+            ${ls.map((l) => `<label class="ex-les"><input type="checkbox" data-l="${escHTML(l.id)}" data-gi="${gi}" ${on(l.id) ? 'checked' : ''}> ${escHTML(l.title)}</label>`).join('')}</fieldset>`).join('')}</div></div>
+        <div class="ex-setup">
+          <label>${E.count}<select class="lv-input" id="exN"><option>10</option><option selected>20</option><option>30</option><option>40</option></select></label>
+          <label>${E.level}<select class="lv-input" id="exD"><option value="">${E.mixed}</option>${LEVELS.map((L) => `<option value="${L.id}">${L.icon} ${S.levels[L.i]}</option>`).join('')}</select></label>
+        </div><p class="ex-pick-msg w-small"></p>`;
+      const boxes = [...body.querySelectorAll('[data-l]')];
+      const sync = () => {
+        body.querySelectorAll('[data-g]').forEach((g) => {
+          const kids = boxes.filter((b) => b.dataset.gi === g.dataset.g), n = kids.filter((b) => b.checked).length;
+          g.checked = n === kids.length; g.indeterminate = n > 0 && n < kids.length;
+        });
+        body.querySelector('.ex-pick-n').textContent = PK.sel(boxes.filter((b) => b.checked).length);
+        try { localStorage.setItem(pickKey, JSON.stringify(boxes.filter((b) => b.checked).map((b) => b.dataset.l))); } catch {}
+      };
+      body.querySelectorAll('[data-g]').forEach((g) => g.addEventListener('change', () => { boxes.filter((b) => b.dataset.gi === g.dataset.g).forEach((b) => (b.checked = g.checked)); sync(); }));
+      boxes.forEach((b) => b.addEventListener('change', sync));
+      body.querySelector('[data-all]').addEventListener('click', () => { boxes.forEach((b) => (b.checked = true)); sync(); });
+      body.querySelector('[data-none]').addEventListener('click', () => { boxes.forEach((b) => (b.checked = false)); sync(); });
+      sync();
+      const go = h('button', { class: 'btn primary', onclick: () => {
+        const ids = new Set(boxes.filter((b) => b.checked).map((b) => b.dataset.l));
+        const n = +body.querySelector('#exN').value, d = body.querySelector('#exD').value;
+        if (!ids.size) { body.querySelector('.ex-pick-msg').textContent = PK.need; return; }
+        let sel = pool.filter((p) => (!d || p.level.id === d) && ids.has(p.lesson.id));
+        sel = sel.map((p) => [Math.random(), p]).sort((a, b) => a[0] - b[0]).map((x) => x[1]).slice(0, n);
+        if (!sel.length) { body.querySelector('.ex-pick-msg').textContent = E.empty; return; }
+        run(sel);
+      } }, E.start);
+      body.appendChild(h('div', { class: 'lv-actions center' })).appendChild(go);
+    }
+    function run(list) {
+      let i = 0, good = 0;
+      const mistakes = [];
+      const t0 = Date.now();
+      const show = () => {
+        if (i >= list.length) return end();
+        const { q, lesson, level } = list[i];
+        const mm = Math.floor((Date.now() - t0) / 60000), ss = Math.floor(((Date.now() - t0) / 1000) % 60);
+        body.innerHTML = `<div class="lv-top"><span class="lv-pill ${level.id}">${level.icon} ${S.levels[level.i]}</span><span>${S.q} ${i + 1} / ${list.length}</span>
+          <span class="lv-type">⏱ ${mm}:${String(ss).padStart(2, '0')} · ${S.score} ${good}</span></div>
+          <div class="w-quiz-bar"><span style="width:${(i / list.length) * 100}%"></span></div>
+          <p class="w-small">${escHTML(lesson.title)}</p><p class="w-q">${q.q}</p>`;
+        askQuestion(body, q, S, (ok, actions) => {
+          if (ok) good++; else mistakes.push(list[i]);
+          body.querySelectorAll('.lv-input, .lv-form button').forEach((x) => (x.disabled = true));
+          const nx = h('button', { class: 'btn primary', onclick: () => { i++; show(); } }, i + 1 < list.length ? S.next : E.finish);
+          actions.appendChild(nx); nx.focus();
+        });
+      };
+      const end = () => {
+        const note = Math.round((good / list.length) * 20 * 4) / 4;
+        const sec = Math.round((Date.now() - t0) / 1000);
+        body.innerHTML = `<div class="w-quiz-end"><div class="w-score">${String(note).replace('.', ',')} / 20</div>
+          <p>${good} / ${list.length} · ${E.time} ${Math.floor(sec / 60)} min ${sec % 60} s</p></div>
+          <h4>${E.mistakes}</h4>
+          ${mistakes.length ? `<ol class="ex-mist">${mistakes.map(({ q, lesson }) => `<li><p>${q.q}</p><p><b>${S.answer}</b> ${correctText(q)}</p>${q.explain ? `<p class="muted">${q.explain}</p>` : ''}<p class="w-small">${escHTML(lesson.title)}</p></li>`).join('')}</ol>` : `<p>${E.none}</p>`}`;
+        body.appendChild(h('div', { class: 'lv-actions center' })).appendChild(h('button', { class: 'btn primary', onclick: setup }, E.restart));
+        if (note >= 18) burst(body);
+        const subj = String((list[0] && list[0].lesson.data) || '').split('/')[0];
+        if (subj) window.dispatchEvent(new CustomEvent('tcsf:activity', { detail: { act: 'examen', subject: subj } }));
+      };
+      show();
+    }
+    setup();
+  }
+
+  // ---------- « Méthode du centre » (2.4) : Fiche résumé · Cours à compléter · Série corrigée · Devoir surveillé ----------
+  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  async function methode(el, api) {
+    const d = (await api.readJSON(el.dataset.src)) || {};
+    const S = S_(el);
+    const ex = d.exercises || {};
+    const title = el.dataset.title || d.title || '';
+    const key = 'tcsf:ds:' + el.dataset.src;
+    el.classList.add('widget', 'w-meth');
+    const TABS = [
+      ['fiche', '📄 Fiche résumé'],
+      ['completer', '✍️ Cours à compléter'],
+      ['serie', '📝 Série corrigée'],
+      ['devoir', '⏱️ Devoir surveillé']
+    ];
+    const tabs = h('div', { class: 'lv-tabs mt-tabs no-print' });
+    const body = h('div', { class: 'mt-body' });
+    el.append(h('div', { class: 'w-head no-print' }, `<span class="w-badge">Méthode</span><b>Comprendre · retenir · s’entraîner · se tester</b><span class="w-hint">comme au centre de soutien</span>`), tabs, body);
+    let cur = 'fiche';
+    const draw = () => {
+      tabs.innerHTML = '';
+      TABS.forEach(([id, lab]) => tabs.appendChild(h('button', { class: 'lv-tab' + (cur === id ? ' active' : ''), onclick: () => { cur = id; draw(); } }, lab)));
+      body.innerHTML = '';
+      ({ fiche, completer, serie, devoir })[cur]();
+    };
+
+    // 1) Fiche : tout le chapitre sur une page, à relire la veille du devoir
+    function fiche() {
+      const meth = [...(ex.moyen || []), ...(ex.difficile || [])].filter((q) => q.explain && q.type !== 'code').slice(0, 6);
+      body.innerHTML = `<div class="mt-fiche">
+        <div class="mt-fiche-head"><h3>Fiche · ${title}</h3><button class="btn no-print" data-print>🖨️ Imprimer</button></div>
+        ${d.objectifs ? `<div class="box def"><span class="box-title">🎯 Je dois savoir</span><ul>${d.objectifs.map((o) => `<li>${o}</li>`).join('')}</ul></div>` : ''}
+        ${d.recap ? `<div class="recall"><p><b>L’essentiel :</b> ${d.recap}</p></div>` : ''}
+        ${(d.cards || []).length ? `<h4>Définitions · propriétés · formules</h4><table class="mt-tab">${d.cards.map((c) => `<tr><th>${c[0]}</th><td>${c[1]}</td></tr>`).join('')}</table>` : ''}
+        ${meth.length ? `<h4>Méthodes à connaître</h4><ol class="mt-meth">${meth.map((q) => `<li><span class="muted">${q.q}</span><br>➜ ${q.explain}</li>`).join('')}</ol>` : ''}
+        ${(d.cours || []).length ? `<p class="w-small muted">Plan du chapitre : ${d.cours.map((s) => s.t).join(' · ')}</p>` : ''}
+      </div>`;
+      body.querySelector('[data-print]').onclick = () => window.print();
+    }
+
+    // 2) Cours à compléter : le cours « semi-rempli » — on complète de tête, puis on vérifie
+    function completer() {
+      const cards = d.cards || [];
+      if (!cards.length) { body.innerHTML = '<p class="muted">Pas de cours à compléter pour ce chapitre.</p>'; return; }
+      let got = 0, seen = 0;
+      const score = h('p', { class: 'lv-score' });
+      const upd = () => { score.innerHTML = `Complété de mémoire : <b>${got} / ${cards.length}</b>${seen === cards.length ? (got === cards.length ? ' — 🌟 cours maîtrisé !' : ' — relis les cases en orange puis recommence.') : ''}`; };
+      body.append(h('p', { class: 'w-small' }, 'Le cours est à moitié rempli. Pour chaque case, <b>écris la suite sur ton cahier</b> (ou dans la case), puis clique « Vérifier » et sois honnête.'), score);
+      shuffle(cards).forEach((c) => {
+        const row = h('div', { class: 'mt-fill' });
+        row.innerHTML = `<div class="mt-fill-q">${c[0]}</div><textarea class="mt-fill-in" rows="2" placeholder="… complète ici"></textarea><div class="mt-fill-a" hidden>${c[1]}</div>`;
+        const act = h('div', { class: 'mt-fill-act' });
+        const show = h('button', { class: 'btn', onclick: () => {
+          row.querySelector('.mt-fill-a').hidden = false; show.remove(); seen++;
+          act.append(h('button', { class: 'btn primary', onclick: () => { got++; row.classList.add('ok'); act.remove(); upd(); } }, '✔ Je savais'),
+            h('button', { class: 'btn', onclick: () => { row.classList.add('ko'); act.remove(); upd(); } }, '✘ À revoir'));
+        } }, 'Vérifier');
+        act.append(show); row.append(act); body.append(row);
+      });
+      upd();
+    }
+
+    // 3) Série corrigée : on cherche d'abord seul, puis correction détaillée
+    function serie() {
+      const qs = [...(ex.moyen || []), ...(ex.difficile || [])];
+      if (!qs.length) { body.innerHTML = '<p class="muted">Pas de série pour ce chapitre.</p>'; return; }
+      body.append(h('p', { class: 'w-small' }, 'Cherche chaque exercice <b>au brouillon pendant quelques minutes</b> avant d’ouvrir la correction : c’est en cherchant qu’on progresse.'));
+      qs.forEach((q, i) => {
+        const steps = [];
+        if (q.type === 'qcm' && q.why) q.why.forEach((w, k) => { if (w && k !== q.answer) steps.push(`Pourquoi pas « ${q.choices[k]} » ? ${w}`); });
+        const box = h('div', { class: 'mt-exo' });
+        box.innerHTML = `<p class="mt-exo-n">Exercice ${String(i + 1).padStart(2, '0')} <span class="lv-pill ${(ex.difficile || []).includes(q) ? 'difficile' : 'moyen'}">${(ex.difficile || []).includes(q) ? '🔴 Difficile' : '🟠 Moyen'}</span></p>
+          <p class="w-q">${q.q}</p>
+          ${q.type === 'qcm' ? `<ol type="a" class="mt-choices">${q.choices.map((c) => `<li>${c}</li>`).join('')}</ol>` : ''}
+          <details class="mt-cor"><summary>📘 Voir la correction</summary>
+            <p><b>Réponse :</b> ${q.type === 'qcm' ? String.fromCharCode(97 + q.answer) + ') ' : ''}${q.type === 'calc' && !q.display && Number.isInteger(q.answer) && Math.abs(q.answer) < 1e6 ? q.answer + (q.unit ? ' ' + q.unit : '') : correctText(q)}</p>
+            ${q.explain ? `<p><b>Démarche :</b> ${q.explain}</p>` : ''}
+            ${steps.length ? `<ul>${steps.map((s) => `<li>${s}</li>`).join('')}</ul>` : ''}
+          </details>`;
+        body.append(box);
+      });
+    }
+
+    // 4) Devoir surveillé : sujet tiré au sort, barème sur 20, chronomètre, une seule tentative par question
+    function devoir() {
+      const best = store.get(key);
+      const pick = (arr, n) => shuffle(arr || []).slice(0, n);
+      const BAR = { facile: 2, moyen: 3, difficile: 5 };
+      const sujet = [...pick(ex.facile, 2).map((q) => [q, 'facile']), ...pick(ex.moyen, 2).map((q) => [q, 'moyen']), ...pick(ex.difficile, 2).map((q) => [q, 'difficile'])];
+      if (!sujet.length) { body.innerHTML = '<p class="muted">Pas de devoir pour ce chapitre.</p>'; return; }
+      const total = sujet.reduce((a, [, l]) => a + BAR[l], 0);
+      const start = h('div', { class: 'w-quiz-end' });
+      start.innerHTML = `<p><b>Devoir surveillé · ${title}</b></p>
+        <p>${sujet.length} questions · durée conseillée <b>${sujet.length * 4} min</b> · noté sur 20</p>
+        <p class="w-small">Barème : 🟢 ${BAR.facile} pts · 🟠 ${BAR.moyen} pts · 🔴 ${BAR.difficile} pts. Une seule réponse par question, comme le jour du devoir.</p>
+        ${best ? `<p class="muted">Ta meilleure note : <b>${best.best} / 20</b></p>` : ''}`;
+      const go = h('button', { class: 'btn primary' }, '▶ Commencer le devoir');
+      start.append(go); body.append(start);
+      go.onclick = () => {
+        const t0 = Date.now(); let i = 0, pts = 0; const res = [];
+        const clock = h('span', { class: 'mt-clock' });
+        const tick = setInterval(() => { if (!el.isConnected) return clearInterval(tick); const s = Math.floor((Date.now() - t0) / 1000); clock.textContent = `⏱️ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }, 500);
+        const show = () => {
+          if (i >= sujet.length) return end();
+          const [q, l] = sujet[i];
+          body.innerHTML = `<div class="lv-top"><span class="lv-pill ${l}">Question ${i + 1} / ${sujet.length} · ${BAR[l]} pts</span></div>
+            <div class="w-quiz-bar"><span style="width:${(i / sujet.length) * 100}%"></span></div><p class="w-q">${q.q}</p>`;
+          body.querySelector('.lv-top').append(clock);
+          let done = false;
+          askQuestion(body, q, S, (ok, actions) => {
+            if (done) return; done = true;
+            if (ok) pts += BAR[l];
+            res.push([q, l, ok]);
+            body.querySelectorAll('.lv-form input, .lv-form button').forEach((x) => (x.disabled = true));
+            const nx = h('button', { class: 'btn primary', onclick: () => { i++; show(); } }, i + 1 < sujet.length ? 'Question suivante →' : 'Rendre la copie');
+            actions.innerHTML = ''; actions.append(nx); nx.focus();
+          });
+        };
+        const end = () => {
+          clearInterval(tick);
+          const note = Math.round((pts / total) * 20 * 4) / 4;
+          const mins = Math.round((Date.now() - t0) / 60000);
+          store.set(key, { best: Math.max(note, (best && best.best) || 0), last: note, at: Date.now() });
+          const app = note >= 16 ? 'Très bien — prêt pour le devoir 🌟' : note >= 12 ? 'Bien — revois les points perdus' : note >= 10 ? 'Passable — refais la série corrigée' : 'Insuffisant — reprends la fiche puis le cours à compléter';
+          body.innerHTML = `<div class="w-quiz-end"><div class="w-score">${note} / 20</div><p>${app}</p><p class="muted">Temps : ${mins} min</p>
+            <table class="mt-tab">${res.map(([q, l, ok], k) => `<tr><th>Q${k + 1} ${ok ? '✔' : '✘'}</th><td>${ok ? BAR[l] : 0} / ${BAR[l]}${ok ? '' : ` — <span class="muted">réponse : ${correctText(q)}</span>`}</td></tr>`).join('')}</table></div>`;
+          if (note >= 16) burst(body);
+          body.querySelector('.w-quiz-end').append(h('button', { class: 'btn primary', onclick: () => { cur = 'devoir'; draw(); } }, '🔁 Nouveau sujet'));
+        };
+        show();
+      };
+    }
+    draw();
+  }
+
+  // outils partagés avec le mode « Avec le prof » (prof.js)
+  window.TCSF_Q ={ askQuestion, STR, store, h, burst, escHTML };
+  return { 'atom-history': atomHistory, rutherford, 'atom-builder': atomBuilder, 'atom-scale': atomScale, quiz, 'atom-explorer': atomExplorer, 'nucleus-slider': nucleusSlider, levels, exam, methode };
+})();
