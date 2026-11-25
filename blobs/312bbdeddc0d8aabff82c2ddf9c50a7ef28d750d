@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://ntfy.sh https://*.wikipedia.org https://fr.vikidia.org https://raw.githubusercontent.com https://api.github.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:">
+  <title>Tronc Commun Scientifique Français</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="theme3.css">
+</head>
+<body>
+  <header class="topbar">
+    <button id="backBtn" class="icon-btn" title="Retour (Alt + ←)" aria-label="Retour" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <a class="brand" href="#/" title="Accueil">
+      <span class="brand-logo" aria-hidden="true">TC</span>
+      <span class="brand-text">Tronc Commun Scientifique <em>Français</em></span>
+    </a>
+    <nav id="crumbs" class="crumbs" aria-label="Fil d'Ariane"></nav>
+    <button id="menuBtn" class="icon-btn" title="Mises à jour et informations" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg>
+    </button>
+  </header>
+
+  <main id="view" class="view" tabindex="-1"></main>
+  <footer class="app-credit">Conçu par <b>Zaid Amallah</b> · <span lang="ar" dir="rtl">تصميم <b>زيد أملاح</b></span></footer>
+
+  <div id="menu" class="menu" hidden>
+    <div class="menu-card" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+      <h2 id="menuTitle">Mises à jour</h2>
+      <p class="muted" id="versionLine"></p>
+      <p>Les nouvelles leçons arrivent sous forme d'un petit fichier <b>.tcsf</b> : double-cliquez dessus, ou importez-le ici. Aucune réinstallation n'est nécessaire.</p>
+      <div class="menu-actions">
+        <button class="btn primary" id="importBtn">Importer un fichier .tcsf</button>
+        <button class="btn" id="onlineBtn">Vérifier en ligne</button>
+      </div>
+      <p id="menuMsg" class="menu-msg" role="status"></p>
+      <button class="btn ghost close" id="closeMenu">Fermer</button>
+    </div>
+  </div>
+
+  <script src="wikirank.js"></script>
+  <script src="mobile.js"></script>
+  <script src="icons.js"></script>
+  <script src="widgets.js"></script>
+  <script src="sims.js"></script>
+  <script src="sims-elec.js"></script>
+  <script src="sims-chim.js"></script>
+  <script src="sims-plus.js"></script>
+  <script src="sims-math.js"></script>
+  <script src="vendor/three.min.js"></script>
+  <script src="sims3d.js"></script>
+  <script src="guides.js"></script>
+  <script src="voice.js"></script>
+  <script src="qa.js"></script>
+  <script src="mascot.js"></script>
+  <script src="duo.js"></script>
+  <script src="prof.js"></script>
+  <script src="pyrun.js"></script>
+  <script src="prof-code.js"></script>
+  <script src="planner.js"></script>
+  <script src="app.js"></script>
+  <script src="sfx.js"></script>
+  <script src="live.js"></script>
+  <script src="access.js"></script>
+</body>
+</html>
