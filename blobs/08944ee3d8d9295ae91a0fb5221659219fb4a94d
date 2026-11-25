@@ -1,0 +1,128 @@
+[
+ {
+  "id": "premiers-pas",
+  "title": "Premiers pas avec Python",
+  "module": "Unité 1 · Les bases (print, textes, input, variables)",
+  "description": "Algorithme, programme, print() et les commentaires.",
+  "data": "informatique/l/premiers-pas.json"
+ },
+ {
+  "id": "textes",
+  "title": "Jouer avec les textes",
+  "module": "Unité 1 · Les bases (print, textes, input, variables)",
+  "description": "Coller, répéter, changer la casse, sauter une ligne, afficher des guillemets.",
+  "data": "informatique/l/textes.json"
+ },
+ {
+  "id": "variables",
+  "title": "Variables et types",
+  "module": "Unité 1 · Les bases (print, textes, input, variables)",
+  "description": "Ranger des valeurs, int, float, str, bool.",
+  "data": "informatique/l/variables.json"
+ },
+ {
+  "id": "entrees-sorties",
+  "title": "Entrées et sorties : input()",
+  "module": "Unité 1 · Les bases (print, textes, input, variables)",
+  "description": "Demander une valeur à l’utilisateur et la convertir.",
+  "data": "informatique/l/entrees-sorties.json"
+ },
+ {
+  "id": "projet-u1",
+  "title": "Projet de l’unité 1 : la carte de présentation",
+  "module": "Unité 1 · Les bases (print, textes, input, variables)",
+  "description": "Assembler print, input, variables et textes dans un vrai petit programme.",
+  "data": "informatique/l/projet-u1.json"
+ },
+ {
+  "id": "fonctions-integrees",
+  "title": "Les fonctions de Python et les conversions",
+  "module": "Unité 2 · Fonctions, calculs et textes formatés",
+  "description": "Ce qu’est une fonction : print, input, len, type, int, float, str, round, max, min.",
+  "data": "informatique/l/fonctions-integrees.json"
+ },
+ {
+  "id": "operateurs",
+  "title": "Calculs et opérateurs",
+  "module": "Unité 2 · Fonctions, calculs et textes formatés",
+  "description": "Opérations, division entière, modulo, puissance, priorités.",
+  "data": "informatique/l/operateurs.json"
+ },
+ {
+  "id": "fstrings",
+  "title": "Les textes formatés (f-strings)",
+  "module": "Unité 2 · Fonctions, calculs et textes formatés",
+  "description": "Insérer des variables dans un texte avec f\"…{x}…\", arrondir à l’affichage.",
+  "data": "informatique/l/fstrings.json"
+ },
+ {
+  "id": "projets-u2",
+  "title": "Projets de l’unité 2 : facture et compteur d’heures",
+  "module": "Unité 2 · Fonctions, calculs et textes formatés",
+  "description": "Deux programmes complets avec input, conversions, calculs et f-strings.",
+  "data": "informatique/l/projets-u2.json"
+ },
+ {
+  "id": "conditions",
+  "title": "Les conditions : if, elif, else",
+  "module": "Unité 3 · Les conditions",
+  "description": "Faire des choix selon une condition.",
+  "data": "informatique/l/conditions.json"
+ },
+ {
+  "id": "conditions-avancees",
+  "title": "Conditions imbriquées et raccourcis",
+  "module": "Unité 3 · Les conditions",
+  "description": "Un if dans un if, et la condition sur une ligne (x if … else y).",
+  "data": "informatique/l/conditions-avancees.json"
+ },
+ {
+  "id": "boucle-for",
+  "title": "La boucle for et range()",
+  "module": "Unité 4 · Les boucles",
+  "description": "Répéter un nombre connu de fois.",
+  "data": "informatique/l/boucle-for.json"
+ },
+ {
+  "id": "boucle-while",
+  "title": "La boucle while",
+  "module": "Unité 4 · Les boucles",
+  "description": "Répéter tant qu’une condition est vraie.",
+  "data": "informatique/l/boucle-while.json"
+ },
+ {
+  "id": "chaines",
+  "title": "Les chaînes de caractères",
+  "module": "Unité 5 · Textes, listes et fonctions",
+  "description": "Longueur, indices, tranches, méthodes, parcours.",
+  "data": "informatique/l/chaines.json"
+ },
+ {
+  "id": "listes",
+  "title": "Les listes",
+  "module": "Unité 5 · Textes, listes et fonctions",
+  "description": "Ranger plusieurs valeurs, append, parcours, sum, max, sort.",
+  "data": "informatique/l/listes.json"
+ },
+ {
+  "id": "fonctions",
+  "title": "Les fonctions",
+  "module": "Unité 5 · Textes, listes et fonctions",
+  "description": "def, paramètres, return.",
+  "data": "informatique/l/fonctions.json"
+ },
+ {
+  "id": "algorithmes",
+  "title": "Algorithmes classiques",
+  "module": "Unité 6 · Algorithmes et projets",
+  "description": "Maximum, recherche, compteur, moyenne, tri simple.",
+  "data": "informatique/l/algorithmes.json"
+ },
+ {
+  "id": "projets",
+  "title": "Mini-projets",
+  "module": "Unité 6 · Algorithmes et projets",
+  "description": "Jeu du nombre mystère, calculatrice, bulletin de notes.",
+  "data": "informatique/l/projets.json"
+ }
+]
