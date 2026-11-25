@@ -1,0 +1,200 @@
+// Expériences ajoutées en 2.4 (programme TC) — écrites pour l'application.
+(() => {
+  const { SIMS, frame, slider, seg, btn, loop, arrow, T, L, plot, fr, n2, COL } = window.TCSF_SIM;
+
+  // Notion de pression : P = F / S
+  SIMS.pression = (el) => {
+    const S = frame(el, 'La notion de pression', 'Même force, surfaces différentes : qui s’enfonce le plus ?', '0 0 640 300');
+    const F = slider(S.ctrls, { label: 'Force pressante F', min: 10, max: 600, step: 10, value: 200, unit: 'N' }, draw);
+    let sc = 100;
+    seg(S.ctrls, 'Surface de contact', [[1, '1 cm²'], [10, '10 cm²'], [100, '100 cm²'], [1000, '1 000 cm²']], 100, (v) => { sc = v; draw(); });
+    function draw() {
+      const Sm = sc * 1e-4, P = F.v / Sm;
+      const depth = Math.min(110, 12 * Math.log10(1 + P / 500));
+      const w = 20 + Math.sqrt(sc) * 6;
+      let s = `<rect x="40" y="200" width="560" height="90" fill="#e9c46a" opacity=".55"/>` + T(60, 285, 'sable', 'start', 'tick');
+      s += `<rect x="${n2(320 - w / 2)}" y="${n2(110 + depth)}" width="${n2(w)}" height="90" rx="4" fill="${COL.e}" opacity=".85"/>`;
+      s += arrow(320, 30, 320, 30 + Math.min(70, F.v / 8), COL.a, 'F', 330, 50);
+      s += `<path d="M ${n2(320 - w / 2 - 8)} 200 q ${n2(w / 2 + 8)} ${n2(depth * 1.6)} ${n2(w + 16)} 0" fill="none" class="dash"/>`;
+      S.draw(s);
+      S.stats([['Surface S', fr(Sm), 'm²'], ['Pression P = F / S', fr(P), 'Pa'], ['En bar (1 bar = 10⁵ Pa)', fr(P / 1e5), 'bar']]);
+      S.note('Pour une même force, plus la surface est petite, plus la pression est grande : c’est pour cela qu’un clou pointu s’enfonce et que les skis ne s’enfoncent pas dans la neige.');
+    }
+    draw();
+  };
+
+  // Mouvement rectiligne uniforme et équation horaire
+  SIMS.mru = (el) => {
+    const S = frame(el, 'Mouvement rectiligne uniforme', 'Lance le mobile et lis son équation horaire', '0 0 640 340');
+    const v = slider(S.ctrls, { label: 'Vitesse v', min: -4, max: 4, step: 0.5, value: 2, unit: 'm/s' }, reset);
+    const x0 = slider(S.ctrls, { label: 'Position initiale x₀', min: -10, max: 10, step: 1, value: -6, unit: 'm' }, reset);
+    let t = 0, run = false, pts = [];
+    btn(S.ctrls, '▶ Lancer / ⏸', () => { run = !run; });
+    btn(S.ctrls, '↺ Recommencer', reset);
+    function reset() { t = 0; run = false; pts = []; render(); }
+    loop(el, (dt) => { if (run) { t += dt; const x = v.v * t + x0.v; if (t > 10 || Math.abs(x) > 20) run = false; if (!pts.length || t - pts[pts.length - 1][0] >= 1) pts.push([+t.toFixed(0), x]); render(); } return true; });
+    function render() {
+      const x = v.v * t + x0.v, X = (u) => 40 + (u + 20) * 14;
+      let s = L(40, 60, 600, 60, 'stroke');
+      for (let u = -20; u <= 20; u += 5) s += L(X(u), 55, X(u), 65, 'stroke') + T(X(u), 80, u, 'middle', 'tick');
+      s += T(610, 64, 'x (m)', 'start', 'tick') + T(X(0), 45, 'O', 'middle', 'tick');
+      s += `<rect x="${n2(X(x) - 16)}" y="34" width="32" height="18" rx="4" fill="${COL.b}"/>`;
+      pts.forEach(([, xp]) => { s += `<circle cx="${n2(X(xp))}" cy="60" r="3" fill="${COL.a}"/>`; });
+      const pl = plot({ x: 70, y: 110, w: 520, h: 200, xmin: 0, xmax: 10, ymin: -20, ymax: 20, xl: 't (s)', yl: 'x (m)', nx: 10, ny: 4, series: [{ line: [[0, x0.v], [10, v.v * 10 + x0.v]], color: COL.b, dash: true, w: 1.2 }, { dots: pts, color: COL.a }] });
+      S.draw(s + pl.svg);
+      S.stats([['t', fr(t, 2), 's'], ['x(t)', fr(x, 3), 'm'], ['Équation horaire', `x = ${fr(v.v)}·t ${x0.v < 0 ? '−' : '+'} ${fr(Math.abs(x0.v))}`]]);
+      S.note('Les points (un par seconde) sont régulièrement espacés : le mouvement est uniforme. La courbe x(t) est une droite de pente v ; son ordonnée à l’origine est x₀.');
+    }
+    reset();
+  };
+
+  // Repérage d'un point en rotation
+  SIMS.rotation = (el) => {
+    const S = frame(el, 'Point d’un solide en rotation', 'Abscisse angulaire, abscisse curviligne, vitesse', '0 0 640 320');
+    const R = slider(S.ctrls, { label: 'Rayon R', min: 0.2, max: 1, step: 0.1, value: 0.6, unit: 'm' }, () => {});
+    const w = slider(S.ctrls, { label: 'Vitesse angulaire ω', min: 0, max: 6, step: 0.5, value: 2, unit: 'rad/s' }, () => {});
+    let th = 0;
+    btn(S.ctrls, '↺ θ = 0', () => { th = 0; });
+    loop(el, (dt) => { th += w.v * dt; const cx = 200, cy = 160, r = 60 + R.v * 120, a = th % (2 * Math.PI);
+      const px = cx + r * Math.cos(a), py = cy - r * Math.sin(a);
+      let s = `<circle cx="${cx}" cy="${cy}" r="${n2(r)}" fill="none" class="dash"/>` + L(cx, cy, cx + r + 20, cy, 'stroke') + L(cx, cy, n2(px), n2(py), 'stroke');
+      s += `<path d="M ${cx + 30} ${cy} A 30 30 0 ${a > Math.PI ? 1 : 0} 0 ${n2(cx + 30 * Math.cos(a))} ${n2(cy - 30 * Math.sin(a))}" fill="none" stroke="${COL.d}" stroke-width="3"/>`;
+      s += `<path d="M ${cx + r} ${cy} A ${n2(r)} ${n2(r)} 0 ${a > Math.PI ? 1 : 0} 0 ${n2(px)} ${n2(py)}" fill="none" stroke="${COL.c}" stroke-width="4"/>`;
+      if (w.v) s += arrow(px, py, px - 40 * Math.sin(a), py - 40 * Math.cos(a), COL.a, 'v');
+      s += `<circle cx="${n2(px)}" cy="${n2(py)}" r="7" fill="${COL.b}"/><circle cx="${cx}" cy="${cy}" r="4" class="dot"/>` + T(cx + 44, cy - 8, 'θ', 'start', 'lab');
+      s += T(430, 80, 'θ (orange) : abscisse angulaire', 'start', 'small') + T(430, 105, 's (vert) : abscisse curviligne', 'start', 'small') + T(430, 130, 's = R·θ   v = R·ω', 'start', 'lab');
+      S.draw(s);
+      S.stats([['θ', fr(a, 3), 'rad'], ['s = R·θ', fr(R.v * a, 3), 'm'], ['v = R·ω', fr(R.v * w.v), 'm/s'], ['Période T = 2π/ω', w.v ? fr((2 * Math.PI) / w.v) : '∞', 's']]);
+      return true; });
+    S.note('Tous les points du solide tournent du même angle θ, mais un point plus éloigné de l’axe parcourt un arc plus long : sa vitesse v = R·ω est plus grande.');
+  };
+
+  // Couple de torsion : M = C·θ
+  SIMS.torsion = (el) => {
+    const S = frame(el, 'Pendule de torsion', 'Applique un couple : le fil se tord', '0 0 640 300');
+    let C = 0.02;
+    seg(S.ctrls, 'Fil', [[0.02, 'Fil fin (C = 0,02)'], [0.05, 'Fil moyen (0,05)'], [0.1, 'Fil épais (0,1)']], 0.02, (v) => { C = v; draw(); });
+    const F = slider(S.ctrls, { label: 'Force F à chaque bout', min: 0, max: 0.5, step: 0.05, value: 0.2, unit: 'N' }, draw);
+    const d = slider(S.ctrls, { label: 'Longueur de la tige d', min: 0.1, max: 0.4, step: 0.05, value: 0.2, unit: 'm' }, draw);
+    function draw() {
+      const M = F.v * d.v, th = M / C, deg = (th * 180) / Math.PI;
+      const cx = 200, cy = 160, r = d.v * 300;
+      let s = `<circle cx="${cx}" cy="${cy}" r="120" fill="none" class="dash"/>` + L(cx - 120, cy, cx + 120, cy, 'dash');
+      s += `<g transform="rotate(${n2(-Math.min(deg, 170))} ${cx} ${cy})"><rect x="${n2(cx - r)}" y="${cy - 5}" width="${n2(2 * r)}" height="10" rx="5" fill="${COL.e}"/>`;
+      if (F.v) s += arrow(cx + r, cy, cx + r, cy - F.v * 200, COL.a, 'F') + arrow(cx - r, cy, cx - r, cy + F.v * 200, COL.a, 'F′');
+      s += `</g><circle cx="${cx}" cy="${cy}" r="8" fill="${COL.d}"/>` + T(cx, cy + 4, '', 'middle');
+      s += T(420, 70, 'Vu de dessus : le fil est vertical,', 'start', 'small') + T(420, 92, 'au centre (point orange).', 'start', 'small');
+      S.draw(s);
+      S.stats([['Moment du couple M = F·d', fr(M), 'N·m'], ['Angle θ = M / C', fr(th), 'rad'], ['Angle', fr(deg, 3), '°']]);
+      S.note('À l’équilibre, le couple de torsion du fil compense le couple appliqué : M = C·θ. Plus le fil est épais (C grand), moins il se tord.', deg > 170 ? 'bad' : '');
+    }
+    draw();
+  };
+
+  // Diviseur de tension
+  SIMS.diviseur = (el) => {
+    const S = frame(el, 'Le diviseur de tension', 'Deux résistances en série partagent la tension', '0 0 640 300');
+    const U = slider(S.ctrls, { label: 'Tension du générateur U', min: 1, max: 12, step: 0.5, value: 12, unit: 'V' }, draw);
+    const R1 = slider(S.ctrls, { label: 'R₁', min: 10, max: 1000, step: 10, value: 200, unit: 'Ω' }, draw);
+    const R2 = slider(S.ctrls, { label: 'R₂', min: 10, max: 1000, step: 10, value: 100, unit: 'Ω' }, draw);
+    function draw() {
+      const I = U.v / (R1.v + R2.v), U2 = R2.v * I, U1 = R1.v * I;
+      let s = `<polyline points="120,250 120,50 380,50 380,250 120,250" fill="none" class="wire"/>`;
+      s += `<rect x="100" y="125" width="40" height="50" fill="var(--bg,#fff)" class="comp"/>` + T(120, 155, 'U', 'middle', 'lab') + T(80, 155, fr(U.v) + ' V', 'end', 'small');
+      s += `<rect x="366" y="70" width="28" height="70" class="comp"/>` + T(405, 110, 'R₁', 'start', 'lab');
+      s += `<rect x="366" y="160" width="28" height="70" class="comp"/>` + T(405, 200, 'R₂', 'start', 'lab');
+      s += L(380, 150, 520, 150, 'wire') + L(380, 250, 520, 250, 'wire') + `<circle cx="520" cy="200" r="22" class="meter"/>` + T(520, 205, 'V', 'middle', 'lab') + L(520, 150, 520, 178, 'wire') + L(520, 222, 520, 250, 'wire');
+      s += `<rect x="550" y="188" width="78" height="24" rx="5" class="lcd"/>` + T(589, 205, fr(U2) + ' V', 'middle', 'lcdt');
+      S.draw(s);
+      S.stats([['I = U / (R₁ + R₂)', fr(I * 1000), 'mA'], ['U₁ = R₁·I', fr(U1), 'V'], ['U₂ = R₂·I', fr(U2), 'V'], ['U₂ / U', fr(U2 / U.v), '']]);
+      S.note('Formule du diviseur : U₂ = U · R₂ / (R₁ + R₂). Et U₁ + U₂ = U (loi des mailles). La plus grande résistance reçoit la plus grande tension.');
+    }
+    draw();
+  };
+
+  // Électrisation par frottement
+  SIMS.electrisation = (el) => {
+    const S = frame(el, 'Électrisation par frottement', 'Frotte, puis approche du pendule', '0 0 640 300');
+    const PAIRS = { verre: ['Bâton de verre', 'Laine', +1], plastique: ['Règle en plastique', 'Laine', -1], ebonite: ['Ébonite', 'Fourrure de chat', -1] };
+    let p = 'verre', q = 0, near = false;
+    seg(S.ctrls, 'Matériaux', Object.entries(PAIRS).map(([k, v]) => [k, v[0] + ' / ' + v[1]]), 'verre', (k) => { p = k; q = 0; near = false; draw(); });
+    btn(S.ctrls, '🧽 Frotter', () => { q = Math.min(6, q + 2); draw(); });
+    btn(S.ctrls, '👉 Approcher / éloigner', () => { near = !near; draw(); });
+    function draw() {
+      const [a, b, sg] = PAIRS[p], n = q * sg;
+      const ang = near && q ? 18 : 0;
+      let s = `<rect x="60" y="120" width="220" height="26" rx="13" fill="${COL.f}" opacity=".7"/>` + T(170, 170, a, 'middle', 'small');
+      for (let i = 0; i < Math.abs(n); i++) s += T(80 + i * 30, 139, n > 0 ? '+' : '−', 'middle', 'lab');
+      s += `<rect x="60" y="210" width="140" height="40" rx="8" fill="#a8a29e"/>` + T(130, 270, b, 'middle', 'small');
+      for (let i = 0; i < Math.abs(n); i++) s += T(75 + i * 20, 236, n > 0 ? '−' : '+', 'middle', 'lab');
+      const px = near ? 330 : 480;
+      s += L(500, 30, 500, 30, 'stroke') + L(440, 30, 560, 30, 'stroke', 'stroke-width="4"');
+      const bx = 500 - 150 * Math.sin((ang * Math.PI) / 180), by = 30 + 150 * Math.cos((ang * Math.PI) / 180);
+      s += L(500, 30, n2(bx), n2(by), 'stroke') + `<circle cx="${n2(bx)}" cy="${n2(by)}" r="14" fill="#fde68a" stroke="#a16207"/>`;
+      s += `<g transform="translate(${px - 280} 0)"></g>`;
+      if (near) s += T(390, 110, '← bâton approché', 'middle', 'tick');
+      S.draw(s);
+      S.stats([['Charge du bâton', q ? (n > 0 ? '+' : '−') + Math.abs(n) + ' e (schéma)' : 'neutre'], ['Électrons', q ? (n > 0 ? `passent du bâton vers la ${b.toLowerCase()}` : `passent de la ${b.toLowerCase()} vers le bâton`) : '—'], ['Pendule', near && q ? 'attiré' : 'immobile']]);
+      S.note(q ? 'Le frottement transfère des <b>électrons</b> d’un corps à l’autre : les deux corps prennent des charges opposées et de même valeur. Un corps électrisé attire un petit objet léger et neutre.' : 'Au départ, les deux corps sont neutres : autant de charges + que de charges −.');
+    }
+    draw();
+  };
+
+  // Concentrations massique et molaire
+  SIMS.concentration = (el) => {
+    const S = frame(el, 'Concentration d’une solution', 'Dissous un soluté dans un volume d’eau', '0 0 640 300');
+    const SOL = { nacl: ['Chlorure de sodium NaCl', 58.5, '#e5e7eb'], glucose: ['Glucose C₆H₁₂O₆', 180, '#fef3c7'], cuso4: ['Sulfate de cuivre CuSO₄', 159.6, '#3b82f6'] };
+    let k = 'cuso4';
+    seg(S.ctrls, 'Soluté', Object.entries(SOL).map(([id, v]) => [id, v[0]]), k, (v) => { k = v; draw(); });
+    const m = slider(S.ctrls, { label: 'Masse de soluté m', min: 0.5, max: 20, step: 0.5, value: 4, unit: 'g' }, draw);
+    const V = slider(S.ctrls, { label: 'Volume de solution V', min: 50, max: 500, step: 25, value: 200, unit: 'mL' }, draw);
+    function draw() {
+      const [, M, c] = SOL[k], n = m.v / M, Vl = V.v / 1000, Cm = m.v / Vl, C = n / Vl;
+      const hgt = 40 + (V.v / 500) * 180, op = Math.min(0.9, 0.08 + C * 1.2);
+      let s = `<path d="M 120 40 L 120 260 Q 120 270 130 270 L 290 270 Q 300 270 300 260 L 300 40" fill="none" class="stroke" stroke-width="3"/>`;
+      s += `<rect x="122" y="${n2(268 - hgt)}" width="176" height="${n2(hgt)}" fill="${c}" opacity="${n2(op)}"/>` + `<rect x="122" y="${n2(268 - hgt)}" width="176" height="${n2(hgt)}" fill="none" stroke="#60a5fa" opacity=".5"/>`;
+      s += T(310, n2(272 - hgt), V.v + ' mL', 'start', 'tick') + T(420, 80, 'n = m / M', 'start', 'lab') + T(420, 115, 'Cm = m / V', 'start', 'lab') + T(420, 150, 'C = n / V', 'start', 'lab') + T(420, 185, 'Cm = C · M', 'start', 'lab');
+      S.draw(s);
+      S.stats([['Masse molaire M', fr(M), 'g/mol'], ['Quantité n', fr(n), 'mol'], ['Cm', fr(Cm), 'g/L'], ['C', fr(C), 'mol/L']]);
+      S.note('Pour une même masse, si on augmente le volume, la solution est moins concentrée (couleur plus claire avec le sulfate de cuivre).');
+    }
+    draw();
+  };
+
+  // Isotopes et abondance naturelle
+  SIMS.isotopes = (el) => {
+    const S = frame(el, 'Isotopes et abondance naturelle', '100 atomes tirés dans la nature', '0 0 640 300');
+    const EL = { Cl: ['Chlore', 35, 37, 75.8], Cu: ['Cuivre', 63, 65, 69.2], B: ['Bore', 10, 11, 19.9] };
+    let e = 'Cl';
+    const ab = slider(S.ctrls, { label: 'Abondance du 1er isotope', min: 0, max: 100, step: 0.1, value: 75.8, unit: '%' }, draw);
+    seg(S.ctrls, 'Élément', Object.entries(EL).map(([k, v]) => [k, v[0]]), e, (v) => { e = v; ab.v = EL[v][3]; draw(); });
+    function draw() {
+      const [, A1, A2, nat] = EL[e], x = ab.v / 100, Mm = x * A1 + (1 - x) * A2, n1 = Math.round(ab.v);
+      let s = '';
+      for (let i = 0; i < 100; i++) { const cx = 40 + (i % 20) * 20, cy = 40 + Math.floor(i / 20) * 22; s += `<circle cx="${cx}" cy="${cy}" r="8" fill="${i < n1 ? COL.b : COL.d}"/>`; }
+      s += `<circle cx="470" cy="40" r="8" fill="${COL.b}"/>` + T(485, 45, `${e}-${A1} (${fr(ab.v)} %)`, 'start', 'small') + `<circle cx="470" cy="70" r="8" fill="${COL.d}"/>` + T(485, 75, `${e}-${A2} (${fr(100 - ab.v)} %)`, 'start', 'small');
+      s += T(40, 190, `M = ${fr(x, 3)} × ${A1} + ${fr(1 - x, 3)} × ${A2} ≈ ${fr(Mm, 4)} g/mol`, 'start', 'lab');
+      S.draw(s);
+      S.stats([['Masse molaire moyenne', fr(Mm, 4), 'g/mol'], ['Abondance naturelle réelle', fr(nat) + ' %'], ['Isotopes', `même Z, A = ${A1} et ${A2}`]]);
+      S.note(Math.abs(ab.v - nat) < 0.2 ? 'Avec les abondances naturelles, on retrouve la masse molaire du tableau périodique : c’est une moyenne pondérée des isotopes.' : 'Remets l’abondance naturelle (bouton de l’élément) pour retrouver la valeur du tableau périodique.', Math.abs(ab.v - nat) < 0.2 ? 'ok' : '');
+    }
+    draw();
+  };
+
+  // Échelle des longueurs : puissances de 10
+  SIMS.echelle = (el) => {
+    const S = frame(el, 'L’échelle des longueurs', 'De l’atome à l’Univers : ordres de grandeur', '0 0 640 220');
+    const OBJ = [[-15, 'Noyau d’atome', '⚛️'], [-10, 'Atome', '⚛️'], [-9, 'Molécule d’ADN (largeur)', '🧬'], [-6, 'Bactérie', '🦠'], [-4, 'Cheveu (épaisseur)', '〰️'], [-2, 'Fourmi', '🐜'], [0, 'Enfant', '🧒'], [2, 'Terrain de football', '🏟️'], [4, 'Ville', '🏙️'], [7, 'Terre (diamètre)', '🌍'], [9, 'Soleil (diamètre)', '☀️'], [11, 'Distance Terre–Soleil', '🪐'], [16, 'Année-lumière', '✨'], [21, 'Galaxie', '🌌'], [26, 'Univers observable', '🔭']];
+    const e = slider(S.ctrls, { label: 'Puissance de 10 (en m)', min: 0, max: OBJ.length - 1, step: 1, value: 6, fmt: (i) => '10' + String(OBJ[i][0]).replace(/[-0-9]/g, (c) => '⁻⁰¹²³⁴⁵⁶⁷⁸⁹'['-0123456789'.indexOf(c)]) + ' m' }, draw);
+    function draw() {
+      const [p, n, ic] = OBJ[e.v];
+      let s = L(30, 160, 610, 160, 'stroke');
+      OBJ.forEach(([q], i) => { const x = 30 + ((q + 15) / 41) * 580; s += `<circle cx="${n2(x)}" cy="160" r="${i === e.v ? 8 : 4}" fill="${i === e.v ? COL.a : '#94a3b8'}"/>`; });
+      s += T(320, 80, ic, 'middle', '', 'font-size="64"') + T(320, 130, n, 'middle', 'lab') + T(30, 190, '10⁻¹⁵ m', 'start', 'tick') + T(610, 190, '10²⁶ m', 'end', 'tick');
+      S.draw(s);
+      S.stats([['Objet', n], ['Ordre de grandeur', '10<sup>' + p + '</sup>', 'm'], ['Écart avec un enfant (1 m)', '10<sup>' + Math.abs(p) + '</sup> fois ' + (p < 0 ? 'plus petit' : p > 0 ? 'plus grand' : '')]]);
+      S.note('L’ordre de grandeur d’une longueur est la puissance de 10 la plus proche. Changer d’une unité de puissance, c’est multiplier ou diviser par 10.');
+    }
+    draw();
+  };
+})();

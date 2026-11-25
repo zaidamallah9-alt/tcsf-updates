@@ -1,0 +1,224 @@
+// « Avec le prof » pour la programmation, sur le modèle des cours vidéo arabes (chaîne Octo Code) :
+// 🔁 rappel de la leçon d'avant → pour chaque étape : 🎬 une situation de la vie, ⌨️ le prof code en direct
+// (le code s'écrit à l'écran), on l'exécute, 🔮 on prédit, ⏸ on essaie seul avant de voir la solution →
+// 🐞 le piège classique à corriger (debugging) → 🏆 le défi de la leçon. Explications en français ou en arabe
+// (les mots de Python restent en anglais).
+(() => {
+  const W = window.TCSF_WIDGETS || (window.TCSF_WIDGETS = {});
+  const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const btn = (label, cls, fn) => { const b = el('button', 'btn ' + (cls || ''), label); b.type = 'button'; b.addEventListener('click', fn); return b; };
+  const LKEY = 'tcsf:pylang';
+  const T = {
+    fr: { badge: 'Tico, le prof', head: 'Apprends à coder comme dans un vrai cours', recap: '🔁 Rappel', sit: '🎬 La situation', live: '⌨️ Je code en direct', pred: '🔮 Prédis', pause: '⏸ Essaie d’abord', bug: '🐞 Le piège classique', defi: '🏆 Le défi', end: '🏁 Bilan',
+      hello: (t) => `<p>Salut ! Moi c’est <b>Tico</b> 👋 Aujourd’hui : <b>${t}</b>.</p><p>On travaille comme dans un vrai cours de programmation : je t’explique avec une situation de la vie, je code devant toi, tu prédis le résultat, tu <b>essaies d’abord tout seul</b>, puis on corrige ensemble les erreurs classiques. À la fin, un défi !</p>`,
+      recapT: (t) => `Avant de commencer, rappelons la leçon précédente (<b>${t}</b>) :`, first: 'C’est la première leçon : on part de zéro, pas besoin de rappel 🙂', start: 'On commence ! 🚀', resume: (n) => `Reprendre à l’étape ${n}`, restart: '↺ Recommencer',
+      liveT: 'Regarde, j’écris le code devant toi… Ensuite <b>clique sur ▶ Exécuter</b>. Tu peux le modifier et le relancer.', skip: '⏩ Montrer tout le code', seen: 'J’ai vu le résultat, continuer →', runFirst: '← exécute d’abord le programme',
+      predT: 'Sans l’exécuter, devine : <b>que va afficher ce programme ?</b>', predOk: 'Exactement ! Tu lis le code comme un ordinateur. 🧠', predKo: 'Pas grave : prédire, c’est difficile au début. Vérifie en l’exécutant :', toCode: 'À moi de coder ⌨️',
+      pauseT: '⏸ <b>Mets la vidéo en pause</b>, comme dans un cours en ligne : essaie d’abord tout seul. L’indice arrive après 2 essais, la solution après 3.', ok: ['Bravo, ton code marche ! 🎉', 'Excellent, tu programmes déjà ! 💪', 'Parfait ! Tu as tout compris. ⭐'], notYet: 'Pas encore…', hint: '💡 Indice :', seeSol: '👀 Voir une solution', goOn: 'Continuer quand même →', next: 'Étape suivante →',
+      bugT: 'Voici une erreur que <b>tous les débutants</b> font. Exécute le code, regarde ce qui se passe, puis <b>corrige-le</b> et clique sur « J’ai corrigé ».', bugCheck: '✅ J’ai corrigé', bugOk: 'Bien joué, tu as trouvé le piège ! 🕵️', bugKo: 'Ce n’est pas encore corrigé. Relis le message d’erreur, ou le résultat obtenu.', bugWhy: 'Pourquoi ?', bugShow: '👀 Voir la correction',
+      defiT: 'Le défi de la leçon : un exercice plus difficile, sans aide au début. Tu peux aussi le garder pour plus tard.', later: 'Plus tard', done: (n, m) => `<p>🏁 <b>Leçon terminée !</b> Défis réussis : ${n}/${m}.</p>`, keep: 'À retenir :', devT: 'Pour t’entraîner librement, ouvre le <b>Mode développeur</b> : c’est ton espace pour tes propres programmes.', dev: '💻 Mode développeur', rev: '✍️ Exercices de révision', step: 'Étape', lang: 'Langue du prof :' },
+    ar: { badge: 'تيكو، الأستاذ', head: 'تعلم البرمجة كما في درس حقيقي', recap: '🔁 تذكير', sit: '🎬 الموقف', live: '⌨️ أبرمج أمامك', pred: '🔮 توقّع', pause: '⏸ جرّب أولا', bug: '🐞 الخطأ الشائع', defi: '🏆 التحدي', end: '🏁 الحصيلة',
+      hello: (t) => `<p>مرحبا! أنا <b>تيكو</b> 👋 درس اليوم: <b>${t}</b>.</p><p>سنشتغل كما في كورس برمجة حقيقي: أشرح لك بمثال من الحياة، أكتب الكود أمامك، تتوقع النتيجة، <b>تجرب وحدك أولا</b>، ثم نصحح معا الأخطاء الشائعة. وفي النهاية، تحدٍّ!</p>`,
+      recapT: (t) => `قبل أن نبدأ، لنتذكر الدرس السابق (<b>${t}</b>):`, first: 'هذا هو الدرس الأول: نبدأ من الصفر 🙂', start: 'لنبدأ! 🚀', resume: (n) => `أكمل من الخطوة ${n}`, restart: '↺ ابدأ من جديد',
+      liveT: 'انتبه، سأكتب الكود أمامك… ثم <b>اضغط على ▶ Exécuter</b>. يمكنك أن تغيّره وتعيد تشغيله.', skip: '⏩ أظهر الكود كاملا', seen: 'رأيت النتيجة، تابع ←', runFirst: '→ شغّل البرنامج أولا',
+      predT: 'بدون تشغيل، توقّع: <b>ماذا سيعرض هذا البرنامج؟</b>', predOk: 'بالضبط! تقرأ الكود مثل الحاسوب. 🧠', predKo: 'لا بأس، التوقع صعب في البداية. تحقق بتشغيله:', toCode: 'دوري في البرمجة ⌨️',
+      pauseT: '⏸ <b>أوقف الفيديو</b> كما في كورس على الإنترنت: جرّب وحدك أولا. التلميح يظهر بعد محاولتين، والحل بعد ثلاث.', ok: ['برافو، الكود ديالك خدام! 🎉', 'ممتاز، أنت مبرمج الآن! 💪', 'رائع! فهمت كل شيء. ⭐'], notYet: 'ليس بعد…', hint: '💡 تلميح:', seeSol: '👀 أظهر حلا', goOn: '← تابع على كل حال', next: '← الخطوة الموالية',
+      bugT: 'هذا خطأ يقع فيه <b>كل المبتدئين</b>. شغّل الكود، لاحظ ما يحدث، ثم <b>صحّحه</b> واضغط «صحّحت».', bugCheck: '✅ صحّحت', bugOk: 'أحسنت، اكتشفت الفخ! 🕵️', bugKo: 'لم يُصحَّح بعد. اقرأ رسالة الخطأ أو النتيجة جيدا.', bugWhy: 'لماذا؟', bugShow: '👀 أظهر التصحيح',
+      defiT: 'تحدي الدرس: تمرين أصعب بدون مساعدة في البداية. يمكنك أيضا تركه لوقت لاحق.', later: 'لاحقا', done: (n, m) => `<p>🏁 <b>انتهى الدرس!</b> التحديات الناجحة: ${n}/${m}.</p>`, keep: 'ما ينبغي تذكره:', devT: 'للتدرب بحرية، افتح <b>وضع المطور</b>: هو مساحتك لبرامجك الخاصة.', dev: '💻 وضع المطور', rev: '✍️ تمارين المراجعة', step: 'خطوة', lang: 'لغة الأستاذ:' }
+  };
+
+  W.profcode = async (root, api) => {
+    const d = (await api.readJSON(root.dataset.src)) || {};
+    const steps = d.steps || [];
+    const Q = window.TCSF_Q, PY = window.TCSF_PY, M = window.TCSF_MASCOT, VO = window.TCSF_VOICE;
+    const QS = (Q && Q.STR.fr) || {};
+    let lang = 'fr'; try { lang = localStorage.getItem(LKEY) === 'ar' ? 'ar' : 'fr'; } catch {}
+    const S = T[lang];
+    // leçon précédente (pour le rappel)
+    let prev = null;
+    try {
+      const idx = (await api.readJSON('informatique/index.json')) || [];
+      const k = idx.findIndex((l) => root.dataset.src && root.dataset.src.endsWith('/' + l.id + '.json'));
+      if (k > 0) prev = { title: idx[k - 1].title, d: await api.readJSON(idx[k - 1].data) };
+    } catch {}
+    const defi = ((d.exercises || {}).difficile || []).find((q) => q.type === 'code');
+    const key = 'profcode:' + root.dataset.src;
+    let st = {}; try { st = JSON.parse(localStorage.getItem(key)) || {}; } catch {}
+    st = Object.assign({ i: 0, done: {}, fails: {} }, st);
+    const save = () => { try { localStorage.setItem(key, JSON.stringify(st)); } catch {} };
+    const total = steps.length + (d.bug ? 1 : 0) + (defi ? 1 : 0);
+
+    root.classList.add('w-prof', 'w-profcode');
+    root.innerHTML = `<div class="w-head"><span class="w-badge">${S.badge}</span><b>${S.head}</b></div>
+      <div class="prof-lang"><span class="w-small">${S.lang}</span><button type="button" class="chip-btn${lang === 'fr' ? ' on' : ''}" data-l="fr">Français</button><button type="button" class="chip-btn${lang === 'ar' ? ' on' : ''}" data-l="ar">العربية</button><button type="button" class="chip-btn pc-voice"></button></div>
+      <ol class="pc-road">${steps.map((s, k) => `<li data-k="${k}"><span>${k + 1}</span>${s.t}</li>`).join('')}${d.bug ? '<li data-k="bug"><span>🐞</span></li>' : ''}${defi ? '<li data-k="defi"><span>🏆</span></li>' : ''}</ol>
+      <div class="prof-chat pc-chat"${lang === 'ar' ? ' dir="rtl" lang="ar"' : ''}></div>`;
+    root.querySelectorAll('.prof-lang [data-l]').forEach((b) => b.addEventListener('click', () => {
+      try { localStorage.setItem(LKEY, b.dataset.l); } catch {}
+      if (VO) VO.stop();
+      root.classList.remove('w-prof', 'w-profcode'); W.profcode(root, api);
+    }));
+    // c'est l'élève qui décide : le prof parle ou se tait
+    const vb = root.querySelector('.pc-voice');
+    const paintV = () => { const on = VO && VO.enabled; vb.textContent = on ? '🔊 Le prof parle' : '🔇 Prof muet'; vb.classList.toggle('on', !!on); vb.hidden = !VO; };
+    vb.addEventListener('click', () => { if (VO) { VO.setEnabled(!VO.enabled); paintV(); } });
+    paintV();
+    const chat = root.querySelector('.prof-chat');
+    const road =() => root.querySelectorAll('.pc-road li').forEach((li) => { const k = li.dataset.k; li.className = st.done[k] ? 'ok' : String(st.i) === k ? 'cur' : ''; });
+    const scroll = (n) => { try { n.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch {} };
+    const phase = (n, label) => `<span class="pc-phase pc-${n}">${label}</span>`;
+    function say(html, cls = '') {
+      const b = el('div', 'prof-msg prof ' + cls, `<span class="prof-av mascot" aria-hidden="true">${M ? M.svg(46) : '👨‍🏫'}</span><div class="prof-bubble">${html}</div>`);
+      chat.appendChild(b); scroll(b);
+      const c = b.querySelector('.prof-bubble').cloneNode(true);
+      c.querySelectorAll('.pc-phase, pre, .py-play, .box').forEach((x) => x.remove());
+      const t = c.textContent.replace(/\s+/g, ' ').trim();
+      if (M && t) M.say((t.match(/^[^.!?؟]{4,}[.!?؟]?/) || [t])[0]);
+      if (VO && VO.enabled && t) VO.speak(c.innerHTML, lang);
+      return b.querySelector('.prof-bubble');
+    }
+    function actions(...bs) { const a = el('div', 'prof-actions'); bs.forEach((x) => a.appendChild(x)); chat.appendChild(a); scroll(a); return a; }
+    const okCount = () => Object.keys(st.done).filter((k) => st.done[k] === 2 || /^\d+$/.test(k) || k === 'bug').length;
+
+    function hello() {
+      chat.innerHTML = '';
+      say(S.hello(root.dataset.title || '') + `<div class="pm-method">${[S.recap, S.sit, S.live, S.pred, S.pause, S.bug, S.defi].map((x, k) => `<span class="pc-phase pc-${(k % 4) + 1}">${x}</span>`).join('<span class="pm-arrow">' + (lang === 'ar' ? '←' : '→') + '</span>')}</div>${window.TCSF_VIDEOS ? window.TCSF_VIDEOS(d) : ''}`, 'first');
+      // 🔁 rappel de la leçon précédente
+      if (prev && prev.d) say(`${phase(1, S.recap)}<p>${S.recapT(prev.title)}</p><div class="prof-key" dir="ltr" lang="fr">${prev.d.recap || ''}</div>`);
+      else say(`${phase(1, S.recap)}<p>${S.first}</p>`);
+      const bs = [btn(st.i > 0 && !st.finished ? S.resume(typeof st.i === 'number' ? st.i + 1 : steps.length) : S.start, 'primary', () => { a.remove(); go(st.finished ? 0 : st.i); })];
+      if (st.i || st.finished) bs.push(btn(S.restart, 'ghost', () => { st = { i: 0, done: {}, fails: {} }; save(); road(); hello(); }));
+      const a = actions(...bs);
+      road();
+    }
+    const go = (i) => (typeof i === 'number' && i < steps.length ? stepAt(i) : i === 'defi' ? stageDefi() : i === 'end' ? finish() : stageBug());
+
+    function stepAt(k) {
+      const s = steps[k];
+      st.i = k; save(); road();
+      chat.appendChild(el('div', 'prof-sep', `<span>${S.step} ${k + 1}/${steps.length} · ${s.t}</span>`));
+      // 🎬 la situation
+      const expl = lang === 'ar' && s.ar ? s.ar : s.explain;
+      say(`${phase(1, S.sit)}${expl}`);
+      // ⌨️ code en direct : le code s'écrit à l'écran, puis on l'exécute
+      const b = say(`${phase(2, S.live)}<p>${S.liveT}</p>`, 'board');
+      let ran = false;
+      const next = btn(S.seen, 'primary', () => { next.parentNode.remove(); predict(k); });
+      next.disabled = true;
+      const pg = PY.playground(b, '', { minRows: Math.min(14, s.code.split('\n').length + 1), maxRows: 14, onRun: () => { if (!ran) { ran = true; next.disabled = false; } } });
+      const runB = pg.wrap.querySelector('.py-run'); runB.disabled = true;
+      const skip = btn(S.skip, 'ghost', () => { typed = s.code.length; });
+      pg.wrap.querySelector('.py-bar').appendChild(skip);
+      let typed = 0;
+      const tick = setInterval(() => {
+        typed = Math.min(s.code.length, typed + (s.code[typed] === ' ' ? 4 : 2));
+        pg.ed.value = s.code.slice(0, typed);
+        if (typed >= s.code.length) { clearInterval(tick); runB.disabled = false; skip.remove(); runB.classList.add('pulse'); }
+      }, 35);
+      const a = actions(next);
+      a.appendChild(el('span', 'w-small muted', S.runFirst));
+    }
+
+    // 🔮 prédire
+    function predict(k) {
+      const s = steps[k];
+      if (!s.predict || !Q) return task(k);
+      const src = (s.predict.q.match(/<pre[\s\S]*<\/pre>/) || [''])[0];
+      const b = say(`${phase(3, S.pred)}<p>${S.predT}</p><div dir="ltr">${src}</div>`);
+      const zone = el('div', 'prof-zone'); zone.dir = 'ltr'; b.appendChild(zone);
+      Q.askQuestion(zone, Object.assign({}, s.predict, { q: '' }), QS, (ok) => {
+        if (ok) say(S.predOk, 'good');
+        else { const bb = say(`<p>${S.predKo}</p>`, 'board'); PY.playground(bb, (s.predict.q.match(/<code>([\s\S]*?)<\/code>/) || [, ''])[1].replace(/&lt;/g, '<').replace(/&amp;/g, '&'), { minRows: 3, maxRows: 10, noReset: true }); }
+        actions(btn(S.toCode, 'primary', function () { this.parentNode.remove(); task(k); }));
+      });
+    }
+
+    // ⏸ essayer seul, puis ⌨️ coder (corrigé automatiquement)
+    function task(k) {
+      const s = steps[k];
+      if (!s.task) return stepDone(k);
+      codeTask(s.task, k, () => stepDone(k), 4, S.pause);
+    }
+    function codeTask(q, k, onDone, ph, label) {
+      const b = say(`${phase(ph, label)}<p>${S.pauseT}</p><p dir="ltr" lang="fr" class="pc-task">${q.q}</p>`);
+      const zone = el('div', 'prof-zone'); zone.dir = 'ltr'; b.appendChild(zone);
+      const fb = el('div', 'w-fb');
+      PY.task(zone, q, (ok, why) => {
+        if (ok) {
+          fb.className = 'w-fb ok'; fb.innerHTML = '<b>✅</b>';
+          if (Q) Q.burst(root);
+          st.done[k] = 2; save();
+          say(S.ok[Math.floor(Math.random() * S.ok.length)], 'good');
+          actions(btn(S.next, 'primary', function () { this.parentNode.remove(); onDone(); }));
+        } else {
+          st.fails[k] = (st.fails[k] || 0) + 1; save();
+          fb.className = 'w-fb ko';
+          fb.innerHTML = `<b>${S.notYet}</b>${why || ''}${st.fails[k] >= 2 && q.hint ? `<p>${S.hint} ${q.hint}</p>` : ''}`;
+          if (st.fails[k] === 3) {
+            fb.appendChild(el('details', 'py-sol', `<summary>${S.seeSol}</summary>${PY.codeHTML(q.solution || '')}`));
+            actions(btn(S.goOn, 'ghost', function () { this.parentNode.remove(); onDone(); }));
+          }
+        }
+      });
+      zone.appendChild(fb);
+    }
+    function stepDone(k) {
+      if (!st.done[k]) st.done[k] = 1;
+      st.i = k + 1; save(); road();
+      if (k + 1 < steps.length) stepAt(k + 1); else (d.bug ? stageBug() : defi ? stageDefi() : finish());
+    }
+
+    // 🐞 le piège classique : un code faux à exécuter puis à corriger
+    async function stageBug() {
+      if (!d.bug) return defi ? stageDefi() : finish();
+      st.i = 'bug'; save(); road();
+      chat.appendChild(el('div', 'prof-sep', `<span>${S.bug}</span>`));
+      const b = say(`${phase(3, S.bug)}<p>${S.bugT}</p>`, 'board');
+      const pg = PY.playground(b, d.bug.code, { minRows: 3, maxRows: 10 });
+      const want = await PY.run(d.bug.fix, { inputs: ['5', '3', '5', '3'], timeout: 3000 });
+      let tries = 0;
+      const check = btn(S.bugCheck, 'primary', async () => {
+        check.disabled = true;
+        const r = await PY.run(pg.ed.value, { inputs: ['5', '3', '5', '3'], timeout: 3000 });
+        check.disabled = false;
+        if (r.ok && r.out.trim() === want.out.trim() && pg.ed.value.trim() !== d.bug.code.trim()) {
+          a.remove(); st.done.bug = 1; save(); road();
+          if (Q) Q.burst(root);
+          say(`<p>${S.bugOk}</p><p><b>${S.bugWhy}</b> ${lang === 'ar' ? d.bug.ar : d.bug.fr}</p>`, 'good');
+          actions(btn(S.next, 'primary', function () { this.parentNode.remove(); defi ? stageDefi() : finish(); }));
+        } else {
+          tries++;
+          say(`<p>${S.bugKo}</p>${tries >= 2 ? `<details class="py-sol"><summary>${S.bugShow}</summary>${PY.codeHTML(d.bug.fix)}<p>${lang === 'ar' ? d.bug.ar : d.bug.fr}</p></details>` : ''}`);
+          if (tries >= 2 && !a.querySelector('.ghost')) a.appendChild(btn(S.goOn, 'ghost', () => { a.remove(); defi ? stageDefi() : finish(); }));
+        }
+      });
+      const a = actions(check);
+    }
+
+    // 🏆 le défi de la leçon
+    function stageDefi() {
+      if (!defi) return finish();
+      st.i = 'defi'; save(); road();
+      chat.appendChild(el('div', 'prof-sep', `<span>${S.defi}</span>`));
+      say(`${phase(4, S.defi)}<p>${S.defiT}</p>`);
+      codeTask(defi, 'defi', finish, 4, S.defi);
+      actions(btn(S.later, 'ghost', function () { this.parentNode.remove(); finish(); }));
+    }
+
+    function finish() {
+      st.finished = true; st.i = 'end'; save(); road();
+      if (Q) Q.burst(root);
+      const n = Object.keys(st.done).length;
+      say(`${S.done(n, total)}<div class="prof-key" dir="ltr" lang="fr"><b>${S.keep}</b> ${d.recap || ''}</div><p>${S.devT}</p>`, 'good');
+      window.dispatchEvent(new CustomEvent('tcsf:activity', { detail: { act: 'prof', src: root.dataset.src } }));
+      const bs = [];
+      const dev = el('a', 'btn primary', S.dev); dev.href = '#/c/informatique/developpeur'; bs.push(dev);
+      if (root.dataset.rev) { const r = el('a', 'btn', S.rev); r.href = root.dataset.rev; bs.push(r); }
+      bs.push(btn(S.restart, 'ghost', () => { st = { i: 0, done: {}, fails: {} }; save(); hello(); }));
+      actions(...bs);
+    }
+
+    if (!steps.length) { chat.innerHTML = '<p class="muted">—</p>'; return; }
+    hello();
+  };
+})();
