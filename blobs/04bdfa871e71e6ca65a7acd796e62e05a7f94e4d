@@ -1,0 +1,31 @@
+// Onglet latéral « Classique » : accès direct à l'ancienne navigation (avant 3.0) :
+// matière → rubriques (Cours, Avec le prof, Expériences, Examens, Révisions…) → leçons.
+(() => {
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const read = async (rel) => { try { const t = window.tcsf ? await window.tcsf.readContent(rel) : await fetch('../content/' + rel).then((r) => (r.ok ? r.text() : null)); return t ? JSON.parse(t) : null; } catch { return null; } };
+  const ICO = { cours: '📖', prof: '👨‍🏫', examen: '📝', revision: '🎯', labo: '🔬', methode: '📄', dev: '💻' };
+  let tab = null, side = null;
+  function build() {
+    tab = document.createElement('button');
+    tab.type = 'button'; tab.className = 'acc-side-tab cl-tab'; tab.title = 'Navigation classique (avant la 3.0)';
+    tab.innerHTML = '<span>📚</span><b>Classique</b>';
+    tab.addEventListener('click', open);
+    side = document.createElement('aside');
+    side.className = 'acc-side cl-side'; side.hidden = true;
+    document.body.append(tab, side);
+    window.addEventListener('hashchange', () => { side.hidden = true; tab.hidden = document.body.classList.contains('duo-in'); setTimeout(() => { tab.hidden = document.body.classList.contains('duo-in'); }, 400); });
+  }
+  async function open() {
+    side.hidden = false;
+    side.innerHTML = `<div class="acc-side-head"><h3>📚 Navigation classique</h3><button type="button" class="chip-btn acc-close" title="Fermer">✕</button></div>
+      <p class="w-small muted">Toutes les rubriques comme dans l’ancienne version : touche une matière pour voir ses rubriques.</p><div class="cl-list">Chargement…</div>`;
+    side.querySelector('.acc-close').onclick = () => (side.hidden = true);
+    const subjects = (await read('subjects.json')) || [];
+    const list = side.querySelector('.cl-list');
+    list.innerHTML = subjects.map((s) => `<details class="cl-subj" style="--c1:${esc((s.color || [])[0] || '#4f6bed')}">
+      <summary><span class="cl-dot"></span>${esc(s.title)}${s.status !== 'ready' ? ' <small class="muted">(bientôt)</small>' : ''}</summary>
+      <div class="cl-cats">${(s.categories || []).map((c) => `<a href="#/c/${encodeURIComponent(s.id)}/${encodeURIComponent(c.id)}" class="${c.status === 'ready' ? '' : 'off'}">${ICO[c.mode] || '•'} ${esc(c.title)}</a>`).join('')}</div></details>`).join('');
+    list.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => (side.hidden = true)));
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
+})();
