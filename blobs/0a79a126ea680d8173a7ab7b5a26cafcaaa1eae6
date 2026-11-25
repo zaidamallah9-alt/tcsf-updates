@@ -1,0 +1,107 @@
+[
+ {
+  "id": "arithmetique",
+  "title": "Arithmétique dans ℕ",
+  "module": "1er semestre",
+  "description": "Parité, multiples et diviseurs, nombres premiers, PGCD et PPCM.",
+  "data": "mathematiques/l/arithmetique.json"
+ },
+ {
+  "id": "vecteurs",
+  "title": "Le calcul vectoriel dans le plan",
+  "module": "1er semestre",
+  "description": "Vecteurs, relation de Chasles, multiplication par un réel, colinéarité, milieu.",
+  "data": "mathematiques/l/vecteurs.json"
+ },
+ {
+  "id": "projection",
+  "title": "La projection dans le plan",
+  "module": "1er semestre",
+  "description": "Projection sur une droite parallèlement à une autre, projection orthogonale, propriétés.",
+  "data": "mathematiques/l/projection.json"
+ },
+ {
+  "id": "ensembles",
+  "title": "Les ensembles de nombres ℕ, ℤ, 𝔻, ℚ et ℝ",
+  "module": "1er semestre",
+  "description": "Ensembles de nombres, puissances, racines carrées, identités remarquables.",
+  "data": "mathematiques/l/ensembles.json"
+ },
+ {
+  "id": "ordre",
+  "title": "L’ordre dans ℝ",
+  "module": "1er semestre",
+  "description": "Comparaison, opérations et inégalités, valeur absolue, intervalles, encadrements.",
+  "data": "mathematiques/l/ordre.json"
+ },
+ {
+  "id": "droite",
+  "title": "La droite dans le plan",
+  "module": "1er semestre",
+  "description": "Repère, coordonnées, déterminant, vecteur directeur, équations de droites, parallélisme.",
+  "data": "mathematiques/l/droite.json"
+ },
+ {
+  "id": "polynomes",
+  "title": "Les polynômes",
+  "module": "1er semestre",
+  "description": "Degré, égalité, racine, divisibilité par (x − α), division et factorisation.",
+  "data": "mathematiques/l/polynomes.json"
+ },
+ {
+  "id": "equations",
+  "title": "Équations, inéquations et systèmes",
+  "module": "1er semestre",
+  "description": "Premier degré, trinôme du second degré (discriminant, signe), systèmes 2×2.",
+  "data": "mathematiques/l/equations.json"
+ },
+ {
+  "id": "statistiques",
+  "title": "Les statistiques",
+  "module": "1er semestre",
+  "description": "Vocabulaire, effectifs et fréquences, moyenne, mode, médiane, variance, écart-type.",
+  "data": "mathematiques/l/statistiques.json"
+ },
+ {
+  "id": "trigo1",
+  "title": "Le calcul trigonométrique (1)",
+  "module": "2e semestre",
+  "description": "Radian, cercle trigonométrique, cosinus, sinus, tangente, relations et valeurs remarquables.",
+  "data": "mathematiques/l/trigo1.json"
+ },
+ {
+  "id": "trigo2",
+  "title": "Le calcul trigonométrique (2) : équations et inéquations",
+  "module": "2e semestre",
+  "description": "Équations cos x = cos a, sin x = sin a, tan x = tan a et inéquations simples.",
+  "data": "mathematiques/l/trigo2.json"
+ },
+ {
+  "id": "fonctions",
+  "title": "Généralités sur les fonctions numériques",
+  "module": "2e semestre",
+  "description": "Ensemble de définition, parité, variations, extremums, fonctions de référence.",
+  "data": "mathematiques/l/fonctions.json"
+ },
+ {
+  "id": "transformations",
+  "title": "Les transformations du plan",
+  "module": "2e semestre",
+  "description": "Translation, symétries centrale et axiale, homothétie et leurs propriétés.",
+  "data": "mathematiques/l/transformations.json"
+ },
+ {
+  "id": "produit-scalaire",
+  "title": "Le produit scalaire",
+  "module": "2e semestre",
+  "description": "Définition, projection orthogonale, orthogonalité, Al-Kashi, théorème de la médiane.",
+  "data": "mathematiques/l/produit-scalaire.json"
+ },
+ {
+  "id": "espace",
+  "title": "La géométrie dans l’espace",
+  "module": "2e semestre",
+  "description": "Solides usuels, positions relatives de droites et plans, parallélisme, orthogonalité, volumes.",
+  "data": "mathematiques/l/espace.json"
+ }
+]

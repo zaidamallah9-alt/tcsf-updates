@@ -1,0 +1,669 @@
+// « Mon planning » : emploi du temps (photo lue automatiquement ou saisie à la main),
+// examens, programme de révision généré dans le temps libre, rappels (notifications).
+(() => {
+  const KEY = 'tcsf:planner';
+  const DAYS = [['lun', 'Lundi'], ['mar', 'Mardi'], ['mer', 'Mercredi'], ['jeu', 'Jeudi'], ['ven', 'Vendredi'], ['sam', 'Samedi']];
+  const HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+  const SHORT = { mathematiques: 'Maths', 'physique-chimie': 'PC', svt: 'SVT', francais: 'Français', arabe: 'Arabe', anglais: 'Anglais', 'education-islamique': 'Islamique', 'histoire-geographie': 'HG', philosophie: 'Philo', informatique: 'Info', eps: 'EPS' };
+  const WEIGHT = { mathematiques: 4, 'physique-chimie': 4, svt: 3, francais: 3, anglais: 2, arabe: 2, philosophie: 2, 'histoire-geographie': 2, 'education-islamique': 2, informatique: 1, eps: 0 };
+  const KIND = {
+    learn: { ic: '👨‍🏫', t: 'Comprendre avec le prof', cat: 'prof' },
+    exo: { ic: '✍️', t: 'Exercices Facile → Difficile', cat: 'revisions' },
+    memo: { ic: '🧠', t: 'Mémoriser : fiche + cartes', cat: 'revisions' },
+    blanc: { ic: '📝', t: 'Examen blanc chronométré', cat: 'examens' },
+    veille: { ic: '🌙', t: 'Veille d’examen : relire les fiches, dormir tôt', cat: 'revisions' },
+    jour: { ic: '📖', t: 'Revoir le cours du jour', cat: 'cours' },
+    libre: { ic: '💪', t: 'Entraînement libre', cat: 'revisions' },
+    prep: { ic: '🎒', t: 'Préparer le cours de demain', cat: 'prof' },
+    retard: { ic: '🚑', t: 'Rattraper une leçon en retard', cat: 'prof' },
+    avance: { ic: '🚀', t: 'Avancer dans le programme', cat: 'prof' },
+    rev: { ic: '🔁', t: 'Rappel espacé', cat: 'revisions' },
+    erreurs: { ic: '🧠', t: 'Corriger mes erreurs', cat: 'revisions' },
+    devoir: { ic: '🏁', t: 'Devoir de la semaine', cat: 'methode' }
+  };
+  // rappels espacés après la 1re leçon (jours) : on revoit juste avant d'oublier
+  const SPACING = [1, 3, 7, 16, 35];
+  // position attendue dans le programme du centre (S1 : mi-sept → fin janv. · S2 : févr. → mi-juin)
+  function expectedIndex(idx) {
+    const now = new Date(), y = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+    const frac = (a, b) => Math.min(1, Math.max(0, (now - a) / (b - a)));
+    const s2 = (l) => /(^|\D)2(e|\D|$)|second/i.test(l.module || '') && /semestre|^S2$/i.test(l.module || '');
+    const semestres = idx.some((l) => /semestre|^S[12]$/i.test(l.module || ''));
+    if (!semestres) return Math.floor(frac(new Date(y, 8, 15), new Date(y + 1, 5, 10)) * idx.length);
+    const n1 = idx.filter((l) => !s2(l)).length, n2 = idx.length - n1;
+    return Math.floor(frac(new Date(y, 8, 15), new Date(y + 1, 0, 31)) * n1 + frac(new Date(y + 1, 1, 1), new Date(y + 1, 5, 10)) * n2);
+  }
+  const toast = (msg) => { document.querySelector('.pl-toast')?.remove(); const t = document.createElement('div'); t.className = 'pl-toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3500); };
+  const duoS = () => { try { return (window.TCSF_DUO && window.TCSF_DUO.state()) || {}; } catch { return {}; } };
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const pad = (n) => String(n).padStart(2, '0');
+  const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const parseYmd = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const toMin = (hm) => { const [h, m] = String(hm || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+  const hm = (m) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+  const dayKey = (d) => [null, 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'][d.getDay()] || null; // dimanche → null
+  const FR_DAY = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  const FR_MON = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+  const nice = (s) => { const d = parseYmd(s); return `${FR_DAY[d.getDay()]} ${d.getDate()} ${FR_MON[d.getMonth()]}`; };
+  const daysTo = (s) => Math.round((parseYmd(s) - parseYmd(ymd(new Date()))) / 86400000);
+
+  const DEF = {
+    edt: {}, auto: {}, photo: null, exams: [], done: {}, plan: null, notif: true,
+    prefs: { eveStart: '18:00', eveEnd: '20:30', sun1Start: '09:30', sun1End: '12:00', sun2Start: '15:00', sun2End: '17:30', useFree: true, len: 45, pause: 10, maxDay: 180 }
+  };
+  const load = () => { try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.edt) for (const k of Object.keys(s.edt)) if (!SHORT[s.edt[k]]) delete s.edt[k]; return Object.assign({}, DEF, s || {}, { prefs: Object.assign({}, DEF.prefs, (s && s.prefs) || {}) }); } catch { return JSON.parse(JSON.stringify(DEF)); } };
+  const save = (st) => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch { /* photo trop grande ? on réessaie sans elle */ try { localStorage.setItem(KEY, JSON.stringify(Object.assign({}, st, { photo: null }))); } catch {} } };
+
+  // ---------------- Lecture automatique de la photo (OCR hors ligne) ----------------
+  const SUBJ_WORDS = [
+    ['mathematiques', ['math', 'maths', 'mathematiques', 'mathematique', 'رياضيات', 'الرياضيات']],
+    ['physique-chimie', ['physique', 'pc', 'phys', 'chimie', 'فيزياء', 'الفيزياء', 'الكيمياء']],
+    ['svt', ['svt', 'biologie', 'geologie', 'علوم', 'الحياة']],
+    ['francais', ['francais', 'franc', 'fr', 'الفرنسية']],
+    ['arabe', ['arabe', 'العربية', 'عربية']],
+    ['anglais', ['anglais', 'english', 'ang', 'الانجليزية', 'الإنجليزية']],
+    ['education-islamique', ['islamique', 'islam', 'اسلامية', 'الاسلامية', 'إسلامية', 'الإسلامية']],
+    ['histoire-geographie', ['histoire', 'geographie', 'geo', 'hg', 'hist', 'الاجتماعيات', 'اجتماعيات', 'التاريخ']],
+    ['philosophie', ['philosophie', 'philo', 'الفلسفة', 'فلسفة']],
+    ['informatique', ['informatique', 'info', 'المعلوميات', 'معلوميات']],
+    ['eps', ['eps', 'sport', 'البدنية', 'بدنية']]
+  ];
+  const DAY_WORDS = { lun: ['lundi', 'lun', 'الاثنين', 'الإثنين', 'اثنين'], mar: ['mardi', 'الثلاثاء'], mer: ['mercredi', 'الأربعاء', 'الاربعاء'], jeu: ['jeudi', 'الخميس'], ven: ['vendredi', 'الجمعة'], sam: ['samedi', 'السبت'] };
+  const normW = (t) => String(t).toLowerCase().normalize('NFD').replace(/[̀-ًͯ-ْ]/g, '').replace(/[^a-z0-9؀-ۿ:]/g, '');
+  let tessLoading = null;
+  function loadTess() {
+    if (window.Tesseract) return Promise.resolve();
+    if (!tessLoading) tessLoading = new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'vendor/tesseract/tesseract.min.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
+    return tessLoading;
+  }
+  async function imageToCanvas(src) {
+    const img = new Image(); img.src = src; await img.decode();
+    const k = Math.min(1, 2000 / Math.max(img.width, img.height)) * (Math.max(img.width, img.height) < 1000 ? 1.8 : 1);
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0, c.width, c.height);
+    // gris + contraste pour aider la lecture
+    const d = x.getImageData(0, 0, c.width, c.height), p = d.data;
+    for (let i = 0; i < p.length; i += 4) { let v = 0.3 * p[i] + 0.59 * p[i + 1] + 0.11 * p[i + 2]; v = v > 165 ? 255 : v < 90 ? 0 : (v - 90) * 3.4; p[i] = p[i + 1] = p[i + 2] = v; }
+    x.putImageData(d, 0, 0);
+    return c;
+  }
+  // Retour : { cells: {'lun-8': subjectId}, found: {days, hours, subjects} } ou { error }
+  async function readTimetable(src, onProgress) {
+    await loadTess();
+    const abs = (p) => new URL(p, location.href).href;
+    const worker = await window.Tesseract.createWorker(['fra', 'ara'], 1, {
+      workerPath: abs('vendor/tesseract/worker.min.js'), corePath: abs('vendor/tesseract'), langPath: abs('vendor/tesseract/lang'),
+      gzip: false, workerBlobURL: false, cacheMethod: 'none', logger: (m) => onProgress && m.progress && onProgress(m.status, m.progress)
+    });
+    let words;
+    try { const r = await worker.recognize(await imageToCanvas(src)); words = r.data.words || []; } finally { await worker.terminate(); }
+    const W = words.map((w) => ({ t: normW(w.text), raw: w.text, cx: (w.bbox.x0 + w.bbox.x1) / 2, cy: (w.bbox.y0 + w.bbox.y1) / 2 })).filter((w) => w.t);
+    const days = [], hours = [], subs = [];
+    for (const w of W) {
+      for (const [k, list] of Object.entries(DAY_WORDS)) if (list.includes(w.t)) days.push({ k, ...w });
+      const m = w.t.match(/^(\d{1,2})(?:h|:)(\d{2})?/) || w.t.match(/^(\d{1,2})h?$/);
+      if (m && +m[1] >= 7 && +m[1] <= 19 && (/h|:/.test(w.t) || W.some((o) => o !== w && Math.abs(o.cx - w.cx) < 30 && /^(\d{1,2})(h|:)/.test(o.t)))) hours.push({ h: +m[1], ...w });
+      const sub = SUBJ_WORDS.find(([, list]) => list.includes(w.t) || list.some((x) => x.length >= 5 && w.t.startsWith(x.slice(0, 5))));
+      if (sub) subs.push({ s: sub[0], ...w });
+    }
+    const dk = [...new Set(days.map((d) => d.k))];
+    if (dk.length < 2 || hours.length < 2) return { error: 'axes', found: { days: dk.length, hours: hours.length, subjects: subs.length } };
+    const spread = (a, f) => Math.max(...a.map(f)) - Math.min(...a.map(f));
+    const daysCols = spread(days, (d) => d.cx) > spread(days, (d) => d.cy);
+    const dayPos = (w) => (daysCols ? w.cx : w.cy), timePos = (w) => (daysCols ? w.cy : w.cx);
+    // une seule ancre par heure (la première trouvée)
+    const H = []; for (const h of hours.sort((a, b) => timePos(a) - timePos(b))) if (!H.some((x) => x.h === h.h)) H.push(h);
+    H.sort((a, b) => timePos(a) - timePos(b));
+    // une heure non lue entre deux heures lues (ex. 10h … 12h) : on la déduit
+    // (pas d'une colonne/ligne = plus petit écart courant entre deux heures lues)
+    const gaps = H.slice(1).map((h, i) => timePos(h) - timePos(H[i])).sort((a, b) => a - b);
+    const step = gaps.length ? gaps[Math.floor(gaps.length / 3)] : 0;
+    for (let i = H.length - 2; i >= 0; i--) {
+      const a = H[i], b = H[i + 1];
+      if (step && b.h - a.h >= 2 && Math.abs(timePos(b) - timePos(a) - 2 * step) < step * 0.35) H.splice(i + 1, 0, { h: a.h + 1, cx: (a.cx + b.cx) / 2, cy: (a.cy + b.cy) / 2 });
+    }
+    const D = []; for (const d of days) if (!D.some((x) => x.k === d.k)) D.push(d);
+    const cells = {};
+    for (const s of subs) {
+      const day = D.reduce((b, d) => (Math.abs(dayPos(d) - dayPos(s)) < Math.abs(dayPos(b) - dayPos(s)) ? d : b), D[0]);
+      const tp = timePos(s);
+      let i = 0; for (let k = 0; k < H.length; k++) if (Math.abs(timePos(H[k]) - tp) < Math.abs(timePos(H[i]) - tp)) i = k;
+      const hs = [H[i].h];
+      // texte centré entre deux heures → séance de 2 heures
+      const j = timePos(H[i]) < tp ? i + 1 : i - 1;
+      if (H[j]) { const gap = Math.abs(timePos(H[j]) - timePos(H[i])); if (Math.abs(Math.abs(tp - timePos(H[i])) - gap / 2) < gap * 0.22) hs.push(H[j].h); }
+      for (const h of hs) if (HOURS.includes(h) && !cells[`${day.k}-${h}`]) cells[`${day.k}-${h}`] = s.s;
+    }
+    return { cells, found: { days: D.length, hours: H.length, subjects: subs.length } };
+  }
+
+  // ---------------- Génération du programme ----------------
+  function freeSessions(st, from, to) {
+    const P = st.prefs, out = [];
+    const now = new Date(), today = ymd(now), nowMin = now.getHours() * 60 + now.getMinutes();
+    for (let d = new Date(from); d <= to; d = addDays(d, 1)) {
+      const k = dayKey(d), date = ymd(d), wins = [];
+      if (k) {
+        wins.push([toMin(P.eveStart), toMin(P.eveEnd)]);
+        if (P.useFree) {
+          const busy = HOURS.filter((h) => st.edt[`${k}-${h}`]);
+          const last = busy.length ? Math.max(...busy) + 1 : 8;
+          // heures libres de l'après-midi (après le dernier cours, ou trous de 2 h et plus)
+          let run = [];
+          for (const h of [14, 15, 16, 17]) { if (!st.edt[`${k}-${h}`]) run.push(h); else { if (run.length >= 2) wins.push([run[0] * 60, (run[run.length - 1] + 1) * 60]); run = []; } }
+          if (run.length && (run.length >= 2 || run[0] >= last)) wins.push([run[0] * 60 + (run[0] >= last ? 30 : 0), (run[run.length - 1] + 1) * 60]);
+        }
+      } else { wins.push([toMin(P.sun1Start), toMin(P.sun1End)], [toMin(P.sun2Start), toMin(P.sun2End)]); }
+      let used = 0;
+      for (const [a, b] of wins.sort((x, y) => x[0] - y[0])) {
+        for (let t = a; t + P.len <= b; t += P.len + P.pause) {
+          if (date === today && t < nowMin + 5) continue;
+          if (used + P.len > P.maxDay) break;
+          out.push({ date, start: t, end: t + P.len }); used += P.len;
+        }
+      }
+    }
+    return out;
+  }
+  async function generate(st, api) {
+    const today = parseYmd(ymd(new Date()));
+    const exams = st.exams.filter((e) => daysTo(e.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
+    const lastExam = exams.length ? parseYmd(exams[exams.length - 1].date) : today;
+    const end = new Date(Math.max(addDays(today, 13), addDays(lastExam, 0)));
+    const sessions = freeSessions(st, today, addDays(end, 0));
+    const titles = {};
+    const tasks = [];
+    for (const e of exams) {
+      const ex = parseYmd(e.date);
+      const idx = (await api.readJSON(`${e.subject}/index.json`).catch(() => null)) || [];
+      idx.forEach((l) => (titles[`${e.subject}/${l.id}`] = l.title));
+      const lessons = e.lessons && e.lessons.length ? e.lessons : [];
+      const L = lessons.length ? lessons : [null];
+      L.forEach((lid, i) => {
+        if (lid && duoS().crowns && duoS().crowns[`${e.subject}/${lid}`]) {
+          // leçon déjà faite : pas besoin de la réapprendre, un rappel avant l'examen suffit
+          tasks.push({ exam: e.id, subject: e.subject, lesson: lid, id: `${e.id}:${lid}:rev`, kind: 'rev', min: addDays(ex, -6), max: addDays(ex, -1), prio: 1, order: i });
+          return;
+        }
+        const base = { exam: e.id, subject: e.subject, lesson: lid };
+        const id = (k) => `${e.id}:${lid || 'all'}:${k}`;
+        tasks.push({ ...base, id: id('learn'), kind: 'learn', min: today, max: addDays(ex, -3), prio: 0, order: i });
+        tasks.push({ ...base, id: id('exo'), kind: 'exo', after: id('learn'), gap: 1, min: today, max: addDays(ex, -2), prio: 1, order: i });
+        tasks.push({ ...base, id: id('memo'), kind: 'memo', after: id('exo'), gap: 2, min: today, max: addDays(ex, -1), prio: 2, order: i });
+      });
+      if (api.hasExam(e.subject)) tasks.push({ exam: e.id, subject: e.subject, id: `${e.id}:blanc`, kind: 'blanc', min: addDays(ex, -4), max: addDays(ex, -1), prio: 3, order: 99 });
+      tasks.push({ exam: e.id, subject: e.subject, id: `${e.id}:veille`, kind: 'veille', min: addDays(ex, -1), max: addDays(ex, -1), prio: 4, order: 100, last: true });
+    }
+    // ---- suivi du programme du centre, même sans examen ----
+    const S = duoS(), crowns = S.crowns || {};
+    st.learned = st.learned || {};
+    const far = addDays(end, 30);
+    const subs = Object.keys(WEIGHT).filter((x) => WEIGHT[x] > 0 && api.ready(x));
+    const tomorrowClass = (d) => { const k = dayKey(addDays(d, 1)); return k ? new Set(HOURS.map((h) => st.edt[`${k}-${h}`]).filter(Boolean)) : new Set(); };
+    st.prog = {};
+    const examLessons = new Set(tasks.filter((t) => t.lesson).map((t) => `${t.subject}/${t.lesson}`));
+    for (const s of subs) {
+      const idx = (await api.readJSON(`${s}/index.json`).catch(() => null)) || [];
+      if (!idx.length) continue;
+      idx.forEach((l) => (titles[`${s}/${l.id}`] = l.title));
+      const key = (l) => `${s}/${l.id}`;
+      // leçons couronnées sans date connue : considérées vues il y a une semaine
+      idx.forEach((l) => { if (crowns[key(l)] && !st.learned[key(l)]) st.learned[key(l)] = ymd(addDays(today, -7)); });
+      const auto = expectedIndex(idx);
+      const ci = st.cur && st.cur[s] ? Math.max(0, idx.findIndex((l) => l.id === st.cur[s])) : auto;
+      const done = idx.filter((l) => crowns[key(l)]).length;
+      st.prog[s] = { n: idx.length, done, cur: ci, auto, manual: !!(st.cur && st.cur[s]) };
+      const w = WEIGHT[s];
+      // 1) retard : leçons déjà vues en classe mais pas faites (les plus anciennes d'abord)
+      idx.slice(0, ci).filter((l) => !crowns[key(l)] && !examLessons.has(key(l))).slice(0, 3).forEach((l, i) => tasks.push({ subject: s, lesson: l.id, id: `learn:${key(l)}`, kind: 'retard', min: addDays(today, i), max: addDays(today, 3 + i * 2), prio: 1, order: i, w }));
+      // 2) le cours en classe en ce moment / la prochaine leçon : à préparer avant la prochaine séance de la matière
+      const next = idx.slice(ci).filter((l) => !crowns[key(l)]).slice(0, 2);
+      const eves = []; for (let d = new Date(today), n = 0; n < 15; n++, d = addDays(d, 1)) if (tomorrowClass(d).has(s)) eves.push(new Date(d));
+      next.forEach((l, i) => {
+        if (examLessons.has(key(l))) return;
+        const before = eves[i] || null;
+        tasks.push({ subject: s, lesson: l.id, id: `learn:${key(l)}`, kind: before ? 'prep' : 'avance', min: today, max: before || addDays(today, 6), prio: before ? 0.5 : 3, order: i, w });
+      });
+      // 3) rappels espacés J+1, J+3, J+7, J+16, J+35 de chaque leçon apprise
+      idx.forEach((l) => {
+        const t0 = st.learned[key(l)]; if (!t0) return;
+        const iv = SPACING.find((n) => !st.done[`rev:${key(l)}:${n}`]); if (!iv) return;
+        const due = addDays(parseYmd(t0), iv); if (due > far) return;
+        const min = due < today ? today : due;
+        tasks.push({ subject: s, lesson: l.id, id: `rev:${key(l)}:${iv}`, kind: 'rev', iv, min, max: addDays(min, iv <= 3 ? 1 : 3), prio: 1.5, order: 0, w });
+      });
+      // 4) mes erreurs : dès qu'il y en a 3, une séance pour les corriger (une par semaine)
+      const nm = (S.mistakes || []).filter((m) => m.s === s).length;
+      const wk = ymd(addDays(today, -((today.getDay() + 6) % 7)));
+      if (nm >= 3) tasks.push({ subject: s, lesson: null, id: `err:${s}:${wk}`, kind: 'erreurs', min: today, max: addDays(today, 4), prio: 2, order: 0, w, n: nm });
+      // 5) le dimanche : devoir de la semaine (Fiche · Série · Devoir) sur la dernière leçon apprise
+      const last = idx.filter((l) => st.learned[key(l)]).sort((a, b) => st.learned[key(b)].localeCompare(st.learned[key(a)]))[0];
+      if (last && w >= 3 && api.hasMethode(s)) for (let d = new Date(today); d <= end; d = addDays(d, 1)) if (d.getDay() === 0) { tasks.push({ subject: s, lesson: last.id, id: `dev:${s}:${ymd(d)}`, kind: 'devoir', min: new Date(d), max: new Date(d), prio: 2.5, order: 0, w }); break; }
+    }
+    const placed = {}, plan = [], missed = [];
+    const doneTask = (t) => st.done[t.id];
+    for (const t of tasks) if (doneTask(t)) placed[t.id] = '0000-00-00';
+    // les tâches trop tardives sont avancées : on garde au moins aujourd'hui
+    for (const t of tasks) { if (t.max < today) t.max = today; if (t.min > t.max) t.min = t.max; }
+    let lastSubject = null;
+    for (const s of sessions) {
+      const d = parseYmd(s.date);
+      // pas plus de 2 séances de la même matière par jour (sauf examen dans 3 jours), et on alterne les matières
+      const nToday = (sub) => plan.filter((p) => p.date === s.date && p.subject === sub).length;
+      const urgent = (t) => t.exam && (t.max - d) / 86400000 <= 3;
+      const ok = tasks.filter((t) => !placed[t.id] && t.min <= d && (urgent(t) || nToday(t.subject) < 2) && (!t.after || (placed[t.after] && placed[t.after] <= ymd(addDays(d, -(t.gap || 1))))) && !(t.last && plan.some((p) => p.date === s.date && p.kind === 'veille' && p.exam === t.exam)));
+      const late = (t) => Math.max(0, Math.round((t.max - d) / 86400000));
+      ok.sort((a, b) => Math.min(late(a), 7) - Math.min(late(b), 7) || a.prio - b.prio || (a.subject === lastSubject) - (b.subject === lastSubject) || (b.w || 0) - (a.w || 0) || a.order - b.order);
+      let t = ok[0];
+      // la veille de l'examen : séance « veille » en dernier dans la journée
+      if (t && t.kind === 'veille' && sessions.some((o) => o.date === s.date && o.start > s.start)) t = ok.find((x) => x.kind !== 'veille') || null;
+      if (t) { placed[t.id] = s.date; plan.push({ ...s, task: t.id, kind: t.kind, subject: t.subject, lesson: t.lesson, exam: t.exam, iv: t.iv, n: t.n }); lastSubject = t.subject; continue; }
+      // sinon : revoir les matières du jour, puis entraînement libre (maths, PC…)
+      const k = dayKey(d);
+      const todays = k ? [...new Set(HOURS.map((h) => st.edt[`${k}-${h}`]).filter(Boolean))].filter((x) => WEIGHT[x] > 0) : [];
+      const usedToday = plan.filter((p) => p.date === s.date).map((p) => p.subject);
+      let sub = todays.find((x) => !usedToday.includes(x));
+      let kind = 'jour';
+      if (sub && plan.filter((p) => p.date === s.date && p.kind === 'jour').length >= 2) sub = null;
+      if (!sub && plan.some((p) => p.date === s.date && p.kind === 'libre')) continue; // garder du temps de repos
+      if (!sub) { kind = 'libre'; const pool = Object.keys(WEIGHT).filter((x) => api.ready(x)).sort((a, b) => WEIGHT[b] - WEIGHT[a]); sub = pool[(plan.length + d.getDate()) % Math.min(4, pool.length)] || 'mathematiques'; }
+      plan.push({ ...s, task: `${s.date}:${s.start}:${kind}:${sub}`, kind, subject: sub, lesson: null });
+      lastSubject = sub;
+    }
+    for (const t of tasks) if (!placed[t.id] && (t.exam || t.kind === 'retard' || t.kind === 'prep')) missed.push(t);
+    st.plan = { made: ymd(new Date()), items: plan, missed: missed.map((t) => ({ subject: t.subject, lesson: t.lesson, kind: t.kind })), titles };
+    return st.plan;
+  }
+
+  // ---------------- Rappels ----------------
+  function upcomingReminders(st) {
+    const out = [], now = Date.now(), limit = now + 14 * 86400000;
+    for (const p of (st.plan && st.plan.items) || []) {
+      const d = parseYmd(p.date); d.setMinutes(p.start);
+      if (d.getTime() > now && d.getTime() < limit && !st.done[p.task]) out.push({ at: d, title: `⏰ C’est l’heure de réviser ! (${hm(p.start)})`, body: `${SHORT[p.subject] || p.subject} — ${KIND[p.kind].t}${p.lesson ? ' : ' + ((st.plan.titles || {})[`${p.subject}/${p.lesson}`] || '') : ''}` });
+    }
+    for (const e of st.exams) {
+      const d = parseYmd(e.date); d.setDate(d.getDate() - 1); d.setHours(19, 0, 0, 0);
+      if (d.getTime() > now && d.getTime() < limit) out.push({ at: d, title: `📝 Examen demain : ${SHORT[e.subject] || e.subject}`, body: `${e.time ? 'À ' + e.time + '. ' : ''}Relis tes fiches et couche-toi tôt. Bon courage ! 💪` });
+    }
+    return out.sort((a, b) => a.at - b.at).slice(0, 60);
+  }
+  let pcTimer = null;
+  async function syncNotifications(st) {
+    const list = st.notif ? upcomingReminders(st) : [];
+    const N = window.TCSF_NATIVE && window.TCSF_NATIVE.notify;
+    if (N) { try { await N.cancelAll(); if (list.length) await N.schedule(list); } catch (e) { console.warn(e); } try { window.TCSF_DUO && window.TCSF_DUO.remind(); } catch {} return; }
+    // PC : rappels affichés tant que l'application est ouverte
+    if (pcTimer) clearInterval(pcTimer);
+    if (!list.length || !('Notification' in window)) return;
+    const shown = new Set();
+    pcTimer = setInterval(() => {
+      const now = Date.now();
+      for (const r of list) {
+        const k = r.at.getTime();
+        if (!shown.has(k) && now >= k && now - k < 120000) { shown.add(k); try { new Notification(r.title, { body: r.body, icon: 'icon.png' }); } catch {} if (window.TCSF_SFX) window.TCSF_SFX.chime(); }
+      }
+    }, 20000);
+  }
+  async function askPermission() {
+    const N = window.TCSF_NATIVE && window.TCSF_NATIVE.notify;
+    if (N) return N.request();
+    if ('Notification' in window && Notification.permission === 'default') { try { await Notification.requestPermission(); } catch {} }
+    return true;
+  }
+
+  // ---------------- Interface ----------------
+  async function render(view, api) {
+    const st = load();
+    const subjects = await api.getSubjects();
+    const subj = (id) => subjects.find((s) => s.id === id) || (id === 'eps' ? { id, title: 'EPS (sport)', color: ['#ea580c', '#f97316'] } : { id, title: id, color: ['#64748b', '#94a3b8'] });
+    const color = (id) => (subj(id).color || ['#64748b'])[0];
+    const ready = (id) => subj(id).status === 'ready' && (subj(id).categories || []).some((c) => c.lessons);
+    const catOf = (id, mode) => (subj(id).categories || []).find((c) => c.mode === mode || c.id === mode);
+    const A = { readJSON: api.readJSON, ready, hasExam: (id) => !!catOf(id, 'examen'), hasMethode: (id) => !!catOf(id, 'methode') };
+    let tab = api.tab || (Object.keys(st.edt).length ? (st.exams.length ? 'programme' : 'examens') : 'edt');
+    view.innerHTML = `<section class="subject-head plan-head"><span class="tile-icon big">${(window.TCSF_ICONS || {}).calendar || '📅'}</span>
+      <div><p class="eyebrow">Mon organisation</p><h1>Mon planning de révision</h1><p class="muted">Ton emploi du temps + tes examens → un programme de révision dans ton temps libre, avec des rappels.</p></div></section>
+      <nav class="plan-tabs" role="tablist">${[['edt', '1. Emploi du temps'], ['examens', '2. Mes examens'], ['programme', '3. Mon programme'], ['semaine', '📆 Ma semaine'], ['stats', '📊 Mes stats']].map(([k, l]) => `<a role="tab" class="tab${k === tab ? ' active' : ''}" href="#/planning/${k}">${l}</a>`).join('')}</nav>
+      <div class="content plan-body"></div>`;
+    const body = view.querySelector('.plan-body');
+    const persist = () => save(st);
+    if (tab === 'edt') return renderEdt();
+    if (tab === 'examens') return renderExams();
+    if (tab === 'semaine') return renderWeek();
+    if (tab === 'stats') return renderStats();
+    return renderProgramme();
+
+    // ===== 4. Ma semaine : cours (gris), révisions (couleur de la matière), examens =====
+    async function renderWeek() {
+      if (!Object.keys(st.edt).length) { body.innerHTML = '<p class="muted">Remplis d’abord ton emploi du temps (onglet 1).</p>'; return; }
+      if (!st.plan || st.plan.made !== ymd(new Date())) { await generate(st, A); persist(); }
+      let off = 0;
+      const draw = () => {
+        const t0 = parseYmd(ymd(new Date())); const mon = addDays(t0, -((t0.getDay() + 6) % 7) + off * 7);
+        const days = [...Array(7)].map((_, i) => addDays(mon, i));
+        const H0 = 8, H1 = 22, px = 44;
+        const col = (d) => {
+          const k = dayKey(d), date = ymd(d);
+          let s = '';
+          if (k) HOURS.forEach((h) => { const sid = st.edt[`${k}-${h}`]; if (sid) s += `<div class="wk-ev wk-class" style="top:${(h - H0) * px}px;height:${px - 3}px;--c:${color(sid)}"><b>${esc(SHORT[sid] || sid)}</b><small>cours</small></div>`; });
+          (st.plan.items || []).filter((p) => p.date === date).forEach((p) => { const L = link0(p); s += `<a class="wk-ev wk-rev${st.done[p.task] ? ' done' : ''}" ${L ? `href="${L}"` : ''} style="top:${((p.start / 60) - H0) * px}px;height:${((p.end - p.start) / 60) * px - 3}px;--c:${color(p.subject)}"><b>${KIND[p.kind].ic} ${esc(SHORT[p.subject] || p.subject)}</b><small>${hm(p.start)} · ${KIND[p.kind].t}</small></a>`; });
+          st.exams.filter((e) => e.date === date).forEach((e) => { const h = e.time ? toMin(e.time) / 60 : 8; s += `<div class="wk-ev wk-exam" style="top:${(h - H0) * px}px;height:${px * 2 - 3}px"><b>📝 ${esc(SHORT[e.subject] || e.subject)}</b><small>examen</small></div>`; });
+          return `<div class="wk-col${date === ymd(new Date()) ? ' today' : ''}"><div class="wk-dh">${['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][d.getDay()]} <b>${d.getDate()}</b></div><div class="wk-cells" style="height:${(H1 - H0) * px}px">${s}</div></div>`;
+        };
+        body.innerHTML = `<div class="wk-nav"><button class="btn" data-w="-1">←</button><b>Semaine du ${nice(ymd(days[0]))}</b><button class="btn" data-w="1">→</button></div>
+          <div class="wk-grid"><div class="wk-hours"><div class="wk-dh"></div>${[...Array(H1 - H0)].map((_, i) => `<div style="height:${px}px">${H0 + i}h</div>`).join('')}</div>${days.map(col).join('')}</div>
+          <p class="w-small muted">Gris : tes cours · Couleur : tes révisions (touche pour commencer) · Rouge : examens.</p>`;
+        body.querySelectorAll('[data-w]').forEach((b) => (b.onclick = () => { off += +b.dataset.w; draw(); }));
+      };
+      draw();
+    }
+
+    // ===== 5. Mes stats =====
+    function renderStats() {
+      const F = st.focus || {}, today = parseYmd(ymd(new Date()));
+      const last7 = [...Array(7)].map((_, i) => ymd(addDays(today, i - 6)));
+      const mins = last7.map((d) => F[d] || 0), max = Math.max(30, ...mins);
+      const items = (st.plan && st.plan.items) || [];
+      const per = {}; items.filter((p) => st.done[p.task]).forEach((p) => (per[p.subject] = (per[p.subject] || 0) + (p.end - p.start)));
+      let streak = 0; for (let i = 0; ; i++) { const d = ymd(addDays(today, -i)); if (F[d]) streak++; else if (i) break; if (i > 365) break; }
+      const total = Object.values(F).reduce((a, b) => a + b, 0);
+      body.innerHTML = `<div class="st-tiles"><div><b>${Math.round(total / 60 * 10) / 10} h</b><small>en mode Focus</small></div><div><b>${streak} 🔥</b><small>jours de travail d’affilée</small></div><div><b>${st.stars || 0} ⭐</b><small>séances terminées</small></div><div><b>${items.length ? Math.round(items.filter((p) => st.done[p.task]).length / items.length * 100) : 0} %</b><small>du programme fait</small></div></div>
+        <h3>⏱️ Minutes de Focus · 7 derniers jours</h3>
+        <div class="st-bars">${last7.map((d, i) => `<div><span style="height:${(mins[i] / max) * 140}px"></span><b>${mins[i]}</b><small>${['D', 'L', 'M', 'M', 'J', 'V', 'S'][parseYmd(d).getDay()]}</small></div>`).join('')}</div>
+        <h3>📚 Temps de révision par matière (séances faites)</h3>
+        ${Object.keys(per).length ? Object.entries(per).sort((a, b) => b[1] - a[1]).map(([s, m]) => `<div class="st-row"><span>${esc(SHORT[s] || s)}</span><div class="w-massbar"><span style="width:${(m / Math.max(...Object.values(per))) * 100}%;background:${color(s)}"></span></div><b>${m} min</b></div>`).join('') : '<p class="muted">Termine des séances (bouton ⏱️ Focus ou ✔) pour voir tes statistiques.</p>'}`;
+    }
+    function link0(p) {
+      const c = catOf(p.subject, KIND[p.kind].cat) || catOf(p.subject, 'revision') || catOf(p.subject, 'cours');
+      if (!ready(p.subject) || !c) return '';
+      if (p.kind === 'erreurs') return `#/s/${encodeURIComponent(p.subject)}/__erreurs`;
+      if (p.kind === 'devoir') { const m = catOf(p.subject, 'methode'); if (m) return `#/l/${encodeURIComponent(p.subject)}/${encodeURIComponent(m.id)}/${encodeURIComponent(p.lesson)}`; }
+      if (['exo', 'prep', 'retard', 'avance', 'rev', 'learn'].includes(p.kind) && p.lesson) return `#/s/${encodeURIComponent(p.subject)}/${encodeURIComponent(p.lesson)}`;
+      return p.lesson && p.kind !== 'blanc' ? `#/l/${encodeURIComponent(p.subject)}/${encodeURIComponent(c.id)}/${encodeURIComponent(p.lesson)}` : `#/c/${encodeURIComponent(p.subject)}/${encodeURIComponent(c.id)}`;
+    }
+
+    // ===== 1. Emploi du temps =====
+    function renderEdt() {
+      let brush = Object.keys(SHORT)[0];
+      body.innerHTML = `<div class="box def"><span class="box-title">Deux façons de remplir ton emploi du temps</span>
+        <p><b>📷 Avec une photo :</b> prends ton emploi du temps en photo, l’application le lit toute seule, puis tu corriges si besoin.<br><b>✋ À la main :</b> choisis une matière ci-dessous, puis touche les cases de tes cours.</p></div>
+        <div class="plan-photo-row"><label class="btn primary plan-file">📷 Prendre / choisir une photo<input type="file" accept="image/*" hidden></label>
+        <button type="button" class="btn ghost plan-clear">🗑 Vider le tableau</button><span class="plan-ocr-msg muted"></span></div>
+        <div class="plan-edt-wrap"><div class="plan-grid-box"><div class="plan-brushes"></div><div class="table-wrap"><table class="plan-grid"></table></div>
+        <p class="w-small">Astuce : touche une case avec la même matière pour l’effacer. Les cases <span class="plan-auto-demo">en pointillés</span> ont été lues sur la photo : vérifie-les.</p></div>
+        <div class="plan-photo" ${st.photo ? '' : 'hidden'}><p class="w-small">Ta photo :</p><img alt="Photo de l’emploi du temps" ${st.photo ? `src="${st.photo}"` : ''}></div></div>
+        <h2 data-nonum>Quand peux-tu réviser ?</h2>
+        <div class="plan-prefs">
+          <label>Les jours de classe, de <input type="time" data-p="eveStart"> à <input type="time" data-p="eveEnd"></label>
+          <label>Le dimanche matin, de <input type="time" data-p="sun1Start"> à <input type="time" data-p="sun1End"></label>
+          <label>Le dimanche après-midi, de <input type="time" data-p="sun2Start"> à <input type="time" data-p="sun2End"></label>
+          <label>Durée d’une séance <select data-p="len"><option>30</option><option>45</option><option>60</option></select> min, pause <select data-p="pause"><option>5</option><option>10</option><option>15</option></select> min</label>
+          <label>Maximum par jour <select data-p="maxDay"><option value="90">1 h 30</option><option value="120">2 h</option><option value="180">3 h</option><option value="240">4 h</option></select></label>
+          <label class="plan-check"><input type="checkbox" data-p="useFree"> Réviser aussi pendant les après-midi libres (sans cours)</label>
+        </div>
+        <p style="text-align:center"><a class="btn primary" href="#/planning/examens">Suivant : mes examens →</a></p>`;
+      const grid = body.querySelector('.plan-grid'), brushes = body.querySelector('.plan-brushes'), msg = body.querySelector('.plan-ocr-msg');
+      brushes.innerHTML = Object.entries(SHORT).map(([id, n]) => `<button type="button" class="chip-btn${id === brush ? ' on' : ''}" data-s="${id}" style="--c:${color(id)}"><i style="background:${color(id)}"></i>${n}</button>`).join('') + `<button type="button" class="chip-btn" data-s="">🧽 Gomme</button>`;
+      brushes.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; brush = b.dataset.s; brushes.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); });
+      const paintGrid = () => {
+        grid.innerHTML = `<tr><th></th>${DAYS.map(([, n]) => `<th>${n}</th>`).join('')}</tr>` + HOURS.map((h) => `<tr><th>${h}h–${h + 1}h</th>${DAYS.map(([k]) => { const s = st.edt[`${k}-${h}`]; return `<td data-c="${k}-${h}" class="${s ? 'busy' : ''}${st.auto[`${k}-${h}`] ? ' auto' : ''}${h === 12 || h === 13 ? ' lunch' : ''}" style="${s ? `background:${color(s)}` : ''}">${s ? esc(SHORT[s] || s) : ''}</td>`; }).join('')}</tr>`).join('');
+      };
+      let painting = false, paintVal = null;
+      const apply = (td) => {
+        const c = td.dataset.c; if (!c) return;
+        if (paintVal === null) paintVal = st.edt[c] === brush ? '' : brush;
+        if (paintVal) st.edt[c] = paintVal; else delete st.edt[c];
+        delete st.auto[c];
+        td.className = (paintVal ? 'busy' : '') + (/-1[23]$/.test(c) ? ' lunch' : ''); td.style.background = paintVal ? color(paintVal) : ''; td.textContent = paintVal ? SHORT[paintVal] : '';
+      };
+      grid.addEventListener('pointerdown', (e) => { const td = e.target.closest('td'); if (!td) return; painting = true; paintVal = null; apply(td); e.preventDefault(); });
+      grid.addEventListener('pointerover', (e) => { if (!painting) return; const td = e.target.closest('td'); if (td) apply(td); });
+      window.addEventListener('pointerup', () => { if (painting) { painting = false; st.plan = null; persist(); } }, { once: false });
+      paintGrid();
+      body.querySelector('.plan-clear').addEventListener('click', () => { if (!confirm('Vider tout le tableau ?')) return; st.edt = {}; st.auto = {}; st.plan = null; persist(); paintGrid(); });
+      // photo
+      body.querySelector('.plan-file input').addEventListener('change', async (e) => {
+        const f = e.target.files && e.target.files[0]; if (!f) return;
+        const url = await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+        // miniature gardée pour l'afficher à côté du tableau
+        const img = new Image(); img.src = url; await img.decode();
+        const k = Math.min(1, 1100 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = img.width * k; c.height = img.height * k; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        st.photo = c.toDataURL('image/jpeg', 0.72);
+        const ph = body.querySelector('.plan-photo'); ph.hidden = false; ph.querySelector('img').src = st.photo;
+        msg.textContent = '🔎 Lecture de la photo… (quelques secondes)';
+        try {
+          const r = await readTimetable(url, (s, p) => { if (/recogniz/.test(s)) msg.textContent = `🔎 Lecture de la photo… ${Math.round(p * 100)} %`; });
+          if (r.error) { msg.innerHTML = `⚠️ Je n’ai pas réussi à repérer ${r.found.days < 2 ? 'les jours' : 'les heures'} sur la photo. Remplis le tableau à la main (la photo reste affichée à côté pour t’aider).`; }
+          else {
+            const n = Object.keys(r.cells).length;
+            for (const [c, s] of Object.entries(r.cells)) { st.edt[c] = s; st.auto[c] = 1; }
+            msg.innerHTML = n ? `✅ J’ai lu <b>${n}</b> heure(s) de cours. Vérifie les cases en pointillés et corrige si besoin.` : '⚠️ Je n’ai reconnu aucune matière. Remplis le tableau à la main.';
+            st.plan = null; paintGrid();
+          }
+        } catch (err) { console.error(err); msg.textContent = '⚠️ La lecture automatique a échoué. Remplis le tableau à la main.'; }
+        persist(); e.target.value = '';
+      });
+      // préférences
+      body.querySelectorAll('[data-p]').forEach((inp) => {
+        const k = inp.dataset.p;
+        if (inp.type === 'checkbox') inp.checked = !!st.prefs[k]; else inp.value = String(st.prefs[k]);
+        inp.addEventListener('change', () => { st.prefs[k] = inp.type === 'checkbox' ? inp.checked : inp.tagName === 'SELECT' ? +inp.value : inp.value; st.plan = null; persist(); });
+      });
+    }
+
+    // ===== 2. Examens =====
+    async function renderExams() {
+      const opts = Object.entries(SHORT).filter(([id]) => id !== 'eps').map(([id, n]) => `<option value="${id}">${esc(subj(id).title || n)}</option>`).join('');
+      body.innerHTML = `<div class="box def"><span class="box-title">Tes contrôles et examens</span><p>Ajoute chaque examen avec sa date et les leçons concernées. Le programme commence par comprendre chaque leçon, puis les exercices, puis la mémorisation, et un examen blanc avant le jour J.</p></div>
+        <form class="plan-exam-form"><label>Matière <select name="subject">${opts}</select></label><label>Date <input type="date" name="date" required></label><label>Heure <input type="time" name="time" value="08:00"></label>
+        <div class="plan-lessons"></div><button class="btn primary" type="submit">➕ Ajouter l’examen</button></form>
+        <div class="plan-exam-list"></div>
+        <p style="text-align:center"><a class="btn primary" href="#/planning/programme">Voir mon programme →</a></p>`;
+      const form = body.querySelector('form'), lessonsBox = body.querySelector('.plan-lessons');
+      form.date.min = ymd(new Date());
+      const showLessons = async () => {
+        const id = form.subject.value;
+        const idx = ready(id) ? (await api.readJSON(`${id}/index.json`).catch(() => null)) || [] : [];
+        lessonsBox.innerHTML = idx.length ? `<p class="w-small"><b>Leçons de l’examen</b> (coche celles qui tombent) :</p><div class="plan-lesson-checks">${idx.map((l) => `<label><input type="checkbox" value="${esc(l.id)}"> ${esc(l.title)}</label>`).join('')}</div>` : '<p class="w-small">Cette matière n’a pas encore de leçons dans l’application : le programme prévoira des séances de révision avec ton cahier.</p>';
+      };
+      form.subject.addEventListener('change', showLessons); showLessons();
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const ex = { id: 'e' + Date.now().toString(36), subject: form.subject.value, date: form.date.value, time: form.time.value, lessons: [...lessonsBox.querySelectorAll('input:checked')].map((x) => x.value) };
+        if (!ex.date) return;
+        st.exams.push(ex); st.plan = null; persist(); list(); form.reset(); form.date.min = ymd(new Date()); form.time.value = '08:00'; showLessons();
+        if (window.TCSF_SFX) window.TCSF_SFX.good();
+      });
+      const list = () => {
+        const L = body.querySelector('.plan-exam-list');
+        const ex = [...st.exams].sort((a, b) => a.date.localeCompare(b.date));
+        L.innerHTML = ex.length ? ex.map((e) => { const n = daysTo(e.date); return `<div class="plan-exam${n < 0 ? ' past' : ''}" style="--c:${color(e.subject)}"><div><b>${esc(subj(e.subject).title)}</b><br><span class="muted">${nice(e.date)}${e.time ? ' à ' + e.time : ''} · ${e.lessons.length ? e.lessons.length + ' leçon(s)' : 'leçons non précisées'}</span></div><span class="plan-count">${n < 0 ? 'passé' : n === 0 ? 'aujourd’hui !' : n === 1 ? 'demain' : 'dans ' + n + ' j'}</span><button type="button" class="icon-btn" data-del="${e.id}" title="Supprimer">✕</button></div>`; }).join('') : '<p class="muted">Aucun examen pour l’instant.</p>';
+        L.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => { st.exams = st.exams.filter((x) => x.id !== b.dataset.del); st.plan = null; persist(); list(); }));
+      };
+      list();
+    }
+
+    // ===== 3. Programme =====
+    async function renderProgramme() {
+      if (!Object.keys(st.edt).length) { body.innerHTML = '<div class="box warn"><span class="box-title">Il manque ton emploi du temps</span><p>Commence par remplir ton emploi du temps (photo ou à la main).</p><p><a class="btn primary" href="#/planning/edt">Remplir mon emploi du temps</a></p></div>'; return; }
+      if (!st.plan || st.plan.made !== ymd(new Date())) { await generate(st, A); persist(); }
+      await syncNotifications(st);
+      const plan = st.plan, T = plan.titles || {};
+      const exams = st.exams.filter((e) => daysTo(e.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
+      const byDay = {}; for (const p of plan.items) (byDay[p.date] = byDay[p.date] || []).push(p);
+      const tot = plan.items.length, done = plan.items.filter((p) => st.done[p.task]).length;
+      const link = link0;
+      // ---- Où j'en suis dans le programme du centre ----
+      const PR = st.prog || {};
+      const progBox = await (async () => {
+        const rows = [];
+        for (const s of Object.keys(PR)) {
+          const g = PR[s], idx = (await api.readJSON(`${s}/index.json`).catch(() => null)) || [];
+          const diff = g.done - g.auto;
+          const badge = diff >= 1 ? `<span class="pg-b ok">🚀 en avance (+${diff})</span>` : diff >= -1 ? '<span class="pg-b">✔ à jour</span>' : `<span class="pg-b ko">⚠ ${-diff} leçon(s) de retard</span>`;
+          rows.push(`<div class="pg-row" style="--c:${color(s)}"><div class="pg-top"><b>${esc(subj(s).title || SHORT[s])}</b>${badge}<span class="muted">${g.done}/${g.n} 👑</span></div>
+            <div class="pg-bar"><span style="width:${(g.done / g.n) * 100}%"></span><i style="left:${(Math.min(g.n, g.cur + 0.5) / g.n) * 100}%" title="En classe"></i></div>
+            <label class="pg-cur">📍 En classe, on est à : <select data-cur="${esc(s)}"><option value="">Automatique (selon la date) — ${esc((idx[Math.min(g.auto, idx.length - 1)] || {}).title || '')}</option>${idx.map((l) => `<option value="${esc(l.id)}"${st.cur && st.cur[s] === l.id ? ' selected' : ''}>${esc(l.title)}</option>`).join('')}</select></label></div>`);
+        }
+        return rows.length ? `<details class="pg-box"${st.pgOpen === false ? '' : ' open'}><summary>📚 Où j’en suis dans le programme <small class="muted">(ordre des leçons du centre)</small></summary>
+          <p class="w-small muted">Le programme se construit tout seul : <b>🎒 préparer</b> la leçon avant le prochain cours de la matière, <b>🚑 rattraper</b> les leçons en retard, <b>🔁 rappels espacés</b> (J+1, J+3, J+7, J+16, J+35) pour ne pas oublier, <b>🧠 erreurs</b> à corriger, <b>🏁 devoir</b> le dimanche, et les matières à fort coefficient d’abord. Les séances se cochent <b>toutes seules</b> quand tu fais vraiment l’activité.</p>${rows.join('')}</details>` : '';
+      })();
+      body.innerHTML = progBox + `${exams.length ? `<div class="plan-countdowns">${exams.slice(0, 4).map((e) => { const n = daysTo(e.date); return `<div class="plan-cd" style="--c:${color(e.subject)}"><b>${n === 0 ? 'Aujourd’hui' : n === 1 ? 'Demain' : 'J − ' + n}</b><span>${esc(SHORT[e.subject])} · ${nice(e.date)}</span></div>`; }).join('')}</div>` : '<div class="box note"><span class="box-title">Pas d’examen prévu</span><p>Ton programme contient des révisions régulières : revoir chaque soir les matières du jour et t’entraîner. Ajoute tes examens pour un programme ciblé.</p></div>'}
+        <div class="plan-progress"><span>Séances faites : <b>${done}</b> / ${tot}</span><span class="plan-stars" title="Une étoile par séance terminée">⭐ <b>${st.stars || 0}</b> étoiles</span><div class="w-massbar"><span style="width:${tot ? (done / tot) * 100 : 0}%;background:var(--ex-line)"></span></div></div>
+        ${plan.missed.length ? `<div class="box warn"><span class="box-title">Pas assez de temps libre</span><p>${plan.missed.length} séance(s) n’ont pas trouvé de place avant l’examen. Ajoute des créneaux (onglet 1) ou augmente le maximum par jour.</p></div>` : ''}
+        <div class="plan-tools"><label class="plan-check"><input type="checkbox" class="plan-notif" ${st.notif ? 'checked' : ''}> 🔔 Rappels (notifications) à l’heure de chaque séance et la veille des examens</label>
+        <button type="button" class="btn ghost plan-regen">↻ Refaire le programme</button><button type="button" class="btn ghost plan-print">🖨 Imprimer</button></div>
+        <div class="plan-days">${Object.keys(byDay).sort().map((d) => `<section class="plan-day${d === ymd(new Date()) ? ' today' : ''}"><h3>${d === ymd(new Date()) ? '📍 Aujourd’hui — ' : ''}${nice(d)}${exams.some((e) => e.date === d) ? ' <span class="tag">📝 examen</span>' : ''}</h3>
+          ${byDay[d].map((p) => { const L = link(p); const k = KIND[p.kind]; return `<div class="plan-item${st.done[p.task] ? ' done' : ''}" style="--c:${color(p.subject)}"><span class="plan-tick" data-t="${esc(p.task)}" title="${st.done[p.task] ? 'Faite' : 'Se coche toute seule quand tu fais l’activité'}">${st.done[p.task] ? '✅' : '⭕'}</span>
+            <div class="plan-time">${hm(p.start)}<br><small>${hm(p.end)}</small></div><div class="plan-what"><b>${k.ic} ${esc(SHORT[p.subject] || p.subject)} — ${k.t}${p.iv ? ` (J+${p.iv})` : ''}${p.n ? ` · ${p.n} erreurs` : ''}</b>${p.lesson ? `<br><span>${esc(T[`${p.subject}/${p.lesson}`] || '')}</span>` : !ready(p.subject) ? '<br><span class="muted">avec ton cahier et ton livre</span>' : ''}</div><span class="plan-acts">${st.done[p.task] ? '' : `<button type="button" class="btn plan-focus" data-f="${esc(p.task)}">⏱️ Focus</button>`}${L ? `<a class="btn primary plan-go" href="${L}">Commencer</a>` : ''}</span></div>`; }).join('')}</section>`).join('')}</div>
+        <div class="box ex"><span class="box-title">🧠 Conseils pour bien mémoriser</span><ul>
+          <li><b>Comprendre d’abord</b> : on retient mieux ce qu’on a compris (fais la leçon « avec le prof »).</li>
+          <li><b>Se tester</b> plutôt que relire : cache la fiche et récite, fais les exercices sans regarder.</li>
+          <li><b>Répéter dans le temps</b> : le programme revient sur chaque leçon le lendemain puis quelques jours après.</li>
+          <li><b>Séances courtes</b> avec une pause (méthode Pomodoro) et téléphone loin de toi.</li>
+          <li><b>Dormir</b> : le sommeil fixe ce que tu as appris, surtout la veille d’un examen.</li></ul></div>`;
+      // pas de case à cocher : une séance se valide seulement quand la tâche est vraiment faite
+      body.querySelectorAll('.plan-tick').forEach((c) => c.addEventListener('click', () => {
+        if (st.done[c.dataset.t]) return;
+        const p = plan.items.find((x) => x.task === c.dataset.t), L = p && link(p);
+        toast(L ? 'Cette séance se coche toute seule quand tu termines l’activité : touche « Commencer ».' : 'Lance ⏱️ Focus et va jusqu’au bout : la séance se cochera toute seule.');
+      }));
+      body.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => {
+        const p = plan.items.find((x) => x.task === b.dataset.f); if (!p) return;
+        const L = link(p);
+        focus(p, st, L, (full) => {
+          // séance « avec ton cahier » (pas d'activité dans l'appli) : validée si le minuteur est allé jusqu'au bout
+          if (full && !L && !st.done[p.task]) { st.done[p.task] = 1; st.stars = (st.stars || 0) + 1; persist(); syncNotifications(st); reward(p, st, true); try { window.TCSF_DUO && window.TCSF_DUO.addXP(10); } catch {} renderProgramme(); }
+        });
+      }));
+      body.querySelectorAll('[data-cur]').forEach((sel) => sel.addEventListener('change', async () => {
+        st.cur = st.cur || {}; if (sel.value) st.cur[sel.dataset.cur] = sel.value; else delete st.cur[sel.dataset.cur];
+        st.plan = null; await generate(st, A); persist(); renderProgramme();
+      }));
+      body.querySelector('.plan-regen').addEventListener('click', async () => { st.plan = null; await generate(st, A); persist(); renderProgramme(); });
+      body.querySelector('.plan-print').addEventListener('click', () => window.print());
+      body.querySelector('.plan-notif').addEventListener('change', async (e) => { st.notif = e.target.checked; if (st.notif) await askPermission(); persist(); syncNotifications(st); });
+      // première visite : demander l'autorisation des rappels
+      if (st.notif && !st.asked) { st.asked = 1; persist(); askPermission().then(() => syncNotifications(st)); }
+      const t = body.querySelector('.plan-day.today'); if (t) setTimeout(() => t.scrollIntoView({ block: 'start', behavior: 'smooth' }), 200);
+    }
+  }
+
+  // ---------------- Mode Focus (Pomodoro) : minuteur plein écran pour une séance ----------------
+  function focus(p, st, href, onDone) {
+    const total = (p.end - p.start) * 60; let left = total, run = true, last = Date.now();
+    const o = document.createElement('div'); o.className = 'fc-overlay';
+    const R = 110, C = 2 * Math.PI * R;
+    o.innerHTML = `<div class="fc-card"><p class="fc-sub">${KIND[p.kind].ic} ${esc(SHORT[p.subject] || p.subject)} — ${esc(KIND[p.kind].t)}</p>
+      <svg class="fc-ring" viewBox="0 0 260 260"><circle cx="130" cy="130" r="${R}" class="fc-bg"/><circle cx="130" cy="130" r="${R}" class="fc-fg" stroke-dasharray="${C}" stroke-dashoffset="0" transform="rotate(-90 130 130)"/></svg>
+      <div class="fc-time">--:--</div>
+      <p class="fc-tip">📵 Téléphone loin de toi · 💧 un verre d’eau · une seule tâche</p>
+      <div class="fc-btns"><button class="btn fc-pause">⏸ Pause</button>${href ? `<a class="btn" href="${href}" target="_self">📖 Ouvrir la leçon</a>` : ''}<button class="btn primary fc-end">✔ J’ai fini</button><button class="btn fc-quit">✕</button></div></div>`;
+    document.body.appendChild(o);
+    const fg = o.querySelector('.fc-fg'), tm = o.querySelector('.fc-time');
+    const addMin = (m) => { if (m <= 0) return; const d = ymd(new Date()); st.focus = st.focus || {}; st.focus[d] = (st.focus[d] || 0) + m; save(st); };
+    let counted = 0;
+    const paint = () => { const s = Math.max(0, Math.round(left)); tm.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; fg.setAttribute('stroke-dashoffset', String(C * (1 - left / total))); };
+    const iv = setInterval(() => {
+      const now = Date.now(); if (run) left -= (now - last) / 1000; last = now;
+      const m = Math.floor((total - left) / 60); if (m > counted) { addMin(m - counted); counted = m; }
+      paint();
+      if (left <= 0) { finish(true); }
+    }, 500);
+    paint();
+    const close = () => { clearInterval(iv); o.remove(); };
+    function finish(auto) {
+      close();
+      if (window.TCSF_SFX) try { window.TCSF_SFX.fanfare(); } catch {}
+      if (auto && 'Notification' in window && Notification.permission === 'granted') try { new Notification('⏱️ Séance terminée !', { body: 'Bravo ! Fais une pause de 5 minutes 😊' }); } catch {}
+      onDone && onDone(auto || left <= total * 0.1);
+    }
+    o.querySelector('.fc-pause').onclick = (e) => { run = !run; e.target.textContent = run ? '⏸ Pause' : '▶ Reprendre'; o.classList.toggle('paused', !run); };
+    o.querySelector('.fc-end').onclick = () => finish(false);
+    o.querySelector('.fc-quit').onclick = close;
+    // on ouvre la leçon : le minuteur continue en petit, en bas de l'écran
+    o.querySelector('a.btn')?.addEventListener('click', () => o.classList.add('mini'));
+    o.addEventListener('click', (e) => { if (o.classList.contains('mini') && !e.target.closest('button')) o.classList.remove('mini'); });
+  }
+
+  // ---------------- Carte « Aujourd'hui » sur l'accueil ----------------
+  async function todayCard(el, api) {
+    const st = load();
+    if (!Object.keys(st.edt).length) { el.innerHTML = `<a class="plan-today empty" href="#/planning"><span class="plan-today-ic">📅</span><div><b>Organise tes révisions</b><br><span class="muted">Prends ton emploi du temps en photo et ajoute tes examens : je te prépare un programme avec des rappels.</span></div><span class="btn primary">Créer mon planning</span></a>`; return; }
+    const subjects = await api.getSubjects();
+    const ready = (id) => { const s = subjects.find((x) => x.id === id); return s && s.status === 'ready' && (s.categories || []).some((c) => c.lessons); };
+    const catOf = (id, m) => ((subjects.find((x) => x.id === id) || {}).categories || []).find((c) => c.mode === m || c.id === m);
+    if (!st.plan || st.plan.made !== ymd(new Date())) { await generate(st, { readJSON: api.readJSON, ready, hasExam: (id) => !!catOf(id, 'examen'), hasMethode: (id) => !!catOf(id, 'methode') }); save(st); }
+    syncNotifications(st);
+    const today = ymd(new Date()), items = st.plan.items.filter((p) => p.date === today);
+    const next = st.exams.filter((e) => daysTo(e.date) >= 0).sort((a, b) => a.date.localeCompare(b.date))[0];
+    el.innerHTML = `<div class="plan-today"><div class="plan-today-top"><b>📍 Aujourd’hui</b>${st.stars ? `<span class="tag">⭐ ${st.stars}</span>` : ''}${next ? `<span class="tag">📝 ${esc(SHORT[next.subject])} ${daysTo(next.date) === 0 ? 'aujourd’hui' : daysTo(next.date) === 1 ? 'demain' : 'dans ' + daysTo(next.date) + ' jours'}</span>` : ''}<a href="#/planning/programme" class="plan-today-all">Tout mon programme →</a></div>
+      ${items.length ? items.map((p) => `<div class="plan-mini${st.done[p.task] ? ' done' : ''}"><span>${hm(p.start)}</span><b>${KIND[p.kind].ic} ${esc(SHORT[p.subject] || p.subject)}</b><span class="muted">${KIND[p.kind].t}${p.lesson ? ' · ' + esc((st.plan.titles || {})[`${p.subject}/${p.lesson}`] || '') : ''}</span>${st.done[p.task] ? '✅' : ''}</div>`).join('') : '<p class="muted" style="margin:6px 0">Pas de séance prévue aujourd’hui. Repose-toi bien ! 😊</p>'}</div>`;
+  }
+
+  // ---------------- Séance faite → cochée toute seule + récompense ----------------
+  // Les activités de l'application envoient window 'tcsf:activity' { act: prof|exo|memo|examen, src?, subject?, lesson? }
+  function ctxOf(d) {
+    let { subject, lesson } = d;
+    const m = String(d.src || '').match(/^([^/]+)\/(?:l\/)?([^/.]+)/);
+    if (!subject && m) { subject = m[1]; lesson = lesson || m[2]; }
+    if (!subject) { const hh = location.hash.match(/^#\/l\/([^/]+)\/[^/]+\/([^/?]+)/); if (hh) { subject = decodeURIComponent(hh[1]); lesson = decodeURIComponent(hh[2]); } }
+    return { subject, lesson };
+  }
+  const KMAP = { prof: ['learn', 'prep', 'retard', 'avance'], exo: ['exo', 'rev'], memo: ['memo', 'veille', 'rev'], examen: ['blanc'], session: ['prep', 'retard', 'avance', 'learn', 'rev', 'exo', 'memo'], erreurs: ['erreurs'], devoir: ['devoir'] };
+  function activityDone(d) {
+    const st = load();
+    if (!st.plan) return;
+    const { subject, lesson } = ctxOf(d);
+    if (!subject) return;
+    const today = ymd(new Date());
+    // une leçon terminée (session Parcours) : point de départ des rappels espacés
+    if (d.act === 'session' && lesson) {
+      const k = `${subject}/${lesson}`;
+      if (!st.learned) st.learned = {};
+      const learnK = ['prep', 'retard', 'avance', 'learn'];
+      if (!st.learned[k]) st.learned[k] = today;
+      // apprendre la leçon valide toutes ses séances « apprendre » d'un coup
+      const L = st.plan.items.filter((p) => !st.done[p.task] && p.subject === subject && p.lesson === lesson && learnK.includes(p.kind));
+      if (L.length) { L.forEach((p) => (st.done[p.task] = 1)); st.stars = (st.stars || 0) + 1; st.plan = Object.assign(st.plan, { made: '' }); save(st); syncNotifications(st); reward(L[0], st); return; }
+    }
+    // une séance faite en avance compte aussi (la plus proche d'abord)
+    const cands = st.plan.items.filter((p) => !st.done[p.task] && p.subject === subject).sort((a, b) => a.date.localeCompare(b.date) || a.start - b.start);
+    const pick = cands.find((p) => (KMAP[d.act] || []).includes(p.kind) && (!p.lesson || !lesson || p.lesson === lesson))
+      || cands.find((p) => p.date === today && (p.kind === 'jour' || p.kind === 'libre'));
+    if (!pick) return;
+    st.done[pick.task] = 1;
+    st.stars = (st.stars || 0) + 1;
+    save(st); syncNotifications(st);
+    reward(pick, st);
+  }
+  // Animation de récompense : ⭐ +1
+  function reward(p, st, small) {
+    document.querySelector('.rw-overlay')?.remove();
+    const k = KIND[p.kind] || {};
+    const title = p.lesson ? (st.plan.titles || {})[`${p.subject}/${p.lesson}`] || '' : '';
+    const o = document.createElement('div');
+    o.className = 'rw-overlay' + (small ? ' small' : '');
+    o.innerHTML = `<div class="rw-card" role="status"><div class="rw-rays"></div><div class="rw-star">⭐</div><div class="rw-plus">+1</div>
+      <b class="rw-title">Séance terminée ! Bravo 🎉</b><p class="rw-what">${k.ic || ''} ${esc(SHORT[p.subject] || p.subject)} — ${esc(k.t || '')}${title ? '<br><small>' + esc(title) + '</small>' : ''}</p>
+      <p class="rw-total">Tu as maintenant <b>${st.stars}</b> ⭐ · ${st.plan.items.filter((x) => st.done[x.task]).length}/${st.plan.items.length} séances faites</p>
+      <button type="button" class="btn primary rw-ok">Super !</button></div>`;
+    document.body.appendChild(o);
+    const close = () => { o.classList.add('out'); setTimeout(() => o.remove(), 300); };
+    o.querySelector('.rw-ok').addEventListener('click', close);
+    o.addEventListener('click', (e) => { if (e.target === o) close(); });
+    setTimeout(close, small ? 2600 : 6000);
+    try { if (window.TCSF_SFX) window.TCSF_SFX.fanfare(); } catch {}
+    try { if (window.TCSF_Q && window.TCSF_Q.burst) window.TCSF_Q.burst(o.querySelector('.rw-card')); } catch {}
+    // mettre à jour la page planning si elle est ouverte
+    const c = document.querySelector(`.plan-item input[data-t="${CSS.escape(p.task)}"]`);
+    if (c && !c.checked) { c.checked = true; c.closest('.plan-item').classList.add('done'); }
+  }
+  window.addEventListener('tcsf:activity', (e) => { try { activityDone(e.detail || {}); } catch (err) { console.error(err); } });
+
+  window.TCSF_PLANNER = { render, todayCard, readTimetable, generate, freeSessions, load, save, syncNotifications, activityDone };
+  // au démarrage : reprogrammer les rappels
+  setTimeout(() => { try { const st = load(); if (st.plan) syncNotifications(st); } catch {} }, 1500);
+})();

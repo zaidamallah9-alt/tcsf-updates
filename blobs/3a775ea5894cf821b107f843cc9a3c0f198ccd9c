@@ -1,0 +1,93 @@
+[
+ {
+  "id": "ecosysteme",
+  "title": "L’écosystème et la sortie écologique",
+  "module": "1er semestre · L’écologie",
+  "description": "Écosystème, biotope, biocénose ; méthodes d’étude d’un milieu.",
+  "data": "svt/l/ecosysteme.json"
+ },
+ {
+  "id": "facteurs-edaphiques",
+  "title": "Les facteurs édaphiques et la répartition des êtres vivants",
+  "module": "1er semestre · L’écologie",
+  "description": "Constituants du sol, texture, eau, pH, calcaire et répartition des plantes.",
+  "data": "svt/l/facteurs-edaphiques.json"
+ },
+ {
+  "id": "facteurs-climatiques",
+  "title": "Les facteurs climatiques et la répartition des êtres vivants",
+  "module": "1er semestre · L’écologie",
+  "description": "Lumière, température, humidité ; diagramme ombrothermique ; adaptations.",
+  "data": "svt/l/facteurs-climatiques.json"
+ },
+ {
+  "id": "relations-trophiques",
+  "title": "Les relations alimentaires dans l’écosystème",
+  "module": "1er semestre · L’écologie",
+  "description": "Producteurs, consommateurs, décomposeurs ; chaînes et réseaux trophiques ; pyramides.",
+  "data": "svt/l/relations-trophiques.json"
+ },
+ {
+  "id": "flux-energie",
+  "title": "Le flux d’énergie et le cycle de la matière",
+  "module": "1er semestre · L’écologie",
+  "description": "Productivité, rendement écologique, cycle du carbone.",
+  "data": "svt/l/flux-energie.json"
+ },
+ {
+  "id": "equilibre-naturel",
+  "title": "L’équilibre naturel et la protection de l’environnement",
+  "module": "1er semestre · L’écologie",
+  "description": "Équilibre des écosystèmes, actions de l’homme, protection et développement durable.",
+  "data": "svt/l/equilibre-naturel.json"
+ },
+ {
+  "id": "angiospermes",
+  "title": "La reproduction sexuée chez les plantes à fleurs",
+  "module": "2e semestre · Les plantes",
+  "description": "La fleur, la pollinisation, la double fécondation, la graine et le fruit des angiospermes.",
+  "data": "svt/l/angiospermes.json"
+ },
+ {
+  "id": "gymnospermes",
+  "title": "La reproduction chez les gymnospermes",
+  "module": "2e semestre · Les plantes",
+  "description": "Le pin : cônes mâles et femelles, pollinisation par le vent, graine nue.",
+  "data": "svt/l/gymnospermes.json"
+ },
+ {
+  "id": "plantes-sans-fleurs",
+  "title": "La reproduction des plantes sans fleurs",
+  "module": "2e semestre · Les plantes",
+  "description": "Algues, mousses et fougères : spores, prothalle, gamètes et besoin d’eau.",
+  "data": "svt/l/plantes-sans-fleurs.json"
+ },
+ {
+  "id": "cycles-developpement",
+  "title": "Les cycles de développement",
+  "module": "2e semestre · Les plantes",
+  "description": "Cycle de vie, phase haploïde et phase diploïde, exemples animaux et végétaux.",
+  "data": "svt/l/cycles-developpement.json"
+ },
+ {
+  "id": "reproduction-asexuee",
+  "title": "La reproduction asexuée chez les plantes",
+  "module": "2e semestre · Les plantes",
+  "description": "Multiplication végétative naturelle et artificielle : bouturage, marcottage, greffage, culture in vitro.",
+  "data": "svt/l/reproduction-asexuee.json"
+ },
+ {
+  "id": "modification-genetique",
+  "title": "La modification génétique des plantes",
+  "module": "2e semestre · Les plantes",
+  "description": "L’ADN support de l’information génétique, le gène, la transgenèse et les plantes génétiquement modifiées.",
+  "data": "svt/l/modification-genetique.json"
+ },
+ {
+  "id": "classification-plantes",
+  "title": "La classification des plantes",
+  "module": "2e semestre · Les plantes",
+  "description": "Critères de classification, grands groupes de plantes et clé de détermination.",
+  "data": "svt/l/classification-plantes.json"
+ }
+]

@@ -1,0 +1,144 @@
+// Sons et petites animations de l'interface. Les sons sont fabriqués par le navigateur
+// (Web Audio) : aucun fichier audio, fonctionne hors ligne, sur PC et sur téléphone.
+// Ils réagissent tout seuls à ce qui se passe dans la page (bonne / mauvaise réponse, cartes, confettis…).
+(() => {
+  const KEY = 'tcsf:sound';
+  let on = true;
+  try { on = localStorage.getItem(KEY) !== 'off'; } catch {}
+  let ctx = null, master = null;
+  const audio = () => {
+    if (!on) return null;
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = 0.55; master.connect(ctx.destination);
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  };
+  // une note : fréquence, durée, forme d'onde, volume, décalage, glissement de fréquence
+  function tone(f, d = 0.1, type = 'sine', v = 0.15, at = 0, f2 = null) {
+    const c = audio(); if (!c) return;
+    const t = c.currentTime + at, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + d + 0.02);
+  }
+  // souffle (bruit filtré) pour les glissements
+  function swoosh(d = 0.16, from = 600, to = 2400, v = 0.08, at = 0) {
+    const c = audio(); if (!c) return;
+    const t = c.currentTime + at, n = Math.floor(c.sampleRate * d), buf = c.createBuffer(1, n, c.sampleRate), data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + d);
+    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t);
+  }
+  const SFX = {
+    click: () => { tone(880, 0.045, 'triangle', 0.09, 0, 620); },
+    tab: () => { tone(660, 0.05, 'triangle', 0.08); tone(990, 0.06, 'triangle', 0.06, 0.035); },
+    nav: () => swoosh(0.18, 500, 1800, 0.05),
+    good: () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.16, 'sine', 0.13, i * 0.065)); },
+    bad: () => { tone(311, 0.14, 'triangle', 0.12, 0, 260); tone(233, 0.22, 'triangle', 0.12, 0.12, 185); },
+    flip: () => swoosh(0.14, 900, 3200, 0.07),
+    pop: () => { tone(520, 0.07, 'sine', 0.1, 0, 760); },
+    send: () => { swoosh(0.12, 1200, 3000, 0.05); tone(740, 0.06, 'sine', 0.07, 0.02); },
+    match: () => { tone(784, 0.1, 'sine', 0.12); tone(1175, 0.16, 'sine', 0.12, 0.08); },
+    chime: () => { tone(1047, 0.25, 'sine', 0.08); tone(1568, 0.3, 'sine', 0.05, 0.05); },
+    fanfare: () => { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i === 5 ? 0.45 : 0.13, 'triangle', 0.12, i * 0.09)); swoosh(0.5, 2000, 6000, 0.03, 0.1); },
+    streak: (n) => { const b = 600 + Math.min(n, 10) * 60; tone(b, 0.08, 'square', 0.05); tone(b * 1.5, 0.12, 'square', 0.05, 0.07); },
+    tick: (x) => tone(500 + x * 900, 0.022, 'triangle', 0.045),
+    on: () => { tone(660, 0.08, 'sine', 0.12); tone(990, 0.12, 'sine', 0.12, 0.07); }
+  };
+  window.TCSF_SFX = SFX;
+
+  // ---- clics : son + onde (ripple) ----
+  const CLICKABLE = '.btn, .tile, .lesson-card, .chip-btn, .w-opt, .icon-btn, .tab, .w-round, .w-step, .pm-item, .flip, .spot, .pt-el, .toc a, .crumbs a, .duo-chip, .cv-ctrl button, .cv-seg, .cv-bigplay, .theme-btn';
+  document.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest(CLICKABLE);
+    if (!el || el.disabled) return;
+    if (el.matches('.tab')) SFX.tab(); else if (!el.matches('.flip, .w-opt, .pm-item')) SFX.click();
+    if (el.matches('.btn, .tile, .lesson-card, .chip-btn, .w-opt, .pm-item')) {
+      const r = el.getBoundingClientRect(), s = Math.max(r.width, r.height) * 2.2;
+      const rp = document.createElement('span');
+      rp.className = 'ripple';
+      rp.style.cssText = `width:${s}px;height:${s}px;left:${e.clientX - r.left - s / 2}px;top:${e.clientY - r.top - s / 2}px`;
+      el.appendChild(rp);
+      setTimeout(() => rp.remove(), 600);
+    }
+  }, true);
+
+  // ---- curseurs (sliders) : petit « tic » dont la hauteur suit la valeur ----
+  let lastTick = 0;
+  document.addEventListener('input', (e) => {
+    const r = e.target;
+    if (!(r instanceof HTMLInputElement) || r.type !== 'range' || !e.isTrusted) return;
+    const now = performance.now(); if (now - lastTick < 45) return; lastTick = now;
+    const x = (r.value - r.min) / ((r.max - r.min) || 1);
+    SFX.tick(x);
+  });
+
+  // ---- changement de page ----
+  window.addEventListener('hashchange', () => SFX.nav());
+
+  // ---- série de bonnes réponses ----
+  let streak = 0;
+  function toast(txt) {
+    const t = document.createElement('div');
+    t.className = 'streak-toast';
+    t.textContent = txt;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 1600);
+  }
+
+  // ---- réactions automatiques à ce qui apparaît dans la page ----
+  const had = (old, c) => (' ' + (old || '') + ' ').includes(' ' + c + ' ');
+  const mo = new MutationObserver((list) => {
+    for (const m of list) {
+      if (m.type === 'attributes') {
+        const t = m.target, old = m.oldValue;
+        if (!t.classList) continue;
+        if (t.classList.contains('w-fb')) {
+          if (t.classList.contains('ok') && !had(old, 'ok')) {
+            streak++; SFX.good();
+            if (streak >= 3) { setTimeout(() => SFX.streak(streak), 320); toast('🔥 × ' + streak); }
+          } else if (t.classList.contains('ko') && !had(old, 'ko') && /^\s*✘/.test(t.textContent)) { streak = 0; SFX.bad(); }
+        } else if (t.classList.contains('flip') && t.classList.contains('flipped') !== had(old, 'flipped')) SFX.flip();
+        else if (t.classList.contains('pm-item')) {
+          if (t.classList.contains('ok') && !had(old, 'ok') && t.classList.contains('def')) SFX.match();
+          else if (t.classList.contains('ko') && !had(old, 'ko')) SFX.bad();
+        } else if (t.classList.contains('w-note') && t.classList.contains('ok') && !had(old, 'ok')) SFX.chime();
+      } else {
+        for (const n of m.addedNodes) {
+          if (n.nodeType !== 1) continue;
+          if (n.classList.contains('confetti')) SFX.fanfare();
+          else if (n.classList.contains('prof-msg')) (n.classList.contains('me') ? SFX.send : SFX.pop)();
+        }
+      }
+    }
+  });
+  const start = () => mo.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'], attributeOldValue: true });
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+
+  // ---- bouton son activé / coupé dans la barre du haut ----
+  const ICON_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg>';
+  const ICON_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+  function addToggle() {
+    const menu = document.getElementById('menuBtn');
+    if (!menu || document.getElementById('soundBtn')) return;
+    const b = document.createElement('button');
+    b.id = 'soundBtn'; b.className = 'icon-btn'; b.type = 'button';
+    const paint = () => { b.innerHTML = on ? ICON_ON : ICON_OFF; b.title = on ? 'Couper le son' : 'Activer le son'; b.setAttribute('aria-label', b.title); b.classList.toggle('muted', !on); };
+    b.addEventListener('click', () => {
+      on = !on;
+      try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch {}
+      paint();
+      if (on) SFX.on();
+    });
+    paint();
+    menu.parentNode.insertBefore(b, menu);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addToggle); else addToggle();
+})();
