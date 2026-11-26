@@ -1,0 +1,215 @@
+// « Cours vidéo » : la leçon racontée comme un petit dessin animé.
+// Un personnage explique chaque paragraphe du cours (tableau animé + voix + sous-titres),
+// en français, en arabe ou en mélangé, avec une petite question à la fin de chaque partie.
+(() => {
+  const W = window.TCSF_WIDGETS || (window.TCSF_WIDGETS = {});
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const textOf = (html) => { const d = document.createElement('div'); d.innerHTML = String(html || ''); d.querySelectorAll('[data-widget], script, style').forEach((x) => x.remove()); return d.textContent.replace(/\s+/g, ' ').trim(); };
+  const sentences = (t) => (String(t).match(/[^.!?؟]+[.!?؟]*/g) || [t]).map((x) => x.trim()).filter(Boolean);
+  // décor de la scène : symboles typographiques (maths, code) ou pictos dessinés (sciences), qui dérivent lentement
+  const DECOR = {
+    mathematiques: ['π', '∑', '√x', '△', '÷', '∞', 'x²', '%'],
+    'physique-chimie': ['#atom', '#lab', '#bolt', '#bulb', '#atom', '#lab', '#bolt', '#bulb'],
+    svt: ['#dna', '#globe', '#sparkle', '#dna', '#globe', '#sparkle', '#dna', '#globe'],
+    informatique: ['{ }', '</>', '#code', '01', '#code', '=>', '[ ]', '#code']
+  };
+  const G = (n, s) => (window.TCSF_GLYPH ? window.TCSF_GLYPH(n, s) : '');
+  const decoItem = (x) => (x[0] === '#' ? G(x.slice(1)) : esc(x));
+  // titre « cinétique » : chaque mot dans son span, qui monte avec un léger décalage
+  const kin = (s) => String(s || '').split(/\s+/).filter(Boolean).map((w, i) => `<span style="--i:${i}">${esc(w)}</span>`).join(' ');
+  const CH = { mathematiques: 'nour', 'physique-chimie': 'volta', svt: 'moss', informatique: 'pixel' };
+
+  // découpe un paragraphe HTML en « plans » (un paragraphe, un élément de liste, un encadré, une formule…)
+  function beatsOf(html) {
+    const t = document.createElement('template'); t.innerHTML = String(html || '');
+    const out = [];
+    for (const n of [...t.content.childNodes]) {
+      if (n.nodeType === 3) { const s = n.textContent.trim(); if (s) out.push({ html: `<p>${esc(s)}</p>`, text: s }); continue; }
+      if (n.nodeType !== 1 || n.matches('[data-widget], script, style')) continue;
+      if (n.matches('ul, ol') && n.children.length > 1) {
+        // liste : un élément après l'autre
+        [...n.children].forEach((li, i) => out.push({ html: `<${n.tagName.toLowerCase()} class="cv-li"${n.tagName === 'OL' ? ` start="${i + 1}"` : ''}>${li.outerHTML}</${n.tagName.toLowerCase()}>`, text: textOf(li.innerHTML) }));
+        continue;
+      }
+      const text = textOf(n.outerHTML);
+      if (!text && !n.matches('svg, figure, table, img')) continue;
+      out.push({ html: n.outerHTML, text: text || '' });
+    }
+    return out.length ? out : [{ html: `<p>${esc(textOf(html))}</p>`, text: textOf(html) }];
+  }
+
+  W.coursvideo = async function (el, api) {
+    const d = (await api.readJSON(el.dataset.src)) || {};
+    const sid = el.dataset.subject || String(el.dataset.src).split('/')[0];
+    const lid = String(el.dataset.src).split('/').pop().replace(/\.json$/, '');
+    const cours = d.cours || [];
+    if (!cours.length) { el.innerHTML = '<p class="muted">Pas encore de vidéo pour cette leçon.</p>'; return; }
+    const V = window.TCSF_VOICE, DUO = window.TCSF_DUO;
+    const ch = CH[sid] || 'tico';
+    const face = (mood) => (DUO ? DUO.charSVG(ch, 150, mood) : (window.TCSF_CAST ? window.TCSF_CAST.svg(ch, 150, mood) : ''));
+    const AR = (d.ar && d.ar.cours) || [];
+    let lm = 'fr'; try { lm = localStorage.getItem('tcsf:proflang') || 'fr'; } catch {}
+    if (!AR.length) lm = 'fr';
+    let sound = true; try { sound = localStorage.getItem('tcsf:cv-sound') !== 'off'; } catch {}
+    let speed = 1;
+    const facile = ((d.exercises || {}).facile || []).filter((q) => q.type === 'qcm');
+
+    // plan de la vidéo : chapitre = un paragraphe du cours
+    let chapters = [];
+    const build = () => {
+      chapters = cours.map((p, i) => {
+        const beats = beatsOf(p.h);
+        const ar = AR[i] ? sentences(textOf(AR[i].h)) : [];
+        // narration de chaque plan selon la langue choisie
+        beats.forEach((b, j) => {
+          if (lm === 'ar' && ar.length) { const a = Math.floor((j * ar.length) / beats.length), z = Math.floor(((j + 1) * ar.length) / beats.length); b.say = [[ar.slice(a, Math.max(z, a + 1)).join(' '), 'ar']]; }
+          else b.say = [[b.text, 'fr']];
+        });
+        // mélangé : après le français, le résumé du paragraphe en arabe
+        if (lm === 'mix' && ar.length) beats.push({ html: '', ar: true, text: ar.join(' '), say: [[ar.join(' '), 'ar']] });
+        return { t: p.t, tar: AR[i] && AR[i].t, beats, q: facile[i] || null };
+      });
+    };
+    build();
+    const secsOf = (b) => Math.max(2.6, b.say.reduce((n, [t, l]) => n + t.length / (l === 'ar' ? 12 : 14), 0) + 0.8);
+    const chSecs = (c) => 2 + c.beats.reduce((n, b) => n + secsOf(b), 0);
+    const total = () => chapters.reduce((n, c) => n + chSecs(c), 0);
+    const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+
+    const deco = (DECOR[sid] || ['#book', '#pencil', '#star', '#bulb', '#book', '#pencil']).map((x, i) => `<span class="cv-deco" style="left:${(i * 13 + 4) % 92}%;top:${(i * 29 + 8) % 80}%;--d:${-i * 2.3}s;--r:${(i % 2 ? 1 : -1) * (8 + i * 3)}deg">${decoItem(x)}</span>`).join('');
+    el.innerHTML = `<div class="cv" style="--cvc:${esc((DUO && DUO.CAST[ch] && DUO.CAST[ch].c) || '#5b6cf5')}">
+      <div class="cv-stage">
+        <div class="cv-sky">${deco}</div>
+        <div class="cv-title"><span class="cv-chip">${G('video', 16)} Cours vidéo</span><b>${esc(el.dataset.title || d.title || '')}</b></div>
+        <div class="cv-actor">${face('happy')}</div>
+        <div class="cv-board" aria-live="polite"></div>
+        <div class="cv-sub" hidden></div>
+        <div class="cv-wipe" aria-hidden="true"></div>
+        <div class="cv-cover"><div class="cv-cover-in">${face('happy')}<h3 class="cv-kin">${kin(el.dataset.title || '')}</h3>
+          <p>${chapters.length} parties · ≈ <b class="cv-dur">${Math.max(1, Math.round(total() / 60))}</b> min</p>
+          <button type="button" class="cv-bigplay" aria-label="Lancer la vidéo">${G('play', 34)}</button></div></div>
+      </div>
+      <div class="cv-bar"><div class="cv-prog"></div></div>
+      <div class="cv-ctrl">
+        <button type="button" data-a="prev" title="Partie précédente" aria-label="Partie précédente">${G('prev')}</button><button type="button" data-a="play" class="cv-pp" title="Lecture / pause" aria-label="Lecture">${G('play')}</button><button type="button" data-a="next" title="Partie suivante" aria-label="Partie suivante">${G('next')}</button>
+        <span class="cv-time">0:00 / ${mmss(total())}</span>
+        <span class="cv-sp"></span>
+        ${AR.length ? `<span class="cv-lang" title="Langue de l’explication"><button type="button" data-m="fr">FR</button><button type="button" data-m="mix">Mixte</button><button type="button" data-m="ar">العربية</button></span>` : ''}
+        <button type="button" data-a="speed" title="Vitesse">1×</button><button type="button" data-a="sound" title="Son" aria-label="Son">${G(sound ? 'speaker' : 'mute')}</button><button type="button" data-a="list" title="Les parties" aria-label="Les parties">${G('list')}</button><button type="button" data-a="full" title="Plein écran" aria-label="Plein écran">${G('expand')}</button>
+      </div>
+      <div class="cv-list" hidden></div>
+      <p class="w-small muted cv-note"></p>
+    </div>`;
+    const $ = (s) => el.querySelector(s);
+    const board = $('.cv-board'), sub = $('.cv-sub'), actor = $('.cv-actor'), prog = $('.cv-prog'), pp = $('.cv-pp');
+    let ci = 0, bi = 0, playing = false, tok = 0, done = new Set(), elapsed = 0, talkIv = null;
+
+    const paintBar = () => {
+      const T = total();
+      prog.innerHTML = chapters.map((c, i) => `<button type="button" class="cv-seg${i < ci ? ' done' : i === ci ? ' on' : ''}" data-c="${i}" style="flex:${chSecs(c)}" title="${esc(textOf(c.t))}"><span style="width:${i < ci ? 100 : i === ci ? Math.round((bi / Math.max(1, c.beats.length)) * 100) : 0}%"></span></button>`).join('');
+      const before = chapters.slice(0, ci).reduce((n, c) => n + chSecs(c), 0) + chapters[ci].beats.slice(0, bi).reduce((n, b) => n + secsOf(b), 0);
+      $('.cv-time').textContent = `${mmss(before)} / ${mmss(T)} · Partie ${ci + 1}/${chapters.length}`;
+      prog.querySelectorAll('[data-c]').forEach((b) => (b.onclick = () => jump(+b.dataset.c)));
+      el.querySelectorAll('.cv-lang [data-m]').forEach((b) => b.classList.toggle('on', b.dataset.m === lm));
+    };
+    const talk = (on) => {
+      clearInterval(talkIv); actor.classList.toggle('talk', on);
+    };
+    const sleep = (ms, my) => new Promise((ok) => { const t0 = Date.now(); const iv = setInterval(() => { if (my !== tok || Date.now() - t0 >= ms) { clearInterval(iv); ok(); } }, 80); });
+    async function narrate(b, my) {
+      const subTxt = b.say.map(([t]) => t).join(' ');
+      const isAr = b.say[0][1] === 'ar';
+      sub.hidden = false; sub.dir = isAr ? 'rtl' : 'ltr'; sub.lang = isAr ? 'ar' : 'fr'; sub.textContent = subTxt;
+      talk(true);
+      const can = sound && V && b.say.every(([, l]) => V.canSpeak(l));
+      if (can) { const t0 = Date.now(); await V.speak(b.say, b.say[0][1], true); if (my === tok && Date.now() - t0 < 800) await sleep(secsOf(b) * 1000 / speed, my); }
+      else await sleep((secsOf(b) * 1000) / speed, my);
+      if (my === tok) { talk(false); await sleep(350 / speed, my); }
+    }
+    function showChapterTitle(c, i) {
+      const w = el.querySelector('.cv-wipe'); w.classList.remove('go'); void w.offsetWidth; w.classList.add('go');
+      actor.innerHTML = face('happy');
+      board.innerHTML = `<div class="cv-clap"><span class="cv-part">Partie ${i + 1} <i>/ ${chapters.length}</i></span><h3 class="cv-kin">${kin(textOf(c.t))}</h3>${c.tar && lm !== 'fr' ? `<p dir="rtl" lang="ar">${c.tar}</p>` : ''}</div>`;
+    }
+    function showBeat(c, j) {
+      if (board.querySelector('.cv-clap')) board.innerHTML = `<h3 class="cv-h">${c.t}</h3>`;
+      board.querySelectorAll('.cv-beat.now').forEach((x) => x.classList.remove('now'));
+      const b = c.beats[j];
+      if (b.ar) board.insertAdjacentHTML('beforeend', `<div class="cv-beat now cv-arbox" dir="rtl" lang="ar"><b>بالعربية :</b> ${esc(b.text)}</div>`);
+      else board.insertAdjacentHTML('beforeend', `<div class="cv-beat now">${b.html}</div>`);
+      // le tableau garde les derniers plans de la partie ; on fait défiler vers le dernier
+      [...board.querySelectorAll('.cv-beat:not(.out)')].slice(0, -3).forEach((x) => { x.classList.add('out'); setTimeout(() => x.remove(), 450); });
+      board.scrollTo({ top: board.scrollHeight, behavior: 'smooth' });
+    }
+    async function quiz(c, my) {
+      const Q = window.TCSF_Q;
+      if (!c.q || !Q || done.has(ci)) return;
+      done.add(ci);
+      talk(false); sub.hidden = true;
+      board.innerHTML = '<div class="cv-quiz"><p class="cv-qh">Petite question avant de continuer</p><div class="cv-qhost"></div><p class="cv-qgo"><button type="button" class="btn" data-skip>Passer</button></p></div>';
+      await new Promise((ok) => {
+        board.querySelector('[data-skip]').onclick = ok;
+        try {
+          Q.askQuestion(board.querySelector('.cv-qhost'), c.q, Q.STR, (good) => {
+            actor.innerHTML = face(good ? 'wow' : 'sad');
+            const g = board.querySelector('.cv-qgo'); g.innerHTML = `<button type="button" class="btn primary">${good ? 'Bravo ! On continue' : 'Compris, on continue'}</button>`; g.firstChild.onclick = ok;
+          });
+        } catch (e) { console.error(e); ok(); }
+        const w = setInterval(() => { if (my !== tok) { clearInterval(w); ok(); } }, 200);
+      });
+    }
+    async function run() {
+      const my = ++tok;
+      while (my === tok && ci < chapters.length) {
+        const c = chapters[ci];
+        if (bi === 0) { showChapterTitle(c, ci); paintBar(); talk(true); sub.hidden = false; sub.dir = 'ltr'; sub.textContent = textOf(c.t); await sleep(2700 / speed, my); talk(false); if (my !== tok) return; }
+        else if (!board.querySelector('.cv-beat')) { board.innerHTML = `<h3 class="cv-h">${c.t}</h3>`; for (let j = 0; j < bi; j++) showBeat(c, j); }
+        while (my === tok && bi < c.beats.length) { showBeat(c, bi); paintBar(); await narrate(c.beats[bi], my); if (my !== tok) return; bi++; paintBar(); }
+        if (my !== tok) return;
+        await quiz(c, my);
+        if (my !== tok) return;
+        ci++; bi = 0;
+        if (ci < chapters.length) paintBar();
+      }
+      if (my === tok && ci >= chapters.length) end();
+    }
+    function end() {
+      playing = false; pp.innerHTML = G('replay'); el.querySelector('.cv').classList.remove('is-playing'); talk(false); sub.hidden = true; ci = chapters.length - 1; bi = chapters[ci].beats.length; paintBar();
+      actor.innerHTML = face('wow');
+      const hasPath = !!(DUO && DUO.session);
+      board.innerHTML = `<div class="cv-end"><h3 class="cv-kin">${kin('Fin de la vidéo')}</h3>${d.recap ? `<div class="recall"><p><b>À retenir :</b> ${d.recap}</p></div>` : ''}
+        <p class="cv-end-btns">${hasPath ? `<a class="btn primary" href="#/s/${encodeURIComponent(sid)}/${encodeURIComponent(lid)}">${G('play', 18)} Faire la leçon (exercices)</a>` : ''}<button type="button" class="btn" data-replay>${G('replay', 18)} Revoir</button></p></div>`;
+      board.querySelector('[data-replay]').onclick = () => { ci = 0; bi = 0; done = new Set(); play(); };
+      try { window.dispatchEvent(new CustomEvent('tcsf:activity', { detail: { act: 'prof', subject: sid, lesson: lid } })); } catch {}
+    }
+    function play() { if (ci >= chapters.length - 1 && bi >= chapters[chapters.length - 1].beats.length) { ci = 0; bi = 0; done = new Set(); } $('.cv-cover').hidden = true; playing = true; pp.innerHTML = G('pause'); pp.setAttribute('aria-label', 'Pause'); el.querySelector('.cv').classList.add('is-playing'); run(); }
+    function pause() { playing = false; tok++; pp.innerHTML = G('play'); pp.setAttribute('aria-label', 'Lecture'); el.querySelector('.cv').classList.remove('is-playing'); talk(false); try { V && V.stop(); } catch {} }
+    function jump(i) { const was = playing; pause(); ci = Math.max(0, Math.min(chapters.length - 1, i)); bi = 0; board.innerHTML = ''; paintBar(); showChapterTitle(chapters[ci], ci); if (was || !$('.cv-cover').hidden) play(); }
+
+    $('.cv-bigplay').onclick = play;
+    el.querySelector('[data-a=play]').onclick = () => (playing ? pause() : play());
+    el.querySelector('[data-a=prev]').onclick = () => jump(bi > 1 ? ci : ci - 1);
+    el.querySelector('[data-a=next]').onclick = () => jump(ci + 1);
+    el.querySelector('[data-a=speed]').onclick = (e) => { speed = speed === 1 ? 1.25 : speed === 1.25 ? 1.5 : 1; e.currentTarget.textContent = speed + '×'; };
+    el.querySelector('[data-a=sound]').onclick = (e) => { sound = !sound; e.currentTarget.innerHTML = G(sound ? 'speaker' : 'mute'); try { localStorage.setItem('tcsf:cv-sound', sound ? 'on' : 'off'); } catch {} if (!sound && V) V.stop(); };
+    el.querySelector('[data-a=full]').onclick = () => { const c = $('.cv'); try { document.fullscreenElement ? document.exitFullscreen() : c.requestFullscreen(); } catch {} c.classList.toggle('cv-max'); };
+    el.querySelector('[data-a=list]').onclick = () => {
+      const L = $('.cv-list'); L.hidden = !L.hidden; if (L.hidden) return;
+      L.innerHTML = chapters.map((c, i) => `<button type="button" data-c="${i}" class="${i === ci ? 'on' : ''}"><span>${i + 1}</span><b>${textOf(c.t)}</b><small>${mmss(chSecs(c))}</small></button>`).join('');
+      L.querySelectorAll('[data-c]').forEach((b) => (b.onclick = () => { L.hidden = true; jump(+b.dataset.c); }));
+    };
+    el.querySelectorAll('.cv-lang [data-m]').forEach((b) => (b.onclick = () => {
+      lm = b.dataset.m; try { localStorage.setItem('tcsf:proflang', lm); } catch {}
+      const was = playing; pause(); build(); bi = 0; $('.cv-dur').textContent = Math.max(1, Math.round(total() / 60)); paintBar(); showChapterTitle(chapters[ci], ci); if (was) play();
+    }));
+    // voix absente : on prévient (les sous-titres restent)
+    const needs = lm === 'fr' ? ['fr'] : ['fr', 'ar'];
+    if (V && V.ready) { try { await V.ready(); } catch {} }
+    const miss = V ? needs.filter((l) => !V.canSpeak(l)) : needs;
+    if (miss.length) $('.cv-note').textContent = `Voix ${miss.map((l) => (l === 'ar' ? 'arabe' : 'française')).join(' et ')} non installée sur cet appareil : la vidéo avance avec les sous-titres.`;
+    paintBar();
+    // on quitte la page : la vidéo s'arrête
+    const stopIfGone = () => { if (!document.body.contains(el)) { pause(); window.removeEventListener('hashchange', stopIfGone); } };
+    window.addEventListener('hashchange', () => setTimeout(stopIfGone, 50));
+  };
+})();

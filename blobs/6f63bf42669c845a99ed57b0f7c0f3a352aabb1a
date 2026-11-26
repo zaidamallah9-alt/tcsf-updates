@@ -1,0 +1,102 @@
+// « Tico » : la mascotte de l'application (personnage original dessiné en SVG).
+// - Remplace l'icône du prof dans le mode « Avec le prof ».
+// - Un petit Tico se promène sur l'écran pendant les leçons, parle (bulle) et bouge la bouche quand la voix lit.
+(() => {
+  let uid = 0;
+  function svg(size = 56) {
+    if (window.TCSF_CAST) return window.TCSF_CAST.svg('tico', size);
+    const g = 'mscg' + (++uid);
+    return `<svg class="msc" width="${size}" height="${size}" viewBox="0 0 120 120" aria-hidden="true">
+      <defs><radialGradient id="${g}" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#8b9cff"/><stop offset=".55" stop-color="#5b6cf5"/><stop offset="1" stop-color="#3b3fc9"/></radialGradient></defs>
+      <g class="msc-orbit"><ellipse cx="60" cy="68" rx="54" ry="18" fill="none" stroke="#fbbf24" stroke-width="3" stroke-dasharray="6 5" opacity=".9"/><circle class="msc-e" cx="114" cy="68" r="5" fill="#f59e0b"/></g>
+      <g class="msc-body">
+        <path class="msc-arm-l" d="M28 74 q-14 4 -16 16" stroke="#3b3fc9" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <path class="msc-arm-r" d="M92 74 q14 -2 18 -14" stroke="#3b3fc9" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <ellipse cx="46" cy="106" rx="9" ry="5" fill="#3b3fc9"/><ellipse cx="74" cy="106" rx="9" ry="5" fill="#3b3fc9"/>
+        <circle cx="60" cy="70" r="36" fill="url(#${g})"/>
+        <ellipse cx="60" cy="84" rx="20" ry="14" fill="#c7d2fe" opacity=".55"/>
+        <g class="msc-eyes"><ellipse cx="47" cy="64" rx="8" ry="10" fill="#fff"/><ellipse cx="73" cy="64" rx="8" ry="10" fill="#fff"/>
+          <circle class="msc-pupil" cx="49" cy="66" r="4.5" fill="#1e1b4b"/><circle class="msc-pupil" cx="75" cy="66" r="4.5" fill="#1e1b4b"/>
+          <circle cx="50.5" cy="63.5" r="1.6" fill="#fff"/><circle cx="76.5" cy="63.5" r="1.6" fill="#fff"/></g>
+        <ellipse cx="38" cy="77" rx="5" ry="3" fill="#fb7185" opacity=".55"/><ellipse cx="82" cy="77" rx="5" ry="3" fill="#fb7185" opacity=".55"/>
+        <path class="msc-smile" d="M51 80 q9 8 18 0" stroke="#1e1b4b" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse class="msc-mouth" cx="60" cy="82" rx="6" ry="4" fill="#7f1d1d"/>
+        <g class="msc-cap"><path d="M30 36 L60 24 L90 36 L60 48 Z" fill="#1e293b"/><path d="M44 42 v9 q16 7 32 0 v-9 L60 48 Z" fill="#334155"/>
+          <g class="msc-tassel"><line x1="60" y1="36" x2="86" y2="40" stroke="#fbbf24" stroke-width="2"/><line x1="86" y1="40" x2="86" y2="54" stroke="#fbbf24" stroke-width="2.5"/><circle cx="86" cy="56" r="3" fill="#f59e0b"/></g></g>
+      </g></svg>`;
+  }
+
+  // ---- Tico qui se promène ----
+  const KEY = 'tcsf:mascot';
+  let hidden = false; try { hidden = localStorage.getItem(KEY) === 'off'; } catch {}
+  let el = null, bubble = null, raf = 0, x = 0, vx = 0.35, target = null, sayTimer = 0, lastT = 0, pause = 0;
+  function build() {
+    if (el) return el;
+    el = document.createElement('div');
+    el.className = 'msc-walker';
+    el.innerHTML = `<div class="msc-bubble" hidden></div><button type="button" class="msc-hit" title="Tico">${svg(84)}</button><button type="button" class="msc-x" title="Cacher Tico">×</button>`;
+    bubble = el.querySelector('.msc-bubble');
+    el.querySelector('.msc-x').addEventListener('click', () => { hidden = true; try { localStorage.setItem(KEY, 'off'); } catch {} hide(); showBack(); });
+    el.querySelector('.msc-hit').addEventListener('click', () => { jump(); say(pick(HELLO)); });
+    document.body.appendChild(el);
+    x = window.innerWidth - 130;
+    return el;
+  }
+  const HELLO = ['Coucou ! Je suis Tico 👋', 'On apprend ensemble ! 💪', 'Pose-moi une question avec ❓', 'Tu progresses bien ! ⭐', 'Une petite pause ? Puis on continue 😉'];
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  function jump() { if (!el) return; el.classList.remove('jump'); void el.offsetWidth; el.classList.add('jump'); }
+  function say(text, ms = 4500) {
+    if (!el || hidden) return;
+    const t = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!t) return;
+    bubble.textContent = t.length > 140 ? t.slice(0, 137) + '…' : t;
+    bubble.hidden = false;
+    clearTimeout(sayTimer); sayTimer = setTimeout(() => { bubble.hidden = true; }, ms);
+    pause = 1200; jump();
+  }
+  // promenade : de gauche à droite en bas de l'écran, avec des arrêts
+  function tick(t) {
+    raf = requestAnimationFrame(tick);
+    const dt = Math.min(50, t - (lastT || t)); lastT = t;
+    if (!el) return;
+    const V = window.TCSF_VOICE;
+    el.classList.toggle('talking', !!(V && V.speaking));
+    if (pause > 0) { pause -= dt; el.classList.add('idle'); return; }
+    el.classList.remove('idle');
+    const W = window.innerWidth, minX = 8, maxX = W - 100;
+    if (target === null || Math.abs(target - x) < 4) {
+      if (target !== null) { pause = 1500 + Math.random() * 3500; target = null; return; }
+      target = minX + Math.random() * (maxX - minX);
+    }
+    const dir = Math.sign(target - x);
+    x += dir * vx * dt * 0.13; // ≈ 45 px/s
+    x = Math.max(minX, Math.min(maxX, x));
+    el.style.transform = `translateX(${x}px)`;
+    el.classList.toggle('left', dir < 0);
+  }
+  function show() {
+    if (hidden) { showBack(); return; }
+    build(); el.hidden = false; back && (back.hidden = true);
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function hide() { if (el) el.hidden = true; if (raf) { cancelAnimationFrame(raf); raf = 0; } }
+  let back = null;
+  function showBack() {
+    if (!back) {
+      back = document.createElement('button'); back.type = 'button'; back.className = 'msc-back'; back.title = 'Faire revenir Tico';
+      back.innerHTML = svg(34);
+      back.addEventListener('click', () => { hidden = false; try { localStorage.setItem(KEY, 'on'); } catch {} back.hidden = true; show(); say('Me revoilà ! 😄'); });
+      document.body.appendChild(back);
+    }
+    back.hidden = false;
+  }
+  // visible seulement dans les leçons « Avec le prof » et la page Expériences
+  function route() {
+    const h = location.hash;
+    const on = /^#\/l\/[^/]+\/prof\//.test(h) || /^#\/c\/[^/]+\/experiences/.test(h) || !!document.querySelector('.w-prof');
+    if (on) show(); else { hide(); if (back) back.hidden = true; }
+  }
+  window.addEventListener('hashchange', () => setTimeout(route, 300));
+  setTimeout(route, 800);
+  window.TCSF_MASCOT = { svg, say, show, hide, jump, route };
+})();
