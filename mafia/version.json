@@ -1,7 +1,7 @@
 {
-    "build":  7,
-    "sha1":  "303cc5f14620e9999fd2dbb52c698f8305910805",
+    "build":  8,
+    "sha1":  "bd172ed5de271ceaf28305b0ed2ff03d678d6b5d",
     "size":  228194,
-    "notes":  "forced auto-update everywhere, version shown under credit",
-    "date":  "2026-11-26T20:29:41Z"
+    "notes":  "auto-update live test",
+    "date":  "2026-11-26T20:38:24Z"
 }
