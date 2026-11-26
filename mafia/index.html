@@ -432,6 +432,56 @@ body.hascomp #app{padding-bottom:84px}
 .prowler.rtl{animation-name:walkRL}
 .prowler .guy-svg{width:30px;height:46px}
 .prowler .fedora{display:block!important}
+
+/* ---------- v1.3: living menu ---------- */
+.mstage{position:relative;height:150px;margin:6px 0 10px;border-radius:var(--r);overflow:hidden;border:1px solid var(--n2);container-type:inline-size;
+  background:radial-gradient(ellipse at 50% 120%,rgba(244,196,48,.22),transparent 55%),linear-gradient(#0f1a30,#1a2238 55%,#2a2a33)}
+.msky i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.7;animation:twk 3.2s ease-in-out infinite}
+.msky i:nth-child(1){top:12%;left:8%}.msky i:nth-child(2){top:22%;left:26%;animation-delay:.8s}.msky i:nth-child(3){top:9%;left:47%;animation-delay:1.6s}
+.msky i:nth-child(4){top:26%;left:63%;animation-delay:.4s}.msky i:nth-child(5){top:14%;left:79%;animation-delay:2.2s}.msky i:nth-child(6){top:30%;left:92%;animation-delay:1.1s}
+@keyframes twk{50%{opacity:.15}}
+.mmoon{position:absolute;top:12px;left:16px;width:22px;height:22px;border-radius:50%;box-shadow:-6px 2px 0 0 #f3e6c4;transform:rotate(-20deg);filter:drop-shadow(0 0 6px rgba(243,230,196,.5))}
+.mshops{position:absolute;left:0;right:0;bottom:22px;height:62px;display:flex;gap:6px;padding:0 8px}
+.mshop{flex:1;position:relative;border-radius:3px 3px 0 0;background:linear-gradient(90deg,#d9c6a3,#c9b28a 70%,#a9926c);filter:brightness(.5) saturate(.7);box-shadow:0 4px 6px rgba(0,0,0,.4)}
+.mshop::before{content:"";position:absolute;left:6%;right:6%;top:0;height:9px;border-radius:2px}
+.mshop.c1::before{background:#1f6b45}.mshop.c2::before{background:#9c2a2e}.mshop.c3::before{background:#24418a}
+.mshop b{position:absolute;left:14%;right:14%;top:16px;bottom:0;border-radius:2px;background:repeating-linear-gradient(#a3aab5 0 2px,#7d848f 2px 4px,#686e78 4px 5px)}
+.mshop.lit b{background:linear-gradient(#ffd77a,#e09a35);box-shadow:0 0 18px 4px rgba(255,190,80,.45);animation:flick 4s steps(1) infinite}
+@keyframes flick{0%,100%{opacity:1}47%{opacity:.82}49%{opacity:1}73%{opacity:.9}}
+.mshop.lit{filter:brightness(.8)}
+.mstage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:24px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 1px,transparent 1px 18px),linear-gradient(#4c4538,#3a342b)}
+.mlamp{position:absolute;left:50%;bottom:90px;width:8px;height:12px;margin-left:-4px;border-radius:3px;background:#ffcf6b;box-shadow:0 0 22px 8px rgba(255,200,100,.35);animation:flick 5s steps(1) infinite .7s;z-index:1}
+.mguy{position:absolute;bottom:8px;z-index:2}
+.mguy .guy{position:relative;width:52px;height:80px;transform:none}
+.mguy .guy-svg{width:52px;height:80px}
+.mguy.me{left:50%;margin-left:-30px}.mguy.me .guy,.mguy.me .guy-svg{width:60px;height:92px}
+.mguy.me::after{content:"";position:absolute;left:8px;right:8px;bottom:-2px;height:6px;border-radius:50%;background:rgba(244,196,48,.35);filter:blur(3px)}
+.mguy.n3{left:9%;animation:stroll 14s ease-in-out infinite}
+.mguy.n5{right:9%;animation:stroll 17s ease-in-out infinite reverse}
+@keyframes stroll{0%,100%{transform:translateX(0)}40%,60%{transform:translateX(18px)}}
+.mbat{position:absolute;top:30px;left:-30px;width:24px;z-index:3;animation:batfly 11s linear infinite 2s}
+.mbat svg{display:block;animation:flap .18s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleY(.4)}}
+@keyframes batfly{0%{transform:translate(0,0)}25%{transform:translate(30cqw,14px)}50%{transform:translate(60cqw,-6px)}75%{transform:translate(90cqw,10px)}100%{transform:translate(130cqw,-4px)}}
+.mbird{position:absolute;top:48px;right:-24px;width:18px;z-index:3;animation:birdfly 9s linear infinite 6s}
+.mbird svg{display:block;animation:flap .3s ease-in-out infinite alternate}
+@keyframes birdfly{from{transform:translateX(0)}to{transform:translateX(-130cqw)}}
+/* the sign sways, items arrive one after another, the main button shines */
+#app.menu .hang{transform-origin:50% -30px;animation:sway 6s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-1.3deg)}50%{transform:rotate(1.3deg)}}
+#app.menu .hang .board{animation:glow 4s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 1px rgba(255,255,255,.06),0 10px 30px rgba(200,40,40,.35)}}
+#app.menu > *:not(.hang){animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+#app.menu > *:nth-child(2){animation-delay:.05s}#app.menu > *:nth-child(3){animation-delay:.12s}#app.menu > *:nth-child(4){animation-delay:.18s}
+#app.menu > *:nth-child(5){animation-delay:.24s}#app.menu > *:nth-child(6){animation-delay:.3s}#app.menu > *:nth-child(7){animation-delay:.36s}
+#app.menu > *:nth-child(8){animation-delay:.42s}#app.menu > *:nth-child(9){animation-delay:.48s}#app.menu > *:nth-child(n+10){animation-delay:.54s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#app.menu .btn:not(.sec):not(.green){position:relative;overflow:hidden}
+#app.menu .btn:not(.sec):not(.green)::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);animation:shine 3.6s ease-in-out infinite 1.2s;pointer-events:none}
+@keyframes shine{0%{left:-60%}35%,100%{left:130%}}
+#app.menu .btn{transition:transform .15s}
+#app.menu .btn:active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){.mstage *,#app.menu > *,#app.menu .hang,#app.menu .hang .board,#app.menu .btn::after{animation:none!important}}
 </style>
 </head>
 <body>
@@ -481,7 +531,8 @@ body.hascomp #app{padding-bottom:84px}
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const BUILD = 8;
+const APP_VERSION = "1.3";
+const BUILD = 9;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -637,11 +688,12 @@ function setComposer(mode){
 }
 let lastHtml = "";
 function render(html){
-  html += `<p class="credit">تصميم زيد أملاح <span translate="no" style="opacity:.6">· v${BUILD}</span></p>`;
+  html += `<p class="credit">تصميم زيد أملاح <span translate="no" style="opacity:.6">· v${APP_VERSION}</span></p>`;
   if(html === lastHtml) return;
   lastHtml = html;
   const chats = [...document.querySelectorAll(".chat")].map(c=>c.scrollHeight - c.scrollTop - c.clientHeight < 30);
   $app.innerHTML = html;
+  $app.classList.toggle("menu", html.includes("data-menu"));
   document.querySelectorAll(".chat").forEach((c,i)=>{ if(chats[i]!==false) c.scrollTop = c.scrollHeight; });
   if(!PUB || !PRIV){ setComposer(null); document.getElementById("voicebar").style.display = "none"; document.getElementById("scene").style.display = "none"; }
   tickTimer();
@@ -1138,7 +1190,8 @@ function home(){
   const nm = (lsGet("mafia_name")||"");
   render(`
     <div class="hang"><div class="board b-red"><h1 class="sign">مافيا</h1><div class="sub">الدرب كيتسد مع الليل</div></div></div>
-    <p class="tag-line">العب مع صحابك أونلاين، كل واحد من التليفون ديالو</p>
+    ${menuStage()}
+    <p class="tag-line">مرحبا <b translate="no">${esc(ACC.d)}</b>، العب مع صحابك أونلاين</p>
     <label class="fld" for="nameIn">السمية ديالك</label>
     <input type="text" id="nameIn" maxlength="16" value="${esc(ACC.d)}" readonly>
     ${saved ? `<button class="btn green" onclick="rejoin()">${ic("restart")} رجع للروم ${esc(saved.room)}</button>` : ""}
@@ -1155,7 +1208,7 @@ function home(){
       <button class="ghost danger" onclick="loginScreen()">${ic("exit")} خرج من الكونط</button>
     </div>
     ${langSwitch()}
-    <p class="note center" style="margin:6px 0 0;opacity:.6">النسخة ${BUILD}</p>
+    <p class="note center" style="margin:6px 0 0;opacity:.6" translate="no">v${APP_VERSION} · ${BUILD}</p>
   `);
   ui.err = "";
 }
@@ -1575,6 +1628,8 @@ async function startApp(){
   loading("مرحبا...");
   ADMIN = await loadAdmin();
   if(ADMIN === null && SETUP_BOX) return setupScreen();
+  // أول مرة كيحل التطبيق فهاد الجهاز: نيشان لصفحة الكونط الجديد
+  if(!lsGet("mafia_name") && !lsGet("mafia_seen")) return registerScreen();
   loginScreen();
 }
 
@@ -1621,7 +1676,7 @@ async function doLogin(){
     }
     ACC = {n: u.n, d: u.d || n.trim(), h};
   }
-  lsSet("mafia_name", ACC.d);
+  lsSet("mafia_name", ACC.d); lsSet("mafia_seen", 1);
   const saved = lsGet("mafia_me");
   if(saved && saved.name === ACC.d) rejoin(); else home();
 }
@@ -1629,6 +1684,7 @@ async function doLogin(){
 function registerScreen(){
   render(`
     ${signHead("كونط جديد")}
+    <p class="tag-line">مرحبا بيك! صاوب الكونط ديالك باش تلعب</p>
     <form class="col" onsubmit="event.preventDefault();doRegister()">
       <label class="fld" for="rgName">السمية (هي اللي غادي تبان فاللعبة)</label>
       <input type="text" id="rgName" maxlength="16" autocomplete="username">
@@ -1640,7 +1696,8 @@ function registerScreen(){
       <button class="btn" type="submit">${ic("check")} سجل و عطيني الكود</button>
     </form>
     <div class="spacer"></div>
-    <button class="ghost" style="align-self:center" onclick="loginScreen()">رجوع</button>
+    <button class="ghost" style="align-self:center" onclick="lsSet('mafia_seen',1);loginScreen()">${ic("door")} عندي كونط، بغيت ندخل</button>
+    ${langSwitch()}
   `);
   ui.err = "";
 }
@@ -1656,6 +1713,7 @@ async function doRegister(){
   const list = (await loadUsers()).users || [];
   if(list.some(x => x.n === accNorm(n))){ ui.err = "هاد السمية ديجا عند شي واحد."; return registerScreen(); }
   const h = await accHash(n, pw), code = regCode(h);
+  lsSet("mafia_seen", 1); lsSet("mafia_name", n);
   // كنخليو الطلب فالسيرفور حتى يقراه الأدمين بالكود
   let sent = false;
   try{
@@ -1875,6 +1933,22 @@ function guySvg(i, avIn){
       <g class="arm armF"><path d="M11.2 33.2c-2 1-3 3.4-3 6.4v4" stroke="${ot}" stroke-width="4.4" stroke-linecap="round" fill="none"/><circle class="handF" cx="8.2" cy="44.2" r="2.3" fill="${hand}"/></g>
     </g>
   </svg>`;
+}
+
+/* ---------- المينيو: درب صغير حي، نتا فالوسط و جوج جيران ---------- */
+function menuStage(){
+  const me = myAv();
+  const nb = (i) => `<div class="mguy n${i}"><div class="guy">${guySvg(i, avOf(null, i))}</div></div>`;
+  return `<div class="mstage" data-menu aria-hidden="true">
+    <div class="msky"><i></i><i></i><i></i><i></i><i></i><i></i><span class="mmoon"></span></div>
+    <div class="mshops"><span class="mshop c1"><b></b></span><span class="mshop c2 lit"><b></b></span><span class="mshop c3"><b></b></span></div>
+    <span class="mlamp"></span>
+    ${nb(3)}
+    <div class="mguy me"><div class="guy">${guySvg(0, me)}</div></div>
+    ${nb(5)}
+    <span class="mbat"><svg viewBox="0 0 24 10"><path d="M12 6c-1-2-3-3-5-3 1 1 1 2 0 3-2-1-4-1-7 0 3 0 5 2 6 4 1-1 3-1 4 0 1-1 1-2 2-2s1 1 2 2c1-1 3-1 4 0 1-2 3-4 6-4-3-1-5-1-7 0-1-1-1-2 0-3-2 0-4 1-5 3z" fill="#05070b"/></svg></span>
+    <span class="mbird"><svg viewBox="0 0 20 8"><path d="M0 3q5-4 10 1q5-5 10-1q-5-1-10 4q-5-5-10-4z" fill="#1d2433"/></svg></span>
+  </div>`;
 }
 
 /* ---------- الخزانة: كل واحد كيختار الشخصية ديالو قبل ما يلعب ---------- */
@@ -2194,7 +2268,7 @@ const FR = {
 "هاد السمية ديجا عند شي لاعب.":"Ce nom est déjà pris par un joueur.","ما قدرتش نسجل الأدمين:":"Impossible d'enregistrer l'admin :",
 "مرحبا...":"Bienvenue...","دخل بالسمية و المود دو باس ديالك":"Connecte-toi avec ton nom et ton mot de passe",
 "السمية (الأدمين يقدر بالجيميل)":"Nom (l'admin peut utiliser son Gmail)","المود دو باس":"Mot de passe",
-"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
+"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
 "كنتأكدو...":"Vérification...","الجيميل ولا المود دو باس غالطين.":"Gmail ou mot de passe incorrect.","المود دو باس غالط.":"Mot de passe incorrect.",
 "هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.":"Ce compte n'existe pas ou n'a pas encore été validé par l'admin.",
 "كونط جديد":"Nouveau compte","السمية (هي اللي غادي تبان فاللعبة)":"Nom (celui affiché dans le jeu)",
