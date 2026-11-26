@@ -1,7 +1,7 @@
 {
-    "build":  6,
-    "sha1":  "cea14109a7cdd91744ba39475d8f18007e0c6646",
-    "size":  227937,
-    "notes":  "fix: character invisible in wardrobe on PC",
-    "date":  "2026-11-26T20:28:29Z"
+    "build":  7,
+    "sha1":  "303cc5f14620e9999fd2dbb52c698f8305910805",
+    "size":  228194,
+    "notes":  "forced auto-update everywhere, version shown under credit",
+    "date":  "2026-11-26T20:29:41Z"
 }
