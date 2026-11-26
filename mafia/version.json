@@ -1,7 +1,7 @@
 {
-    "build":  5,
-    "sha1":  "7605e590226bdcdbd60b90826494254a0bf770a0",
-    "size":  225250,
-    "notes":  "dark style for password and gmail fields",
-    "date":  "2026-11-26T20:19:53Z"
+    "build":  6,
+    "sha1":  "cea14109a7cdd91744ba39475d8f18007e0c6646",
+    "size":  227937,
+    "notes":  "fix: character invisible in wardrobe on PC",
+    "date":  "2026-11-26T20:28:29Z"
 }

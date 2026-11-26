@@ -481,7 +481,7 @@ body.hascomp #app{padding-bottom:84px}
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const BUILD = 5;
+const BUILD = 6;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -1891,7 +1891,6 @@ function wardrobe(from){
   render(`
     <div class="util"><span>${ic("users")} الشخصية ديالك</span><button class="ghost" onclick="wardrobeDone()">رجوع</button></div>
     <header class="board b-cobalt"><div class="row"><h1 class="sign">الخزانة</h1></div><div class="sub">لبس الشخصية ديالك كيف بغيتي</div></header>
-    ${guyDefs()}
     <div class="wstage"><div class="guy big">${guySvg(0, av)}</div></div>
     <div class="panel wpanel">
       ${sw("s", 6, v=>`<span class="dotc" style="background:linear-gradient(135deg,${SKINS[v][0]},${SKINS[v][1]})"></span>`)}
@@ -1989,7 +1988,7 @@ function sceneStage(s, p, mode, spots, delay){
 }
 
 function sceneBuild(el){
-  el.innerHTML = guyDefs() + `
+  el.innerHTML = `
     <div class="sky"><span class="cloud c1"></span><span class="cloud c2"></span><span class="moon"></span><span class="sun"></span><i class="st s1"></i><i class="st s2"></i><i class="st s3"></i></div>
     <div class="hall" aria-hidden="true">
       <div class="hall-sign"><span class="sign">الجماعة</span></div>
@@ -2328,6 +2327,10 @@ function wakeNet(){ if(!net) return; if(net.ok) net.check(); else net.reconnect(
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) wakeNet(); });
 window.addEventListener("online", wakeNet);
 window.addEventListener("focus", wakeNet);
+// one shared copy of the character gradients, never inside a hidden element (Edge can't paint url(#id) from display:none)
+(function(){ const d = document.createElement("div"); d.setAttribute("aria-hidden","true");
+  d.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none";
+  d.innerHTML = guyDefs(); document.body.prepend(d); })();
 startApp();
 // web: kol 10 dqayq kanchoufo wach kayna version jdida f GitHub; kan3awdo ntal9o ghir ila ma kan 7ad f room
 if(location.protocol === "https:"){
