@@ -485,8 +485,9 @@ body.hascomp #app{padding-bottom:84px}
 
 /* ---------- ⋮ menu ---------- */
 .topbar{position:relative;z-index:60;max-width:520px;margin:0 auto;padding:6px 10px 0;display:flex;justify-content:flex-start;height:40px}
-.kebab{width:36px;height:34px;display:grid;place-items:center;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--n5);cursor:pointer;transition:background .15s,color .15s}
-.kebab svg{width:4px;height:18px;fill:currentColor}
+.kebab{width:40px;height:36px;display:grid;place-items:center;border-radius:11px;border:1px solid rgba(166,107,255,.55);background:var(--n1);color:var(--paper);cursor:pointer;box-shadow:0 0 14px -4px var(--neon-violet,#a66bff);transition:background .15s,color .15s,box-shadow .15s}
+.kebab svg{width:5px;height:20px;fill:currentColor;filter:drop-shadow(0 0 3px rgba(166,107,255,.9))}
+.kebab:hover{box-shadow:0 0 18px -2px var(--neon-violet,#a66bff)}
 .kebab:hover,.kebab[aria-expanded="true"]{background:var(--n1);color:var(--paper);border-color:var(--n2)}
 .kebab:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
 .kmenu{position:absolute;top:44px;right:10px;min-width:230px;padding:6px;border-radius:12px;background:var(--n1);border:1px solid var(--n3);box-shadow:0 14px 34px rgba(0,0,0,.55);animation:kpop .16s ease-out;transform-origin:top right}
@@ -661,7 +662,7 @@ input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,select
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
 const APP_VERSION = "1.4";
-const BUILD = 10;
+const BUILD = 11;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();

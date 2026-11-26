@@ -1,7 +1,7 @@
 {
-    "build":  10,
-    "sha1":  "093ed62ccac6651e0f11fc1b30ee26970ef09e5d",
-    "size":  274276,
-    "notes":  "v1.4: menu ⋮ (mises a jour, musique, sons), profil + amis, musique et effets sonores, couleurs neon",
-    "date":  "2026-11-26T21:15:12Z"
+    "build":  11,
+    "sha1":  "aaf5fe43c387209685391f2298815234f029a6a4",
+    "size":  277460,
+    "notes":  "bouton ⋮ plus visible",
+    "date":  "2026-11-26T21:31:09Z"
 }
