@@ -73,9 +73,9 @@ h1,h2,h3,p{margin:0}
 .ghost.danger{color:#f0a49d;border-color:#6e2a25}
 
 /* ---------- inputs ---------- */
-input[type=text],select{width:100%;padding:13px 14px;border-radius:var(--r);border:1px solid var(--n4);background:var(--n1);color:var(--paper);font:inherit}
-input[type=text]::placeholder{color:var(--n5)}
-input[type=text]:focus,select:focus{outline:none;border-color:var(--sig)}
+input[type=text],input[type=password],input[type=email],select{width:100%;padding:13px 14px;border-radius:var(--r);border:1px solid var(--n4);background:var(--n1);color:var(--paper);font:inherit}
+input[type=text]::placeholder,input[type=password]::placeholder,input[type=email]::placeholder{color:var(--n5)}
+input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,select:focus{outline:none;border-color:var(--sig)}
 label.fld{display:block;font-size:13px;font-weight:700;color:var(--n5);margin:14px 0 6px}
 .row{display:flex;gap:8px;align-items:stretch}
 .row>input{flex:1}
@@ -481,7 +481,7 @@ body.hascomp #app{padding-bottom:84px}
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const BUILD = 4;
+const BUILD = 5;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();

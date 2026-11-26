@@ -1,7 +1,7 @@
 {
-    "build":  4,
-    "sha1":  "8587a74dbd06286af6316d4d72e26bd25a17fd9b",
-    "size":  225095,
-    "notes":  "2.5D story scene, characters, wardrobe, accounts, languages, web auto-update",
-    "date":  "2026-11-26T20:11:32Z"
+    "build":  5,
+    "sha1":  "7605e590226bdcdbd60b90826494254a0bf770a0",
+    "size":  225250,
+    "notes":  "dark style for password and gmail fields",
+    "date":  "2026-11-26T20:19:53Z"
 }
