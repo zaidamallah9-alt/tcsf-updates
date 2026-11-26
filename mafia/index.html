@@ -219,6 +219,163 @@ body.hascomp #app{padding-bottom:84px}
 .tag-line{text-align:center;color:var(--n5);margin:8px 0 14px}
 .bigicon{display:flex;justify-content:center;color:var(--paper);margin:18px 0 6px}
 
+/* ---------- the living derb ---------- */
+.scene{position:relative;height:250px;margin:4px 14px 12px;max-width:480px;border-radius:var(--r);overflow:hidden;
+  background:linear-gradient(#1b2433,#121826 60%,#0f141e);border:1px solid var(--n2);transition:background 1.2s ease}
+.scene.ph-day,.scene.ph-lobby,.scene.ph-end{background:linear-gradient(#3d5f86,#5b7ea3 55%,#2a3546)}
+.scene.ph-vote,.scene.ph-voteResult{background:linear-gradient(#6b4a3a,#8a5d3f 55%,#2c2622)}
+.scene::after{content:"";position:absolute;left:0;right:0;top:64px;bottom:64px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 26px,rgba(255,255,255,.03) 26px 52px);pointer-events:none}
+.sky{position:absolute;inset:0;pointer-events:none}
+.sky .moon,.sky .sun{position:absolute;top:58px;left:calc(50% + 64px);width:16px;height:16px;border-radius:50%;transition:opacity 1s,transform 1.4s cubic-bezier(.3,.7,.2,1)}
+.sky .moon{background:#e9e4d4;box-shadow:inset -6px -2px 0 #b9b39f}
+.sky .sun{background:var(--sig);box-shadow:0 0 18px rgba(244,196,48,.6);opacity:0;transform:translateY(30px)}
+.ph-day .sky .moon,.ph-lobby .sky .moon,.ph-end .sky .moon,.ph-vote .sky .moon,.ph-voteResult .sky .moon{opacity:0;transform:translateY(30px)}
+.ph-day .sky .sun,.ph-lobby .sky .sun,.ph-end .sky .sun,.ph-vote .sky .sun,.ph-voteResult .sky .sun{opacity:1;transform:none}
+.sky .st{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:.7;animation:tw 3s ease-in-out infinite}
+.sky .s1{top:82px;right:30px}.sky .s2{top:100px;right:70px;animation-delay:-1s}.sky .s3{top:150px;left:50px;animation-delay:-2s}
+.scene:not(.ph-night) .sky .st{opacity:0;animation:none}
+@keyframes tw{50%{opacity:.15}}
+
+.hall{position:absolute;left:50%;top:50%;width:min(52%,210px);height:92px;transform:translate(-50%,-50%);z-index:1}
+.hall-sign{position:absolute;left:50%;top:-12px;transform:translateX(-50%);background:var(--green);border:2px solid rgba(243,238,227,.5);border-radius:3px;padding:0 10px;z-index:2;white-space:nowrap}
+.hall-sign .sign{font-size:17px;line-height:1.5}
+.hall-body{position:absolute;inset:6px 0 0;background:#e8dcc4;border-radius:46% 46% 4px 4px/34% 34% 4px 4px;box-shadow:inset 0 -10px 0 rgba(0,0,0,.08);overflow:hidden}
+.hall .arch{position:absolute;left:50%;bottom:0;width:44%;height:62%;transform:translateX(-50%);background:#2b2118;border-radius:50% 50% 0 0/40% 40% 0 0;transition:background 1s}
+.ph-vote .hall .arch,.ph-voteResult .hall .arch{background:#5a3c22}
+.hall .table{position:absolute;left:50%;bottom:10px;width:40%;height:12px;transform:translateX(-50%);background:#8b5a2b;border-radius:50%;opacity:0;transition:opacity .8s .6s}
+.ph-vote .hall .table,.ph-voteResult .hall .table{opacity:1}
+.hall .lamp{position:absolute;left:50%;top:30%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--sig);box-shadow:0 0 14px 4px rgba(244,196,48,.5);opacity:0;transition:opacity .8s}
+.ph-vote .hall .lamp,.ph-voteResult .hall .lamp,.ph-night .hall .lamp{opacity:1}
+
+.sshop{position:absolute;height:64px;z-index:1}
+.sshop .sb{display:block;height:16px;padding:0 3px;font-size:10px;font-weight:800;line-height:16px;text-align:center;color:var(--paper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:2px;background:var(--tn)}
+.sshop.c-green{--tn:var(--green)}.sshop.c-red{--tn:var(--red)}.sshop.c-cobalt{--tn:var(--cobalt)}.sshop.c-ochre{--tn:var(--ochre)}
+.sshop .sdoor{position:absolute;left:8%;right:8%;top:18px;bottom:0;background:#120f0c;border-radius:2px 2px 0 0;overflow:hidden}
+.sshop .sdoor::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 70%,rgba(244,196,48,.35),transparent 70%);opacity:0;transition:opacity .9s .6s}
+.scene:not(.ph-night) .sshop:not(.dead) .sdoor::before{opacity:1}
+.sshop .sshut{position:absolute;left:8%;right:8%;top:18px;bottom:0;transform-origin:top;transform:scaleY(0);transition:transform .9s cubic-bezier(.5,0,.2,1);
+  background:repeating-linear-gradient(#8a919d 0 3px,#6b717c 3px 6px);border-bottom:2px solid #3a404c;z-index:3}
+.sshop.shut .sshut{transform:scaleY(1)}
+.sshop .grave{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--n6);z-index:4}
+.sshop.dead .grave{display:flex}
+.sshop.dead .sshut{background:repeating-linear-gradient(#4b505a 0 3px,#3a3f48 3px 6px)}
+.sshop.dead .sb{opacity:.5;text-decoration:line-through}
+.sshop .grave .ic{width:18px;height:18px}
+
+.guys{position:absolute;inset:0;z-index:2;pointer-events:none}
+.guy{position:absolute;left:0;top:0;width:28px;height:44px;transition:transform 1.25s cubic-bezier(.45,.05,.3,1),opacity .5s}
+.guy.inside{opacity:0}
+.guy-svg{width:28px;height:44px;display:block;overflow:visible;animation:bob 2.6s ease-in-out infinite;animation-delay:inherit}
+.guy.left .guy-svg{scale:-1 1}
+.guy .lg{transform-box:fill-box;transform-origin:top center}
+.guy .fedora{display:none}
+.guy .fedora path{fill:#15151a;stroke:#15151a;stroke-width:1.2}
+.guy.mate .fedora,.guy.me.mafia-me .fedora{display:block}
+.guy.walking .guy-svg{animation:hop .32s ease-in-out infinite alternate}
+.guy.walking .l1{animation:stepA .32s ease-in-out infinite alternate}
+.guy.walking .l2{animation:stepB .32s ease-in-out infinite alternate}
+@keyframes bob{50%{transform:translateY(-1.5px)}}
+@keyframes hop{to{translate:0 -2px}}
+@keyframes stepA{from{transform:rotate(18deg)}to{transform:rotate(-18deg)}}
+@keyframes stepB{from{transform:rotate(-18deg)}to{transform:rotate(18deg)}}
+.guy .gname{display:none;position:absolute;top:44px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;color:var(--paper);white-space:nowrap;text-shadow:0 1px 2px #000;max-width:60px;overflow:hidden;text-overflow:ellipsis}
+.guy.me .gname{color:var(--sig)}
+.guy.me::before{content:"";position:absolute;left:50%;top:-8px;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--sig);animation:bob 1.4s ease-in-out infinite}
+.guy .badge{position:absolute;top:-6px;right:-8px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--red);color:var(--paper);font-size:10px;font-weight:800;line-height:16px;text-align:center;transform:scale(0);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.guy .badge.on{transform:scale(1)}
+.guy .bubble{position:absolute;bottom:50px;left:50%;transform:translateX(-50%) scale(.6);opacity:0;background:var(--paper);color:#1b1b1b;font-size:10px;font-weight:700;padding:3px 7px;border-radius:8px;white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;transition:opacity .2s,transform .25s cubic-bezier(.3,1.5,.5,1);z-index:5}
+.guy.talk .bubble{opacity:1;transform:translateX(-50%) scale(1)}
+.guy.speak .guy-svg{filter:drop-shadow(0 0 5px rgba(244,196,48,.9))}
+.guy.out .guy-svg{animation:shake .5s ease-in-out 3;filter:drop-shadow(0 0 6px rgba(209,58,58,.9))}
+@keyframes shake{25%{transform:translateX(-2px) rotate(-4deg)}75%{transform:translateX(2px) rotate(4deg)}}
+.guy.me .gname,.ph-vote .guy .gname,.ph-voteResult .guy .gname{display:block}
+@media (min-width:520px){.scene{margin:4px auto 12px}}
+@media (prefers-reduced-motion:reduce){.guy,.sshop .sshut{transition:none}.guy-svg,.guy.walking .guy-svg,.guy.walking .lg,.sky .st,.guy.me::before{animation:none}}
+
+.lang{display:flex;gap:0;align-self:center;border:1px solid var(--n3);border-radius:var(--r);overflow:hidden;margin:4px auto 0}
+.lang button{background:transparent;border:0;color:var(--n5);font:inherit;font-weight:700;font-size:13px;padding:6px 14px;cursor:pointer}
+.lang button.on{background:var(--n2);color:var(--paper)}
+/* ---------- living characters ---------- */
+.guy{width:36px;height:56px}
+.guy-svg{width:36px;height:56px;animation:none}
+.guy-svg *{transform-box:fill-box}
+.guy .upper{transform-origin:50% 100%;animation:breathe 3.2s ease-in-out infinite;animation-delay:inherit}
+.guy .torso{transform-origin:50% 100%}
+.guy .head{transform-origin:50% 90%;animation:tilt 7s ease-in-out infinite;animation-delay:inherit}
+.guy .eyes{transform-origin:50% 50%;animation:blink 4.6s infinite;animation-delay:inherit}
+.guy .pupils{animation:look 9s ease-in-out infinite;animation-delay:inherit}
+.guy .armF{transform-origin:85% 5%;animation:scratch 11s ease-in-out infinite;animation-delay:inherit}
+.guy .armB{transform-origin:15% 5%;animation:gesture 8s ease-in-out infinite;animation-delay:inherit}
+.guy .lg{transform-origin:50% 0}
+.guy .gshadow{transform-origin:50% 50%;animation:shadowB 3.2s ease-in-out infinite;animation-delay:inherit}
+.guy .fedora{display:none}
+.guy.mate .fedora,.guy.mafia-me .fedora{display:block}
+.guy .mouth{transform-origin:50% 0}
+.guy.talk .mouth,.guy.speak .mouth{animation:talk .22s ease-in-out infinite alternate}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.015,1.035) translateY(-.4px)}}
+@keyframes shadowB{50%{transform:scaleX(.92)}}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%{transform:rotate(-4deg)}60%{transform:rotate(3deg)}}
+@keyframes blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.08)}}
+@keyframes look{0%,20%{transform:translateX(0)}28%,45%{transform:translateX(-.8px)}55%,75%{transform:translateX(.8px)}85%,100%{transform:translateX(0)}}
+/* hand goes up to the head and scratches, then back down */
+@keyframes scratch{0%,62%,100%{transform:rotate(0)}68%{transform:rotate(150deg)}70%{transform:rotate(140deg)}72%{transform:rotate(152deg)}74%{transform:rotate(140deg)}76%{transform:rotate(152deg)}82%{transform:rotate(0)}}
+@keyframes gesture{0%,20%,100%{transform:rotate(0)}26%{transform:rotate(-38deg)}31%{transform:rotate(-24deg)}36%{transform:rotate(-40deg)}44%{transform:rotate(0)}}
+@keyframes talk{from{transform:scaleY(1)}to{transform:scaleY(2.4)}}
+.guy.walking .guy-svg{animation:hop .3s ease-in-out infinite alternate}
+.guy.walking .l1{animation:stepA .3s ease-in-out infinite alternate}
+.guy.walking .l2{animation:stepB .3s ease-in-out infinite alternate}
+.guy.walking .armF,.guy.walking .armB{animation:swing .3s ease-in-out infinite alternate}
+@keyframes swing{from{transform:rotate(16deg)}to{transform:rotate(-16deg)}}
+.guy .gname{top:56px}
+.guy.me::before{left:50%;top:-6px}
+@media (prefers-reduced-motion:reduce){.guy .upper,.guy .head,.guy .eyes,.guy .pupils,.guy .armF,.guy .armB,.guy .gshadow{animation:none}}
+.wstage{display:flex;justify-content:center;align-items:flex-end;height:190px;margin:4px 0 8px;border-radius:var(--r);background:radial-gradient(ellipse at 50% 85%,rgba(244,196,48,.18),transparent 60%),linear-gradient(#18202d,#0f141d);border:1px solid var(--n2)}
+.guy.big{position:relative;width:110px;height:170px}
+.guy.big .guy-svg{width:110px;height:170px}
+.wpanel{padding:8px 12px}
+.wrow{padding:8px 0;border-bottom:1px solid var(--n2)}
+.wrow:last-child{border-bottom:0}
+.wlab{display:block;font-size:13px;font-weight:700;color:var(--n5);margin-bottom:6px}
+.wopts{display:flex;flex-wrap:wrap;gap:6px}
+.wopt{min-width:44px;min-height:40px;padding:4px 10px;border-radius:var(--r);border:2px solid var(--n3);background:var(--n1);color:var(--paper);font:inherit;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.wopt.on{border-color:var(--sig);color:var(--sig)}
+.dotc{width:24px;height:24px;border-radius:50%;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+.guy .tassel{transform-origin:50% 0;animation:tassel 2.2s ease-in-out infinite}
+@keyframes tassel{50%{transform:rotate(14deg)}}
+/* ---------- ambient life ---------- */
+.amb{position:absolute;left:0;z-index:4;pointer-events:none;animation-timing-function:linear;animation-fill-mode:both}
+.flyer{width:26px;animation-name:flyLR}
+.flyer.rtl{animation-name:flyRL}
+.flyer.rtl svg{scale:-1 1}
+.flyer.bat{width:30px}
+.flyer svg{display:block;width:100%;animation:flap .28s ease-in-out infinite alternate;transform-origin:50% 50%}
+.bat svg{animation-duration:.16s}
+@keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(.35)}}
+@keyframes flyLR{0%{transform:translate(-40px,0)}25%{transform:translate(calc(25cqw),-10px)}50%{transform:translate(calc(50cqw),6px)}75%{transform:translate(calc(75cqw),-8px)}100%{transform:translate(calc(100cqw + 40px),0)}}
+@keyframes flyRL{0%{transform:translate(calc(100cqw + 40px),0)}25%{transform:translate(calc(75cqw),-8px)}50%{transform:translate(calc(50cqw),8px)}75%{transform:translate(calc(25cqw),-6px)}100%{transform:translate(-40px,0)}}
+.scene{container-type:size}
+.cat{width:40px;z-index:3;animation-name:walkLR}
+.cat.rtl{animation-name:walkRL}
+.cat.rtl svg{scale:-1 1}
+.cat svg{display:block;width:100%;overflow:visible}
+.cat-tail{transform-origin:6px 14px;transform-box:view-box;animation:tail 1.2s ease-in-out infinite alternate}
+.cat-legs path{transform-box:fill-box;transform-origin:50% 0;animation:stepA .25s ease-in-out infinite alternate}
+.cat-legs .cl2{animation-name:stepB}
+@keyframes tail{from{transform:rotate(-12deg)}to{transform:rotate(14deg)}}
+@keyframes walkLR{0%{transform:translateX(-50px)}45%,55%{transform:translateX(calc(45cqw))}100%{transform:translateX(calc(100cqw + 50px))}}
+@keyframes walkRL{0%{transform:translateX(calc(100cqw + 50px))}45%,55%{transform:translateX(calc(55cqw))}100%{transform:translateX(-50px)}}
+/* clouds by day, drifting forever */
+.cloud{position:absolute;z-index:0;height:14px;border-radius:14px;background:rgba(255,255,255,.55);filter:blur(.4px);animation:drift 46s linear infinite;opacity:0;transition:opacity 1.2s}
+.cloud::before,.cloud::after{content:"";position:absolute;background:inherit;border-radius:50%}
+.cloud::before{width:22px;height:22px;left:10px;top:-10px}.cloud::after{width:16px;height:16px;left:26px;top:-6px}
+.cloud.c1{top:74px;width:54px}.cloud.c2{top:118px;width:40px;animation-duration:62s;animation-delay:-30s}
+.ph-day .cloud,.ph-lobby .cloud,.ph-end .cloud{opacity:1}
+@keyframes drift{from{transform:translateX(-70px)}to{transform:translateX(calc(100cqw + 70px))}}
+/* the hall lamp breathes at night */
+.ph-night .hall .lamp{animation:flick 3.4s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:1}47%{opacity:1}50%{opacity:.55}53%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.cloud,.ph-night .hall .lamp{animation:none}}
+.credit{margin:18px 0 4px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.3px;color:var(--n4)}
 </style>
 </head>
 <body>
@@ -259,6 +416,7 @@ body.hascomp #app{padding-bottom:84px}
 <div id="net" class="net" role="status" style="display:none"><svg class="ic" aria-hidden="true"><use href="#i-wifioff"/></svg> الكونيكسيون مقطوعة، كنعاودو نتصلو...</div>
 <div id="voicebar" class="voicebar" style="display:none"><div id="vbtns"></div><div id="vpeers" class="vpeers"></div></div>
 <div id="voiceAudio" style="display:none"></div>
+<div id="scene" class="scene" style="display:none" aria-hidden="true"></div>
 <div id="app"></div>
 <div id="composer" class="composer" style="display:none"><input type="text" id="chatIn" maxlength="200" placeholder="كتب هنا..." aria-label="ميساج" onkeydown="if(event.key==='Enter')sendChat()"><button class="btn small" onclick="sendChat()">صيفط</button></div>
 <script>
@@ -267,7 +425,7 @@ body.hascomp #app{padding-bottom:84px}
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const BUILD = 2;
+const BUILD = 3;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -423,12 +581,13 @@ function setComposer(mode){
 }
 let lastHtml = "";
 function render(html){
+  html += `<p class="credit">تصميم زيد أملاح</p>`;
   if(html === lastHtml) return;
   lastHtml = html;
   const chats = [...document.querySelectorAll(".chat")].map(c=>c.scrollHeight - c.scrollTop - c.clientHeight < 30);
   $app.innerHTML = html;
   document.querySelectorAll(".chat").forEach((c,i)=>{ if(chats[i]!==false) c.scrollTop = c.scrollHeight; });
-  if(!PUB || !PRIV){ setComposer(null); document.getElementById("voicebar").style.display = "none"; }
+  if(!PUB || !PRIV){ setComposer(null); document.getElementById("voicebar").style.display = "none"; document.getElementById("scene").style.display = "none"; }
   tickTimer();
 }
 
@@ -489,8 +648,8 @@ async function clientConnect(fresh){
     if(!ME) return;
     if(found){
       ME.broker = i; lsSet("mafia_me", ME);
-      send({t:"join", name: ME.name});
-      net.onReconnect = ()=>send({t:"join", name: ME.name});
+      send({t:"join", name: ME.name, av: myAv()});
+      net.onReconnect = ()=>send({t:"join", name: ME.name, av: myAv()});
       startPinger();
       const ok = await new Promise(res=>{ let n=0; const t=setInterval(()=>{ if(PRIV||!net||++n>40){ clearInterval(t); res(!!PRIV); } }, 200); });
       if(!ok && net){ leave(true); if(!ui.err) ui.err = "الهوست ما جاوبش. تأكد أن اللي صاوب الروم باقي فاللعبة."; return home(); }
@@ -558,7 +717,7 @@ function hostCreate(name){
   G = {room: ME.room, epoch: rid(6), seq:0, phase:"lobby", round:0, players:[], hostPid:null,
        settings:{mafia:1, doctor:true, detective:true, reveal:true, day:120, night:45, vote:45},
        chat:[], mchat:[], news:[], votes:{}, ready:[], night:{mafia:{},doctor:null,det:null}, lastDoc:null, det:[], deadline:0, result:null, winner:null};
-  const p = hostAdd(ME.secret, name); G.hostPid = p.pid;
+  const p = hostAdd(ME.secret, name); p.av = myAv(); G.hostPid = p.pid;
 }
 function hostAdd(secret, name){
   let nm = String(name||"لاعب").slice(0,16), k=2;
@@ -572,7 +731,7 @@ function sys(x){ G.chat.push({sys:1, x}); if(G.chat.length>60) G.chat.splice(0, 
 function pubView(){
   const now = Date.now();
   return {room:G.room, epoch:G.epoch, seq:G.seq, now, phase:G.phase, round:G.round, hostPid:G.hostPid, settings:G.settings, deadline:G.deadline, closed:!!G.closed,
-    players: G.players.map(p=>({pid:p.pid, name:p.name, alive:p.alive, on: p.secret===ME.secret || now-p.seen<35000,
+    players: G.players.map(p=>({pid:p.pid, name:p.name, av:p.av||null, alive:p.alive, on: p.secret===ME.secret || now-p.seen<35000,
       role: (G.phase==="end" || (!p.alive && G.settings.reveal)) ? p.role : null})),
     news:G.news, votes:(G.phase==="vote"||G.phase==="voteResult")?G.votes:{}, ready:G.ready, chat:G.chat.slice(-40), result:G.result, winner:G.winner};
 }
@@ -608,10 +767,10 @@ function hostHandle(m){
   if(!G || !m || !m.s) return;
   const p = G.players.find(x=>x.secret===m.s);
   if(m.t === "join"){
-    if(p){ p.seen = Date.now(); return hostPublish(); }
+    if(p){ p.seen = Date.now(); if(m.av) p.av = avClean(m.av); return hostPublish(); }
     if(G.phase !== "lobby") return hostErr(m.s, "اللعبة بدات ديجا، تسنى حتى تسالي.");
     if(G.players.length >= 16) return hostErr(m.s, "الروم عامرة (16 لاعب).");
-    const np = hostAdd(m.s, m.name); sys("دخل "+np.name);
+    const np = hostAdd(m.s, m.name); np.av = avClean(m.av); sys("دخل "+np.name);
     if(G.settings.mafia === suggestMafia(G.players.length-1)) G.settings.mafia = suggestMafia(G.players.length);
     return hostPublish();
   }
@@ -918,21 +1077,28 @@ function tone(pid){ const i = PUB ? PUB.players.findIndex(p=>p.pid===pid) : 0; r
 
 function home(){
   PUB=null; PRIV=null;
+  if(!ACC) return loginScreen();
   const saved = lsGet("mafia_me");
   const nm = (lsGet("mafia_name")||"");
   render(`
     <div class="hang"><div class="board b-red"><h1 class="sign">مافيا</h1><div class="sub">الدرب كيتسد مع الليل</div></div></div>
     <p class="tag-line">العب مع صحابك أونلاين، كل واحد من التليفون ديالو</p>
     <label class="fld" for="nameIn">السمية ديالك</label>
-    <input type="text" id="nameIn" maxlength="16" value="${esc(nm)}" placeholder="مثلا: زيد" autocomplete="nickname">
+    <input type="text" id="nameIn" maxlength="16" value="${esc(ACC.d)}" readonly>
     ${saved ? `<button class="btn green" onclick="rejoin()">${ic("restart")} رجع للروم ${esc(saved.room)}</button>` : ""}
+    <button class="btn sec" onclick="wardrobe('home')">${ic("users")} الشخصية ديالي</button>
     <button class="btn" onclick="createRoom()">${ic("plus")} صاوب روم جديدة</button>
     <label class="fld" for="codeIn">عندك كود ديال روم؟</label>
     <div class="row"><input type="text" id="codeIn" maxlength="5" placeholder="الكود" style="text-transform:uppercase;direction:ltr;text-align:center;letter-spacing:6px;font-weight:800">
       <button class="btn small sec" onclick="joinRoom()">دخل</button></div>
     ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
     <div class="spacer"></div>
-    <button class="ghost" style="align-self:center" onclick="rulesScreen()">${ic("book")} القواعد</button>
+    <div class="row" style="justify-content:center;gap:8px;flex-wrap:wrap">
+      <button class="ghost" onclick="rulesScreen()">${ic("book")} القواعد</button>
+      ${ACC.admin ? `<button class="ghost" onclick="adminScreen(true)">${ic("crown")} الأدمين</button>` : ""}
+      <button class="ghost danger" onclick="loginScreen()">${ic("exit")} خرج من الكونط</button>
+    </div>
+    ${langSwitch()}
     <p class="note center" style="margin:6px 0 0;opacity:.6">النسخة ${BUILD}</p>
   `);
   ui.err = "";
@@ -1009,7 +1175,7 @@ function shop(p, o){
   return `<button class="${cls}" ${o.dis?"disabled":""} onclick="${o.pick}('${p.pid}')" aria-pressed="${!!o.sel}">${inner}</button>`;
 }
 function playersBox(){
-  return `<p class="sec-h">${ic("users")} الدرب</p><div class="street mini">${PUB.players.map(p=>shop(p,{shut: PUB.phase==="night" || !p.alive})).join("")}</div>`;
+  return "";   // اللاعبين باينين فالدرب المتحرك اللي الفوق
 }
 function chatBox(mafia){
   const list = mafia ? (PRIV.mafiaChat||PRIV.mchat||[]) : (PUB.chat||[]);
@@ -1017,7 +1183,7 @@ function chatBox(mafia){
   if(canSend) ui.comp = mafia ? "mchat" : "chat";
   return `
     <p class="sec-h">${ic(mafia?"lock":"chat")} ${mafia ? "الشات السري ديال المافيا" : "الشات"}</p>
-    <div class="chat ${mafia?"mafia":""}">${list.length ? list.map(m=> m.sys ? `<div class="m sys">${esc(m.x)}</div>` : `<div class="m"><b>${esc(m.n)}:</b> ${esc(m.x)}</div>`).join("") : '<div class="m sys">ما كاين حتى ميساج.</div>'}</div>
+    <div class="chat ${mafia?"mafia":""}">${list.length ? list.map(m=> m.sys ? `<div class="m sys">${esc(m.x)}</div>` : `<div class="m"><b translate="no">${esc(m.n)}:</b> <span translate="no">${esc(m.x)}</span></div>`).join("") : '<div class="m sys">ما كاين حتى ميساج.</div>'}</div>
     ${canSend ? "" : '<p class="note center">الموتى ما يقدروش يكتبو.</p>'}`;
 }
 
@@ -1030,7 +1196,7 @@ function lobbyView(){
     <div class="util"><span>${n}/16 لاعب</span><button class="ghost danger" onclick="confirmLeave()">${ic("exit")} خرج</button></div>
     <header class="board b-green"><div class="row"><h1 class="sign">اللوبي</h1></div><div class="sub">عطي الكود لصحابك و تسناوهم</div></header>
     <div class="center"><div class="numplate">${esc(PUB.room)}</div></div>
-    <div class="center"><button class="ghost" onclick="shareCode()">${ic("share")} بارطاجي الكود</button></div>
+    <div class="row" style="justify-content:center;gap:8px"><button class="ghost" onclick="shareCode()">${ic("share")} بارطاجي الكود</button><button class="ghost" onclick="wardrobe('lobby')">${ic("users")} بدل الشخصية</button></div>
     <p class="sec-h">${ic("users")} اللاعبين</p>
     <div class="plist">${PUB.players.map(p=>`
       <div class="pitem"><span class="dot ${p.on?"on":""}" title="${p.on?"متصل":"ماشي متصل"}"></span>
@@ -1194,6 +1360,8 @@ function draw(){
     if(PUB.phase === "night" || PUB.phase === "lobby") ui.showRole = false;
   }
   ui.comp = null;
+  if(ui.ward && PUB.phase === "lobby"){ setComposer(null); voiceRefresh(); sceneUpdate(); return; }
+  ui.ward = false;
   switch(PUB.phase){
     case "lobby": lobbyView(); break;
     case "night": nightView(); break;
@@ -1204,6 +1372,7 @@ function draw(){
   }
   setComposer(ui.comp);
   voiceRefresh();
+  sceneUpdate();
 }
 
 /* ---------- voice strip ---------- */
@@ -1250,6 +1419,766 @@ function vDrawPeers(){
   if(h !== vLastPeers){ vLastPeers = h; el.innerHTML = h; }
 }
 
+/* =====================================================================
+   الكونطات: كل واحد خاصو سمية + مود دو باس، و الأدمين هو اللي كيقبل
+   - التسجيل: كيعطيك كود، كتصيفطو للأدمين، هو كيقبلك
+   - اللائحة ديال اللي تقبلو كاينة ف GitHub (users.json)، غير الأدمين اللي يقدر يبدلها
+   ===================================================================== */
+const ACC_ROOT = "https://raw.githubusercontent.com/zaidamallah9-alt/tcsf-updates/main/mafia/";
+const ACC_API = "https://api.github.com/repos/zaidamallah9-alt/tcsf-updates/contents/mafia/";
+// المفتاح ديال GitHub مقفول بكود التفعيل (كيتعطى غير لمول اللعبة). كيتستعمل مرة وحدة باش يتصاوب الأدمين.
+const SETUP_BOX = /*ADMIN_BOX*/{"n":"admin","h":"0f0036586ae50676e93e92d36a5bf0705afc8d1f5d063ca915ce54379366ab4e","salt":"a3f71af67864d5dacfcc9dfc9ccb0ac8","iv":"737ae50bc6de24a0838c86c8","it":250000,"ct":"034616b2e511e64bdefb1c6c91e9b1598c328707bfd1b8c8b067da84f09bea3fcf884d001ef7bb94ef1601f4314bebbdf90b639225c4f02c354107679c461b3b421e12fa2af7849e4340ccba4a3b9063d0e02153b9c3487453b3d4e1cb28fb4990ab5d7a38857b4b9e85182c38"};
+let ADMIN = null;          // admin.json: {n, d, h, salt, iv, it, ct}  (الجيميل و المفتاح مقفولين بالمود دو باس ديالو)
+let ACC = null;            // {n, d, h, admin}  (ما كيتسجلش: كل مرة خاصك تدخل من جديد)
+let ADMIN_TOKEN = null;    // كيتحل غير بالمود دو باس ديال الأدمين، و كيبقى غير فالميموار
+let ADMIN_MAIL = "";
+
+const accNorm = n => String(n||"").trim().replace(/\s+/g," ").toLowerCase();
+const hex = b => [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+const unhex = s => new Uint8Array(s.match(/../g).map(x=>parseInt(x,16)));
+async function sha256hex(s){ return hex(await crypto.subtle.digest("SHA-256", enc.encode(s))); }
+const accHash = (n,p) => sha256hex("mafia-v1|"+accNorm(n)+"|"+p);
+const regCode = h => (h.slice(0,4)+"-"+h.slice(4,8)).toUpperCase();
+
+async function loadUsers(){
+  try{
+    const r = await fetch(ACC_ROOT+"users.json?t="+Date.now(), {cache:"no-store"});
+    if(r.status === 404){ lsSet("mafia_users", {users:[]}); return {users:[]}; }
+    const j = await r.json(); lsSet("mafia_users", j); return j;
+  }catch(e){ return lsGet("mafia_users") || {users:[]}; }   // بلا أنترنيت: آخر لائحة عندنا
+}
+async function boxKey(pw, salt, it, use){
+  const key0 = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:it, hash:"SHA-256"}, key0, {name:"AES-GCM", length:256}, false, [use]);
+}
+async function openBox(box, pw){
+  const key = await boxKey(pw, unhex(box.salt), box.it, "decrypt");
+  return dec.decode(await crypto.subtle.decrypt({name:"AES-GCM", iv:unhex(box.iv)}, key, unhex(box.ct)));
+}
+async function makeBox(pw, text){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), it = 250000;
+  const key = await boxKey(pw, salt, it, "encrypt");
+  const ct = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, enc.encode(text));
+  return {salt: hex(salt), iv: hex(iv), it, ct: hex(ct)};
+}
+// undefined = ما عرفناش (بلا أنترنيت)، null = مازال ما كاينش أدمين
+async function loadAdmin(){
+  try{
+    const r = await fetch(ACC_ROOT+"admin.json?t="+Date.now(), {cache:"no-store"});
+    if(r.status === 404) return null;
+    const j = await r.json(); lsSet("mafia_admin", j); return j;
+  }catch(e){ return lsGet("mafia_admin") || undefined; }
+}
+const gmailOk = m => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m);
+
+/* ---------- أول مرة: ما كاين حتى أدمين ---------- */
+function setupScreen(){
+  render(`
+    ${signHead("أول مرة")}
+    <p class="tag-line">ما كاين حتى واحد دخل للكونط و الجيميل ديال الأدمين. صاوب الكونط ديالك و تولي انت الأدمين الوحيد.</p>
+    <form class="col" onsubmit="event.preventDefault();doSetup()">
+      <label class="fld" for="suCode">كود التفعيل (اللي عطيتك)</label>
+      <input type="text" id="suCode" maxlength="20" autocomplete="off" style="direction:ltr;text-align:center;letter-spacing:2px">
+      <label class="fld" for="suName">السمية ديال الأدمين</label>
+      <input type="text" id="suName" maxlength="16" autocomplete="username">
+      <label class="fld" for="suMail">الجيميل</label>
+      <input type="email" id="suMail" maxlength="80" autocomplete="email" style="direction:ltr">
+      <label class="fld" for="suPw">المود دو باس (على الأقل 6)</label>
+      <input type="password" id="suPw" maxlength="64" autocomplete="new-password">
+      <label class="fld" for="suPw2">عاود المود دو باس</label>
+      <input type="password" id="suPw2" maxlength="64" autocomplete="new-password">
+      ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
+      <button class="btn" type="submit">${ic("crown")} ولي الأدمين</button>
+    </form>
+  `);
+  ui.err = "";
+}
+async function doSetup(){
+  const v = id => document.getElementById(id).value;
+  const code = v("suCode").trim(), n = v("suName").trim().replace(/\s+/g," "), mail = v("suMail").trim(), pw = v("suPw"), pw2 = v("suPw2");
+  if(n.length < 2){ ui.err = "السمية قصيرة بزاف."; return setupScreen(); }
+  if(!gmailOk(mail)){ ui.err = "الجيميل ماشي صحيح."; return setupScreen(); }
+  if(pw.length < 6){ ui.err = "المود دو باس خاصو 6 ديال الحروف على الأقل."; return setupScreen(); }
+  if(pw !== pw2){ ui.err = "جوج المود دو باس ماشي بحال بحال."; return setupScreen(); }
+  loading("كنصاوبو الأدمين...");
+  let token;
+  try{ token = await openBox(SETUP_BOX, code); }catch(e){ ui.err = "كود التفعيل غالط."; return setupScreen(); }
+  if(await loadAdmin()){ ui.err = "ديجا كاين أدمين."; return loginScreen(); }
+  const users = ((await loadUsers()).users || []);
+  if(users.some(u => u.n === accNorm(n))){ ui.err = "هاد السمية ديجا عند شي لاعب."; return setupScreen(); }
+  const h = await accHash(n, pw);
+  const box = await makeBox(pw, JSON.stringify({t: token, e: mail}));
+  const adm = Object.assign({n: accNorm(n), d: n, h}, box);
+  ADMIN_TOKEN = token;
+  try{ await ghPut("admin.json", adm, null, "Mafia: admin account"); }
+  catch(e){ ADMIN_TOKEN = null; ui.err = "ما قدرتش نسجل الأدمين: " + e.message; return setupScreen(); }
+  ADMIN = adm; lsSet("mafia_admin", adm); ADMIN_MAIL = mail;
+  ACC = {n: adm.n, d: n, h, admin: true};
+  lsSet("mafia_name", n);
+  home();
+}
+async function startApp(){
+  loading("مرحبا...");
+  ADMIN = await loadAdmin();
+  if(ADMIN === null && SETUP_BOX) return setupScreen();
+  loginScreen();
+}
+
+function signHead(sub){
+  return `<div class="hang"><div class="board b-red"><h1 class="sign">مافيا</h1><div class="sub">${sub}</div></div></div>`;
+}
+function loginScreen(){
+  ACC = null; ADMIN_TOKEN = null;
+  render(`
+    ${signHead("الدرب كيتسد مع الليل")}
+    <p class="tag-line">دخل بالسمية و المود دو باس ديالك</p>
+    <form class="col" onsubmit="event.preventDefault();doLogin()">
+      <label class="fld" for="lgName">السمية (الأدمين يقدر بالجيميل)</label>
+      <input type="text" id="lgName" maxlength="16" autocomplete="username" value="${esc(lsGet("mafia_name")||"")}">
+      <label class="fld" for="lgPw">المود دو باس</label>
+      <input type="password" id="lgPw" maxlength="64" autocomplete="current-password">
+      ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
+      <button class="btn" type="submit">${ic("door")} دخل</button>
+    </form>
+    <div class="spacer"></div>
+    <button class="ghost" style="align-self:center" onclick="registerScreen()">${ic("plus")} ما عندكش كونط؟ تسجل</button>
+    ${langSwitch()}
+  `);
+  ui.err = "";
+}
+async function doLogin(){
+  const n = document.getElementById("lgName").value, pw = document.getElementById("lgPw").value;
+  if(!accNorm(n) || !pw){ ui.err = "كتب السمية و المود دو باس."; return loginScreen(); }
+  loading("كنتأكدو...");
+  if(!ADMIN) ADMIN = await loadAdmin();
+  const isMail = gmailOk(n.trim());
+  const nn = ADMIN && isMail ? ADMIN.n : n;          // الأدمين يقدر يدخل بالسمية ولا بالجيميل
+  const h = await accHash(nn, pw);
+  if(ADMIN && accNorm(nn) === ADMIN.n && h === ADMIN.h){
+    try{ const o = JSON.parse(await openBox(ADMIN, pw)); ADMIN_TOKEN = o.t; ADMIN_MAIL = o.e; }catch(e){ ADMIN_TOKEN = null; }
+    if(isMail && accNorm(n) !== accNorm(ADMIN_MAIL)){ ADMIN_TOKEN = null; ui.err = "الجيميل ولا المود دو باس غالطين."; return loginScreen(); }
+    ACC = {n: ADMIN.n, d: ADMIN.d || nn.trim(), h, admin: true};
+  } else {
+    const list = (await loadUsers()).users || [];
+    const u = list.find(x => x.n === accNorm(n));
+    if(!u || u.h !== h){
+      ui.err = u ? "المود دو باس غالط." : "هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.";
+      return loginScreen();
+    }
+    ACC = {n: u.n, d: u.d || n.trim(), h};
+  }
+  lsSet("mafia_name", ACC.d);
+  const saved = lsGet("mafia_me");
+  if(saved && saved.name === ACC.d) rejoin(); else home();
+}
+
+function registerScreen(){
+  render(`
+    ${signHead("كونط جديد")}
+    <form class="col" onsubmit="event.preventDefault();doRegister()">
+      <label class="fld" for="rgName">السمية (هي اللي غادي تبان فاللعبة)</label>
+      <input type="text" id="rgName" maxlength="16" autocomplete="username">
+      <label class="fld" for="rgPw">المود دو باس (على الأقل 4)</label>
+      <input type="password" id="rgPw" maxlength="64" autocomplete="new-password">
+      <label class="fld" for="rgPw2">عاود المود دو باس</label>
+      <input type="password" id="rgPw2" maxlength="64" autocomplete="new-password">
+      ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
+      <button class="btn" type="submit">${ic("check")} سجل و عطيني الكود</button>
+    </form>
+    <div class="spacer"></div>
+    <button class="ghost" style="align-self:center" onclick="loginScreen()">رجوع</button>
+  `);
+  ui.err = "";
+}
+async function doRegister(){
+  const n = document.getElementById("rgName").value.trim().replace(/\s+/g," ");
+  const pw = document.getElementById("rgPw").value, pw2 = document.getElementById("rgPw2").value;
+  if(n.length < 2){ ui.err = "السمية قصيرة بزاف."; return registerScreen(); }
+  if(pw.length < 4){ ui.err = "المود دو باس خاصو 4 ديال الحروف على الأقل."; return registerScreen(); }
+  if(pw !== pw2){ ui.err = "جوج المود دو باس ماشي بحال بحال."; return registerScreen(); }
+  if(!ADMIN) ADMIN = await loadAdmin();
+  if(ADMIN && accNorm(n) === ADMIN.n){ ui.err = "هاد السمية محجوزة."; return registerScreen(); }
+  loading("كنصاوبو الكونط...");
+  const list = (await loadUsers()).users || [];
+  if(list.some(x => x.n === accNorm(n))){ ui.err = "هاد السمية ديجا عند شي واحد."; return registerScreen(); }
+  const h = await accHash(n, pw), code = regCode(h);
+  // كنخليو الطلب فالسيرفور حتى يقراه الأدمين بالكود
+  let sent = false;
+  try{
+    const c = await connectAny();
+    sent = c.m.publish(TOPIC_ROOT + "reg/" + code, JSON.stringify({n: accNorm(n), d: n, h, t: Date.now()}), true);
+    setTimeout(()=>c.m.close(), 1500);
+  }catch(e){}
+  if(!sent){ ui.err = "ما قدرتش نتصل بالأنترنيت. عاود."; return registerScreen(); }
+  render(`
+    ${signHead("صيفط الكود للأدمين")}
+    <div class="center"><div class="numplate">${code}</div></div>
+    <p class="ask center">${esc(n)}</p>
+    <p class="note center">صيفط هاد الكود للأدمين باش يقبلك. ملي يقبلك، دخل بالسمية و المود دو باس ديالك.</p>
+    <button class="btn sec" onclick="shareText('كود التسجيل ديالي ف مافيا: ${code} (${esc(n).replace(/'/g,"")})')">${ic("share")} صيفط الكود</button>
+    <div class="spacer"></div>
+    <button class="btn" onclick="loginScreen()">${ic("door")} رجع للدخول</button>
+  `);
+}
+function shareText(txt){
+  if(window.AndroidApp){ AndroidApp.share(txt); }
+  else if(navigator.share){ navigator.share({text: txt}).catch(()=>{}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(()=>alert("تكوبيا")).catch(()=>alert(txt)); }
+  else alert(txt);
+}
+
+/* ---------- الأدمين ---------- */
+let adminState = {users: null, sha: null, req: null, msg: ""};
+async function ghGet(file){
+  const r = await fetch(ACC_API + file + "?ref=main&t=" + Date.now(), {headers: {Authorization: "Bearer " + ADMIN_TOKEN, Accept: "application/vnd.github+json"}, cache: "no-store"});
+  if(r.status === 404) return {data: null, sha: null};
+  if(!r.ok) throw new Error("github " + r.status);
+  const j = await r.json();
+  const txt = dec.decode(Uint8Array.from(atob(j.content.replace(/\n/g,"")), c=>c.charCodeAt(0)));
+  return {data: JSON.parse(txt), sha: j.sha};
+}
+async function ghPut(file, data, sha, message){
+  const bytes = enc.encode(JSON.stringify(data, null, 1));
+  let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b));
+  const body = {message, content: btoa(bin), branch: "main"}; if(sha) body.sha = sha;
+  const r = await fetch(ACC_API + file, {method: "PUT", headers: {Authorization: "Bearer " + ADMIN_TOKEN, Accept: "application/vnd.github+json", "Content-Type": "application/json"}, body: JSON.stringify(body)});
+  if(!r.ok) throw new Error("github " + r.status);
+  return (await r.json()).content.sha;
+}
+async function ghUsers(){ const g = await ghGet("users.json"); return {users: g.data || {users: []}, sha: g.sha}; }
+const ghSaveUsers = (users, sha, message) => ghPut("users.json", users, sha, message);
+async function adminScreen(reload){
+  if(!ACC || !ACC.admin) return home();
+  if(!ADMIN_TOKEN){ adminState.msg = "ما قدرتش نحل المفتاح ديال GitHub."; }
+  else if(reload || !adminState.users){
+    loading("كنجيبو اللائحة...");
+    try{ const g = await ghUsers(); adminState.users = g.users; adminState.sha = g.sha; }
+    catch(e){ adminState.msg = "ما قدرتش نجيب اللائحة: " + e.message; adminState.users = {users: []}; }
+  }
+  const list = (adminState.users && adminState.users.users) || [];
+  const rq = adminState.req;
+  render(`
+    <div class="util"><span>${ic("crown")} الأدمين</span><button class="ghost" onclick="home()">رجوع</button></div>
+    <header class="board b-ochre"><div class="row"><h1 class="sign">الكونطات</h1></div><div class="sub">قبل اللاعبين بالكود اللي صيفطو ليك</div></header>
+    <form class="row" onsubmit="event.preventDefault();adminLookup()">
+      <input type="text" id="adCode" maxlength="9" placeholder="XXXX-XXXX" aria-label="الكود" style="direction:ltr;text-align:center;letter-spacing:3px;font-weight:800;text-transform:uppercase">
+      <button class="btn small sec" type="submit">${ic("lens")} قلب</button>
+    </form>
+    ${rq ? `<div class="panel"><p class="ask" style="margin:0 0 8px">${esc(rq.d)} <span class="muted" style="font-weight:500">· ${regCode(rq.h)}</span></p>
+      <div class="row"><button class="btn green small" onclick="adminApprove()">${ic("check")} قبل</button><button class="btn sec small" onclick="adminState.req=null;adminScreen()">لا</button></div></div>` : ""}
+    ${adminState.msg ? `<p class="note center">${esc(adminState.msg)}</p>` : ""}
+    <p class="sec-h">${ic("users")} اللي مقبولين (${list.length})</p>
+    <div class="plist">${list.map(u=>`<div class="pitem"><span class="n">${esc(u.d||u.n)}</span>
+      <button class="kick" aria-label="حيد ${esc(u.d||u.n)}" onclick="adminRemove('${esc(u.n)}')">${ic("x")}</button></div>`).join("") || '<p class="note center">حتى واحد مازال.</p>'}</div>
+  `);
+  adminState.msg = "";
+}
+async function adminLookup(){
+  let code = (document.getElementById("adCode").value||"").toUpperCase().replace(/[^0-9A-F]/g,"");
+  if(code.length !== 8){ adminState.msg = "الكود خاصو 8 ديال الحروف."; return adminScreen(); }
+  code = code.slice(0,4) + "-" + code.slice(4);
+  loading("كنقلبو على الطلب...");
+  let found = null, c = null;
+  try{
+    c = await connectAny();
+    found = await new Promise(res => {
+      const t = setTimeout(()=>res(null), 6000);
+      c.m.onMsg = (topic, payload) => { try{ const j = JSON.parse(typeof payload === "string" ? payload : dec.decode(payload)); clearTimeout(t); res(j); }catch(e){} };
+      c.m.subscribe(TOPIC_ROOT + "reg/" + code);
+    });
+  }catch(e){}
+  if(c) c.m.close();
+  if(!found || !found.h || regCode(found.h) !== code){ adminState.req = null; adminState.msg = "ما لقيت حتى طلب بهاد الكود."; }
+  else adminState.req = found;
+  adminScreen();
+}
+async function adminApprove(){
+  const rq = adminState.req; if(!rq) return;
+  loading("كنقبلو...");
+  try{
+    const g = await ghUsers();
+    const list = (g.users.users || []).filter(u => u.n !== rq.n);
+    list.push({n: rq.n, d: rq.d, h: rq.h, t: new Date().toISOString().slice(0,10)});
+    adminState.sha = await ghSaveUsers({users: list}, g.sha, "Mafia: accept " + rq.n);
+    adminState.users = {users: list}; adminState.msg = "تقبل " + rq.d + ". دابا يقدر يدخل.";
+    try{ const c = await connectAny(); c.m.publish(TOPIC_ROOT + "reg/" + regCode(rq.h), "", true); setTimeout(()=>c.m.close(), 1500); }catch(e){}
+  }catch(e){ adminState.msg = "ما تقبلش: " + e.message; }
+  adminState.req = null; adminScreen();
+}
+async function adminRemove(n){
+  if(!confirm("تحيد هاد الكونط؟ ما بقاش يقدر يدخل.")) return;
+  loading("كنحيدو...");
+  try{
+    const g = await ghUsers();
+    const list = (g.users.users || []).filter(u => u.n !== n);
+    adminState.sha = await ghSaveUsers({users: list}, g.sha, "Mafia: remove " + n);
+    adminState.users = {users: list}; adminState.msg = "تحيد.";
+  }catch(e){ adminState.msg = "ما تحيدش: " + e.message; }
+  adminScreen();
+}
+
+/* =====================================================================
+   الدرب المتحرك: كل لاعب عندو محل و شخصية.
+   الصباح: المحلات كيتحلو و كلشي واقف قدام المحل ديالو
+   الليل: كلشي كيدخل و كيسد الريدو
+   التصويت: كلشي كيتمشى للجماعة (المبنى اللي فالوسط) و كيتجمعو على الطبلة
+   ===================================================================== */
+const SC = {pl:{}, built:false, lastChat:0, W:0};
+/* ---------- الشخصيات (2.5D): ضو من الفوق، ظل تحت الرجلين، و كيتنفسو / كيغمضو / كيحكو راسهم ---------- */
+const SKINS = [["#f3cfa8","#d9a37a"],["#e2b087","#b97d55"],["#c08a5f","#8e5b38"],["#9a6644","#6b4127"],["#f6d9bd","#dcae8a"],["#d4a073","#a5714a"]];
+const HAIRS = [["#3a2a20","#120c09"],["#1c1a1f","#050507"],["#6b4426","#3b2313"],["#8a5a2e","#4d3016"],["#9b9b9b","#5c5c5c"]];
+const OUTFITS = [["#2f8a5c","#165237"],["#c33a40","#7c1e24"],["#3d63c6","#213b80"],["#d49a2c","#8f6115"],["#3b3f4a","#191b22"],["#efe6d2","#b9ab8c"]];
+const AV_MAX = {s:6, h:6, c:5, o:6, t:6, g:2, b:2};
+function avOf(av, i){
+  const d = {s: i % 6, h: (i*5+1) % 6, c: (i*3) % 5, o: i % 4, t: [0,1,0,2,0,3][i % 6], g: i % 7 === 5 ? 1 : 0, b: i % 5 === 2 ? 1 : 0};
+  const o = {};
+  for(const k in AV_MAX){ const v = av && Number.isInteger(av[k]) ? av[k] : d[k]; o[k] = Math.max(0, Math.min(AV_MAX[k]-1, v)); }
+  return o;
+}
+function avClean(av){ if(!av || typeof av !== "object") return null; const o = {}; for(const k in AV_MAX){ const v = Number(av[k]); if(Number.isInteger(v) && v >= 0 && v < AV_MAX[k]) o[k] = v; } return o; }
+function guyDefs(){
+  let g = "";
+  SKINS.forEach((c,i)=> g += `<radialGradient id="gs${i}" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></radialGradient>`);
+  HAIRS.forEach((c,i)=> g += `<linearGradient id="gh${i}" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient>`);
+  OUTFITS.forEach((c,i)=> g += `<linearGradient id="go${i}" x1=".15" y1="0" x2=".85" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient>`);
+  g += `<linearGradient id="gpants" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a3f4c"/><stop offset="1" stop-color="#1d2029"/></linearGradient>
+        <radialGradient id="gshadow"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+        <linearGradient id="gshine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <linearGradient id="gfez" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d23a3a"/><stop offset="1" stop-color="#7d1418"/></linearGradient>
+        <linearGradient id="gchech" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4efe2"/><stop offset="1" stop-color="#bfb59c"/></linearGradient>`;
+  return `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${g}</defs></svg>`;
+}
+function hairSvg(h, hr){
+  const f = `url(#gh${hr})`;
+  return [
+    `<path d="M10 19c0-7 4.5-11 10-11s10 4 10 11c-2-3-5-5.2-10-5.2S12 16 10 19z" fill="${f}"/><path d="M14 11c2-1.4 5-1.8 8-1" stroke="#fff" stroke-opacity=".25" stroke-width="1.2" fill="none" stroke-linecap="round"/>`,
+    `<path d="M10 19.5c-.6-7.2 4-11.5 10.4-11.5 5.8 0 10.2 4 9.6 11.2-1.3-3.6-4.2-5.4-8-5.6 1 1 1.4 2 1.4 2s-4.8-2.6-9.6.6c-1.6 1.1-2.8 2-3.8 3.3z" fill="${f}"/>`,
+    `<g fill="${f}"><circle cx="13" cy="13.5" r="3.6"/><circle cx="17.5" cy="10.5" r="3.8"/><circle cx="22.5" cy="10.3" r="3.8"/><circle cx="27" cy="13.3" r="3.6"/><circle cx="29.5" cy="17" r="2.6"/><circle cx="10.5" cy="17" r="2.6"/></g>`,
+    `<path d="M10 20c0-8 4.5-12 10-12s10 4 10 12c-1.5-2.4-5-4.4-10-4.4S11.5 17.6 10 20z" fill="${f}"/>`,
+    `<path d="M10.6 17c.6-5.6 4.4-8.6 9.4-8.6s8.8 3 9.4 8.6c-2.4-1.8-5.6-2.6-9.4-2.6s-7 .8-9.4 2.6z" fill="${f}" opacity=".9"/>`,
+    `<path d="M10.2 18.6c-.2-6.8 4.2-10.8 9.8-10.8s10 4 9.8 10.8c-1-2.8-2.8-4.2-4.6-4.7.4 1.3-.3 2.4-.3 2.4s-.8-2.6-4.9-2.6-4.9 2.6-4.9 2.6-.7-1.1-.3-2.4c-1.8.5-3.6 1.9-4.6 4.7z" fill="${f}"/>`
+  ][h];
+}
+function hatSvg(t, o){
+  return [
+    "",
+    // الطربوش
+    `<g class="hat"><path d="M13 14.6l1.2-8c.2-1 1-1.6 2-1.6h7.6c1 0 1.8.6 2 1.6l1.2 8c-2.4.7-4.8 1-7 1s-4.6-.3-7-1z" fill="url(#gfez)"/><path d="M14.6 7.6c1.6-.4 3.4-.6 5.4-.6" stroke="#fff" stroke-opacity=".3" stroke-width="1" fill="none"/>
+      <path d="M20 5.2c2.6 0 4.4 1.2 5.4 3.6l.6 4.6" stroke="#1b1b1b" stroke-width=".9" fill="none"/><path class="tassel" d="M25.6 12.6l1.4 4" stroke="#1b1b1b" stroke-width="1.6" stroke-linecap="round"/></g>`,
+    // كاسكيطة
+    `<g class="hat"><path d="M10.4 15.6c0-5.4 4.2-9 9.6-9s9.6 3.6 9.6 9z" fill="url(#go${(o+2)%6})"/><path d="M9.6 15.2h8c-3.8 0-8 1-11.6 2.4-.9.3-1.6-.7-.8-1.3.9-.6 2.6-1.1 4.4-1.1z" fill="url(#go${(o+2)%6})"/><circle cx="20" cy="6.8" r=".9" fill="#fff" fill-opacity=".6"/><path d="M13 11c1.6-2 4-3 6-3.2" stroke="#fff" stroke-opacity=".3" stroke-width="1" fill="none"/></g>`,
+    // بونيه
+    `<g class="hat"><path d="M10 16.6c0-6 4.4-10 10-10s10 4 10 10z" fill="url(#go${(o+3)%6})"/><path d="M9.6 15.4h20.8v2.8H9.6z" rx="1" fill="url(#go${(o+3)%6})" opacity=".85"/><path d="M12 15.4v2.8M15 15.4v2.8M18 15.4v2.8M21 15.4v2.8M24 15.4v2.8M27 15.4v2.8" stroke="#000" stroke-opacity=".2" stroke-width=".8"/><circle cx="20" cy="5.6" r="2.4" fill="url(#go${(o+3)%6})"/></g>`,
+    // الشاش (عمامة)
+    `<g class="hat"><path d="M9.4 17c-.4-6.6 4.6-10.4 10.6-10.4S31 10.4 30.6 17c-3-1.4-6.6-2-10.6-2s-7.6.6-10.6 2z" fill="url(#gchech)"/><path d="M10.4 12.6c4-2 9.6-2.4 15.6.6M10 15c5.4-2.6 12.4-2.6 20 .4" stroke="#9c9178" stroke-width=".9" fill="none"/></g>`,
+    // الفولار
+    `<g class="hat"><path d="M8.6 22c-.8-8.6 4.4-14.4 11.4-14.4S32.2 13.4 31.4 22c-.4 4.2-1.6 7.4-3.4 9.6h-16c-1.8-2.2-3-5.4-3.4-9.6zm4 .2c0 4.6 3.4 8 7.4 8s7.4-3.4 7.4-8c0-5.2-3.2-8.6-7.4-8.6s-7.4 3.4-7.4 8.6z" fill="url(#go${(o+1)%6})" fill-rule="evenodd"/></g>`
+  ][t];
+}
+function guySvg(i, avIn){
+  const av = avOf(avIn, i);
+  const sk = av.s, hr = av.c, ot = `url(#go${av.o})`, hand = `url(#gs${sk})`;
+  const scarf = av.t === 5;
+  const hairBack = !scarf && av.h === 3 ? `<path d="M9 20c-1-9 4-15 11-15s12 6 11 15c1 6-1 12-3 15H12c-2-3-4-9-3-15z" fill="url(#gh${hr})"/>` : "";
+  const hairTop = scarf ? "" : (av.t === 1 || av.t === 4 ? hairSvg(4, hr) : hairSvg(av.h, hr));
+  const beard = av.b ? `<path d="M12.6 22.6c.6 5 3.6 8.4 7.4 8.4s6.8-3.4 7.4-8.4c-1 1.6-2.6 2.4-4.2 2.4-1 0-1.6-.6-3.2-.6s-2.2.6-3.2.6c-1.6 0-3.2-.8-4.2-2.4z" fill="url(#gh${hr})" opacity=".92"/>` : "";
+  const glasses = av.g ? `<g fill="#9fd3ff" fill-opacity=".18" stroke="#1b1b20" stroke-width="1"><circle cx="16.3" cy="21" r="2.7"/><circle cx="23.7" cy="21" r="2.7"/></g><path d="M19 21h2" stroke="#1b1b20" stroke-width="1"/>` : "";
+  return `<svg class="guy-svg" viewBox="0 0 40 62" aria-hidden="true">
+    <ellipse class="gshadow" cx="20" cy="59" rx="12" ry="3" fill="url(#gshadow)"/>
+    <g class="legs">
+      <g class="lg l1"><path d="M15 43h4.6v12.5h-4.6z" fill="url(#gpants)"/><path d="M13.2 55.2c0-1.3 1-2 2.3-2h4.1v4.4h-5.2c-.7 0-1.2-.5-1.2-1.2z" fill="#191919"/></g>
+      <g class="lg l2"><path d="M20.4 43H25v12.5h-4.6z" fill="url(#gpants)"/><path d="M26.8 55.2c0-1.3-1-2-2.3-2h-4.1v4.4h5.2c.7 0 1.2-.5 1.2-1.2z" fill="#191919"/></g>
+    </g>
+    <g class="upper">
+      <g class="arm armB"><path d="M28.8 33.2c2 1 3 3.4 3 6.4v4" stroke="${ot}" stroke-width="4.4" stroke-linecap="round" fill="none"/><circle cx="31.8" cy="44.2" r="2.3" fill="${hand}"/></g>
+      <g class="torso">
+        <path d="M12 46c-1.6 0-2.5-1.2-2.2-2.8l1.8-8.4c.8-3.6 3.8-6 7.4-6h2c3.6 0 6.6 2.4 7.4 6l1.8 8.4c.3 1.6-.6 2.8-2.2 2.8z" fill="${ot}"/>
+        <path d="M17 29.2l3 4.2 3-4.2" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.3" stroke-linejoin="round"/>
+        <path d="M12.6 35c.7-3 3-4.8 5.6-5.2" stroke="url(#gshine)" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M10.6 42.4h18.8" stroke="#000" stroke-opacity=".18" stroke-width="1.6"/>
+      </g>
+      <g class="head">
+        ${hairBack}
+        ${scarf ? "" : `<ellipse cx="9.6" cy="21.6" rx="1.9" ry="2.6" fill="url(#gs${sk})"/><ellipse cx="30.4" cy="21.6" rx="1.9" ry="2.6" fill="url(#gs${sk})"/>`}
+        <path d="M17.6 26.5h4.8v3.6h-4.8z" fill="url(#gs${sk})"/>
+        <ellipse cx="20" cy="19.6" rx="10.2" ry="10.4" fill="url(#gs${sk})"/>
+        ${hairTop}
+        <ellipse cx="14.6" cy="24.4" rx="2" ry="1.2" fill="#e0706a" opacity=".28"/><ellipse cx="25.4" cy="24.4" rx="2" ry="1.2" fill="#e0706a" opacity=".28"/>
+        <g class="brows"><path d="M14.2 17.4q2-1.2 4 0M21.8 17.4q2-1.2 4 0" stroke="#2a1d16" stroke-width="1" fill="none" stroke-linecap="round"/></g>
+        <g class="eyes">
+          <ellipse cx="16.3" cy="21" rx="1.9" ry="2.2" fill="#fff"/><ellipse cx="23.7" cy="21" rx="1.9" ry="2.2" fill="#fff"/>
+          <g class="pupils"><circle cx="16.6" cy="21.3" r="1.25" fill="#1b130f"/><circle cx="24" cy="21.3" r="1.25" fill="#1b130f"/>
+          <circle cx="17.1" cy="20.7" r=".45" fill="#fff"/><circle cx="24.5" cy="20.7" r=".45" fill="#fff"/></g>
+        </g>
+        ${beard}
+        <path class="mouth" d="M18.2 25.6q1.8 1.3 3.6 0" stroke="#7a3a2c" stroke-width="1" fill="#7a3a2c" stroke-linecap="round"/>
+        ${glasses}
+        ${hatSvg(av.t, av.o)}
+        <g class="fedora"><path d="M7.5 13.6c3.6 1.6 8 2.3 12.5 2.3s8.9-.7 12.5-2.3c-.3 1.3-2 2.4-4.3 3-2.6.6-5.4.9-8.2.9s-5.6-.3-8.2-.9c-2.3-.6-4-1.7-4.3-3z" fill="#16161b"/>
+          <path d="M11.8 14.4l1.6-6.8c.4-1.6 1.9-2.4 3.4-1.8l1.4.6c1.2.5 2.4.5 3.6 0l1.4-.6c1.5-.6 3 .2 3.4 1.8l1.6 6.8c-2.8.8-5.4 1.2-8.2 1.2s-5.4-.4-8.2-1.2z" fill="#22222a"/>
+          <path d="M12.3 12.2c2.6.8 5.2 1.2 7.7 1.2s5.1-.4 7.7-1.2l-.4-1.8c-2.4.7-4.8 1-7.3 1s-4.9-.3-7.3-1z" fill="#b02a30"/></g>
+      </g>
+      <g class="arm armF"><path d="M11.2 33.2c-2 1-3 3.4-3 6.4v4" stroke="${ot}" stroke-width="4.4" stroke-linecap="round" fill="none"/><circle class="handF" cx="8.2" cy="44.2" r="2.3" fill="${hand}"/></g>
+    </g>
+  </svg>`;
+}
+
+/* ---------- الخزانة: كل واحد كيختار الشخصية ديالو قبل ما يلعب ---------- */
+function myAv(){ return avOf(lsGet("mafia_av"), 0); }
+const AV_LABELS = {s:"اللون ديال الجلد", h:"الشعر", c:"لون الشعر", o:"الحوايج", t:"على الراس", g:"اللونيط", b:"اللحية"};
+const HAT_NAMES = ["والو","طربوش","كاسكيطة","بونيه","شاش","فولار"];
+const HAIR_NAMES = ["قصير","مفروق","مكركب","طويل","قرعة","واقف"];
+function wardrobe(from){
+  ui.ward = true;
+  ui.wardFrom = from || ui.wardFrom || "home";
+  const av = myAv();
+  const sw = (k, n, render) => `<div class="wrow"><span class="wlab">${AV_LABELS[k]}</span><div class="wopts" role="radiogroup" aria-label="${AV_LABELS[k]}">${
+    Array.from({length:n}, (_,v)=>`<button class="wopt ${av[k]===v?"on":""}" role="radio" aria-checked="${av[k]===v}" onclick="avSet('${k}',${v})">${render(v)}</button>`).join("")}</div></div>`;
+  render(`
+    <div class="util"><span>${ic("users")} الشخصية ديالك</span><button class="ghost" onclick="wardrobeDone()">رجوع</button></div>
+    <header class="board b-cobalt"><div class="row"><h1 class="sign">الخزانة</h1></div><div class="sub">لبس الشخصية ديالك كيف بغيتي</div></header>
+    ${guyDefs()}
+    <div class="wstage"><div class="guy big">${guySvg(0, av)}</div></div>
+    <div class="panel wpanel">
+      ${sw("s", 6, v=>`<span class="dotc" style="background:linear-gradient(135deg,${SKINS[v][0]},${SKINS[v][1]})"></span>`)}
+      ${sw("t", 6, v=>HAT_NAMES[v])}
+      ${sw("h", 6, v=>HAIR_NAMES[v])}
+      ${sw("c", 5, v=>`<span class="dotc" style="background:linear-gradient(135deg,${HAIRS[v][0]},${HAIRS[v][1]})"></span>`)}
+      ${sw("o", 6, v=>`<span class="dotc" style="background:linear-gradient(135deg,${OUTFITS[v][0]},${OUTFITS[v][1]})"></span>`)}
+      ${sw("g", 2, v=>v?"آه":"لا")}
+      ${sw("b", 2, v=>v?"آه":"لا")}
+    </div>
+    <div class="row"><button class="btn sec" onclick="avRandom()">${ic("dice")} عشوائي</button><button class="btn" onclick="wardrobeDone()">${ic("check")} مزيان هكا</button></div>
+  `);
+}
+function avSet(k, v){ const av = myAv(); av[k] = v; lsSet("mafia_av", av); wardrobe(); }
+function avRandom(){ const av = {}; for(const k in AV_MAX) av[k] = Math.floor(Math.random()*AV_MAX[k]); lsSet("mafia_av", av); wardrobe(); }
+function wardrobeDone(){
+  ui.ward = false;
+  if(PUB && PRIV && ME){
+    if(ME.host){ const p = G && G.players.find(x=>x.secret===ME.secret); if(p){ p.av = myAv(); hostPublish(); } }
+    else send({t:"join", name: ME.name, av: myAv()});
+    lastHtml = ""; return draw();
+  }
+  home();
+}
+
+function sceneBuild(el){
+  el.innerHTML = guyDefs() + `
+    <div class="sky"><span class="cloud c1"></span><span class="cloud c2"></span><span class="moon"></span><span class="sun"></span><i class="st s1"></i><i class="st s2"></i><i class="st s3"></i></div>
+    <div class="hall" aria-hidden="true">
+      <div class="hall-sign"><span class="sign">الجماعة</span></div>
+      <div class="hall-body"><span class="arch"></span><span class="table"></span><span class="lamp"></span></div>
+    </div>
+    <div class="shops"></div><div class="guys"></div>`;
+  SC.built = true; SC.pl = {};
+}
+function sceneSlot(i, n, W, H){
+  const top = Math.ceil(n/2), row = i < top ? 0 : 1, k = row ? i - top : i, cnt = row ? n - top : top;
+  const sw = W / Math.max(cnt, 1);
+  return {row, x: k*sw, w: sw, y: row ? H - 64 : 0};
+}
+function sceneUpdate(){
+  const el = document.getElementById("scene");
+  if(!PUB || !PRIV || !ME || !me()){ el.style.display = "none"; return; }
+  el.style.display = "block";
+  if(!SC.built) sceneBuild(el);
+  const W = el.clientWidth || 340, H = el.clientHeight || 250; SC.W = W;
+  const ph = PUB.phase;
+  el.className = "scene ph-" + ph;
+  const ps = PUB.players, n = ps.length;
+  const shopsEl = el.querySelector(".shops"), guysEl = el.querySelector(".guys");
+  const gather = ph === "vote" || ph === "voteResult";
+  const alive = ps.filter(p=>p.alive);
+  const votes = PUB.votes || {};
+  const mates = PRIV.role === "mafia" ? (PRIV.mates||[]) : [];
+  const seen = {};
+  ps.forEach((p, i) => {
+    seen[p.pid] = 1;
+    let s = SC.pl[p.pid];
+    if(!s){
+      const shop = document.createElement("div"); shop.className = "sshop";
+      shop.innerHTML = `<span class="sb" translate="no"></span><span class="sdoor"><span class="grave">${ic("grave")}</span></span><span class="sshut"></span>`;
+      shopsEl.appendChild(shop);
+      const guy = document.createElement("div"); guy.className = "guy";
+      guy.innerHTML = `<span class="bubble" translate="no"></span><span class="badge"></span>${guySvg(i)}<span class="gname" translate="no"></span>`;
+      guy.dataset.av = "";
+      guysEl.appendChild(guy);
+      s = SC.pl[p.pid] = {shop, guy, x: null, y: null, walkT: null, bubT: null};
+    }
+    const avKey = i + JSON.stringify(p.av||null);
+    if(s.guy.dataset.av !== avKey){ s.guy.dataset.av = avKey; s.guy.querySelector(".guy-svg").outerHTML = guySvg(i, p.av); }
+    const sl = sceneSlot(i, n, W, H);
+    s.shop.style.cssText = `left:${sl.x+2}px;top:${sl.y}px;width:${sl.w-4}px`;
+    s.shop.className = `sshop c-${TONES[i%4]} ${(ph==="night" || !p.alive) ? "shut" : ""} ${p.alive ? "" : "dead"}`;
+    s.shop.querySelector(".sb").textContent = p.name;
+    // where the character stands
+    let tx, ty, inside = false;
+    const doorX = sl.x + sl.w/2 - 18;
+    if(!p.alive){ tx = doorX; ty = sl.row ? sl.y + 14 : sl.y + 14; inside = true; }
+    else if(ph === "night"){ tx = doorX; ty = sl.row ? sl.y + 14 : sl.y + 14; inside = true; }
+    else if(gather){
+      const j = alive.indexOf(p), m = Math.max(alive.length, 1);
+      const a = ((j + .5) / m) * Math.PI * 2 - Math.PI/2;
+      tx = W/2 - 18 + Math.cos(a) * Math.min(W*0.33, 135);
+      ty = H/2 - 36 + Math.sin(a) * 30;
+    } else { tx = doorX; ty = sl.row ? sl.y - 56 : sl.y + 58; }
+    const g = s.guy;
+    if(s.x !== null && (Math.abs(s.x - tx) > 2 || Math.abs(s.y - ty) > 2)){
+      g.classList.add("walking");
+      g.classList.toggle("left", tx < s.x);
+      clearTimeout(s.walkT); s.walkT = setTimeout(()=>g.classList.remove("walking"), 1300);
+    }
+    s.x = tx; s.y = ty;
+    g.style.transform = `translate(${tx}px,${ty}px)`;
+    g.style.animationDelay = (-i * 0.37) + "s";
+    g.classList.toggle("inside", inside);
+    g.classList.toggle("me", p.pid === PRIV.pid);
+    g.classList.toggle("mafia-me", p.pid === PRIV.pid && PRIV.role === "mafia");
+    g.classList.toggle("mate", mates.includes(p.pid) && p.pid !== PRIV.pid);
+    g.classList.toggle("out", ph === "voteResult" && PUB.result && PUB.result.out === p.pid);
+    g.querySelector(".gname").textContent = p.pid === PRIV.pid ? (LANG==="fr" ? "toi" : "انت") : p.name;
+    const vc = ph === "vote" ? Object.values(votes).filter(v=>v===p.pid).length : 0;
+    const b = g.querySelector(".badge"); b.textContent = vc || ""; b.classList.toggle("on", vc > 0);
+  });
+  for(const pid of Object.keys(SC.pl)) if(!seen[pid]){ SC.pl[pid].shop.remove(); SC.pl[pid].guy.remove(); delete SC.pl[pid]; }
+  // speech bubbles for new chat messages
+  const chat = PUB.chat || [];
+  if(chat.length < SC.lastChat) SC.lastChat = 0;
+  for(const m of chat.slice(SC.lastChat)){
+    if(m.sys || !SC.lastChat && chat.length > 3) continue;
+    const p = ps.find(x=>x.name===m.n); const s = p && SC.pl[p.pid]; if(!s) continue;
+    const bub = s.guy.querySelector(".bubble");
+    bub.textContent = m.x.length > 34 ? m.x.slice(0,33) + "…" : m.x;
+    s.guy.classList.add("talk"); clearTimeout(s.bubT);
+    s.bubT = setTimeout(()=>s.guy.classList.remove("talk"), 3800);
+  }
+  SC.lastChat = chat.length;
+}
+window.addEventListener("resize", ()=>{ if(SC.built) sceneUpdate(); });
+// voice: the character of whoever is speaking moves the mouth / glows
+setInterval(()=>{
+  if(!V.on || !SC.built) return;
+  for(const pid of Object.keys(SC.pl)){
+    const p = V.peers[pid]; const speak = pid === vMyPid() ? (!V.muted && vCanSpeak() && vLevel(V.myAn) > 0.04) : (p && vHear(pid) && vLevel(p.an) > 0.04);
+    SC.pl[pid].guy.classList.toggle("speak", !!speak);
+  }
+}, 200);
+
+/* =====================================================================
+   اللغة: الدارجة (الأصل) ولا الفرنسية. كنترجمو الصفحة ملي كتبدل.
+   ===================================================================== */
+let LANG = lsGet("mafia_lang") || "ar";
+const FR = {
+"تصميم زيد أملاح":"Design : Zaid Amallah",
+"الشخصية ديالي":"Mon personnage","بدل الشخصية":"Changer de personnage","الشخصية ديالك":"Ton personnage","الخزانة":"Le vestiaire",
+"لبس الشخصية ديالك كيف بغيتي":"Habille ton personnage comme tu veux","اللون ديال الجلد":"Teint","الشعر":"Cheveux","لون الشعر":"Couleur des cheveux",
+"الحوايج":"Vêtements","على الراس":"Sur la tête","اللونيط":"Lunettes","اللحية":"Barbe","والو":"Rien","طربوش":"Tarbouch","كاسكيطة":"Casquette",
+"بونيه":"Bonnet","شاش":"Chèche","فولار":"Foulard","قصير":"Court","مفروق":"Raie","مكركب":"Bouclés","طويل":"Longs","قرعة":"Rasé","واقف":"En pique",
+"آه":"Oui","عشوائي":"Au hasard","مزيان هكا":"C'est bon",
+"الكونيكسيون مقطوعة، كنعاودو نتصلو...":"Connexion perdue, on se reconnecte...",
+"صيفط":"Envoyer","كتب هنا...":"Écris ici...","ميساج":"Message",
+"كتب السمية ديالك الأول.":"Écris d'abord ton nom.",
+"كنصاوبو الروم...":"Création du salon...",
+"ما قدرتش نتصل بالأنترنيت. شوف الكونيكسيون و عاود.":"Impossible de se connecter. Vérifie ta connexion et réessaie.",
+"الكود خاصو يكون 5 ديال الحروف.":"Le code doit faire 5 caractères.",
+"الروم ما بقاتش.":"Ce salon n'existe plus.","كنرجعو للروم...":"Retour au salon...",
+"ما قدرتش نتصل بالأنترنيت.":"Impossible de se connecter.","كنقلبو على الروم":"Recherche du salon",
+"الهوست ما جاوبش. تأكد أن اللي صاوب الروم باقي فاللعبة.":"L'hôte ne répond pas. Vérifie que le créateur du salon est toujours là.",
+"ما لقيتش هاد الروم. تأكد من الكود.":"Salon introuvable. Vérifie le code.",
+"انت الهوست. إلا خرجتي، الروم غادي تتسد على كلشي. متأكد؟":"Tu es l'hôte. Si tu pars, le salon se ferme pour tout le monde. Sûr ?",
+"واش بغيتي تخرج من الروم؟":"Tu veux quitter le salon ?","الهوست سد الروم.":"L'hôte a fermé le salon.",
+"لاعب":"joueur","اللعبة بدات ديجا، تسنى حتى تسالي.":"La partie a déjà commencé, attends la fin.",
+"الروم عامرة (16 لاعب).":"Le salon est plein (16 joueurs).",
+"دخل":"Entrer","خرج":"Quitter","الهوست خرجك من الروم.":"L'hôte t'a retiré du salon.",
+"اللعبة بدات!":"La partie commence !","مافيا بيناتكم...":"mafieux parmi vous...",
+"تقتل هاد الليلة":"a été tué cette nuit","· كان":"· c'était","تقتل فالليل":"a été tué pendant la nuit",
+"المافيا حاولو يقتلو شي واحد، ولكن الطبيب نقذو!":"La mafia a tenté de tuer quelqu'un, mais le médecin l'a sauvé !",
+"هاد الليلة حتى واحد ما مات.":"Personne n'est mort cette nuit.","حتى واحد ما مات هاد الليلة":"Personne n'est mort cette nuit",
+"المدينة خرجات":"La ville a éliminé","حتى واحد ما خرج فالتصويت":"Personne n'a été éliminé au vote",
+"ربحات المافيا!":"La mafia gagne !","ربحات المدينة!":"La ville gagne !",
+"مافيا":"Mafia","الطبيب":"Médecin","المحقق":"Enquêteur","مواطن":"Citoyen",
+"كل ليلة كتختارو انت و صحابك المافيا واحد تقتلوه. فالنهار تخبى و دير راسك مواطن عادي.":"Chaque nuit, toi et tes complices choisissez quelqu'un à tuer. Le jour, cache-toi et fais le citoyen ordinaire.",
+"كل ليلة كتختار واحد تحميه من المافيا (تقدر تحمي راسك). ما تقدرش تحمي نفس الشخص جوج ليالي متابعين.":"Chaque nuit, tu protèges quelqu'un de la mafia (toi aussi). Pas la même personne deux nuits de suite.",
+"كل ليلة كتحقق مع واحد و كتعرف واش هو مافيا ولا لا.":"Chaque nuit, tu enquêtes sur quelqu'un et tu sais s'il est mafieux.",
+"ما عندك حتى قوة فالليل. فالنهار ناقش، شك، و صوت باش تخرجو المافيا.":"Aucun pouvoir la nuit. Le jour, discute, soupçonne et vote pour chasser la mafia.",
+"اللوبي":"Salon","الليل":"La nuit","النهار":"Le jour","التصويت":"Le vote","الحكم":"Verdict","سالات":"Fin",
+"الدرب كيتسد مع الليل":"Le quartier ferme à la nuit tombée",
+"العب مع صحابك أونلاين، كل واحد من التليفون ديالو":"Joue en ligne avec tes amis, chacun sur son téléphone",
+"السمية ديالك":"Ton nom","رجع للروم":"Revenir au salon","صاوب روم جديدة":"Créer un salon",
+"عندك كود ديال روم؟":"Tu as un code de salon ?","الكود":"Code","القواعد":"Règles","الأدمين":"Admin",
+"خرج من الكونط":"Se déconnecter","النسخة":"Version","الفرق":"Les équipes","المدينة":"La ville",
+"(المواطنين، الطبيب، المحقق) كتربح إلا خرجات كاع المافيا.":"(citoyens, médecin, enquêteur) gagne si toute la mafia est éliminée.",
+"المافيا":"La mafia","كتربح إلا ولاو قد المدينة ولا كثر منها.":"gagne si elle devient aussi nombreuse que la ville.",
+"المافيا كيختارو شكون يقتلو، و عندهم شات و صوت سري بيناتهم.":"La mafia choisit qui tuer, avec un chat et une voix secrets.",
+"الطبيب كيحمي واحد. إلا المافيا ختارو نفس الشخص، ما كيموتش.":"Le médecin protège quelqu'un. Si la mafia le vise, il survit.",
+"المحقق كيعرف واش شي واحد مافيا ولا لا.":"L'enquêteur découvre si quelqu'un est mafieux.",
+"كيتعلن شكون مات. كلشي كيناقش فالشات ولا فالفوكال.":"On annonce qui est mort. Tout le monde discute par chat ou en vocal.",
+"من بعد التصويت: كل واحد كيصوت على شي واحد ولا كيدير":"Puis le vote : chacun vote contre quelqu'un ou fait",
+"سكيب":"Passer",
+"اللي جاب أكثر الأصوات كيخرج. إلا كان تعادل، ولا السكيب جاب قد الأصوات ولا كثر، حتى واحد ما كيخرج.":"Le plus voté est éliminé. En cas d'égalité, ou si « passer » a autant de voix ou plus, personne ne sort.",
+"اللي مات ما بقاش يهضر ولا يصوت، ولكن يقدر يتفرج.":"Les morts ne parlent plus et ne votent plus, mais regardent.",
+"الأدوار":"Les rôles","رجوع":"Retour","الليلة":"Nuit","الروم":"Salon","صحابك:":"Tes complices :",
+"فريق المافيا":"Équipe mafia","فريق المدينة":"Équipe ville","الدور ديالك · كليكي ترفع الريدو":"Ton rôle · touche pour lever le rideau",
+"ميت":"Mort","· انت":"· toi","الشات السري ديال المافيا":"Chat secret de la mafia","الشات":"Chat",
+"ما كاين حتى ميساج.":"Aucun message.","الموتى ما يقدروش يكتبو.":"Les morts ne peuvent pas écrire.",
+"/16 لاعب":"/16 joueurs","عطي الكود لصحابك و تسناوهم":"Donne le code à tes amis et attends-les",
+"بارطاجي الكود":"Partager le code","اللاعبين":"Joueurs","(انت)":"(toi)","الإعدادات":"Réglages",
+"عدد المافيا":"Nombre de mafieux","يبان الدور ديال اللي مات":"Révéler le rôle des morts",
+"وقت النقاش":"Temps de discussion","دقيقة":"min","وقت الليل":"Durée de la nuit","ثانية":"s","وقت التصويت":"Durée du vote",
+"خاص على الأقل 4 ديال اللاعبين.":"Il faut au moins 4 joueurs.","المافيا بزاف بالنسبة لعدد اللاعبين.":"Trop de mafieux pour ce nombre de joueurs.",
+"بدا اللعبة":"Lancer la partie","مافيا ·":"mafieux ·","طبيب ·":"médecin ·","محقق ·":"enquêteur ·","دقيقة نقاش":"min de discussion",
+"تسنى الهوست يبدا اللعبة...":"Attends que l'hôte lance la partie...",
+"أجي تلعب معايا مافيا! كود الروم:":"Viens jouer à la Mafia avec moi ! Code du salon :","تكوبيا الكود:":"Code copié :",
+"انت ميت":"Tu es mort","تسنى حتى يطلع النهار و تفرج.":"Attends le jour et regarde.",
+"شكون غادي تقتلو هاد الليلة؟":"Qui allez-vous tuer cette nuit ?",
+"إلا ما تفقتوش، كيتختار واحد بالقرعة من اللي عندهم أكثر الأصوات.":"Sans accord, on tire au sort parmi les plus votés.",
+"شكون غادي تحمي هاد الليلة؟":"Qui protèges-tu cette nuit ?","ما تقدرش تحمي":"Tu ne peux pas protéger",
+"جوج ليالي متابعين.":"deux nuits de suite.","غادي تحمي":"Tu protèges","النتيجة ديال التحقيق":"Résultat de l'enquête",
+"مافيا!":"Mafieux !","ماشي مافيا":"Pas mafieux","مع شكون غادي تحقق؟":"Sur qui enquêtes-tu ?","حقق مع":"Enquêter sur",
+"التحقيقات اللي فاتو":"Enquêtes précédentes","الدرب سدّ، المدينة ناعسة":"Le quartier est fermé, la ville dort",
+"المافيا و الطبيب و المحقق كيخدمو دابا. تسنى حتى يطلع النهار.":"La mafia, le médecin et l'enquêteur agissent. Attends le jour.",
+"إعلان الصباح":"Annonce du matin","تسنى الآخرين":"Attends les autres","أنا مستعد للتصويت":"Je suis prêt à voter",
+"دوزو للتصويت دابا":"Passer au vote maintenant","شكون كتشك فيه؟":"Qui soupçonnes-tu ?","صوتو":"Votes",
+"· تقدر تبدل الصوت قبل ما يسالي الوقت":"· tu peux changer ton vote avant la fin","· انت ميت، كتفرج غير":"· tu es mort, tu regardes",
+"سكيب: ما نصوت على حد":"Passer : je ne vote contre personne","سالي التصويت دابا":"Terminer le vote maintenant",
+"كان":"C'était","السكيب ربح التصويت.":"« Passer » a gagné le vote.","كان تعادل فالأصوات.":"Égalité des voix.",
+"حتى واحد ما صوت.":"Personne n'a voté.","حتى واحد ما خرج":"Personne n'est éliminé","ما كاين حتى صوت":"Aucun vote",
+"الليل جاي...":"La nuit arrive...","تابع":"Continuer","ربحات المافيا":"La mafia gagne","ربحات المدينة":"La ville gagne",
+"مبروك، ربحتي!":"Bravo, tu as gagné !","خسرتي هاد المرة.":"Perdu cette fois.","شكون كان شكون":"Qui était qui",
+"لعبة جديدة بنفس الروم":"Nouvelle partie, même salon","تسنى الهوست يبدا لعبة جديدة...":"Attends que l'hôte relance...",
+"الليل طاح":"La nuit tombe","صباح الخير":"Bonjour","كلشي كيسمع كلشي":"Tout le monde s'entend",
+"الليل: غير انت و المافيا كتسمعو بعضياتكم":"Nuit : seule la mafia s'entend","الليل: الفوكال مسدود":"Nuit : vocal coupé",
+"انت ميت: كتسمع ولكن ما كتهضرش":"Mort : tu écoutes sans parler","النهار: هضرو و ناقشو":"Jour : parlez et débattez",
+"دخل للفوكال":"Rejoindre le vocal","الشات الصوتي مع اللاعبين":"Chat vocal avec les joueurs","مسكوت":"Muet",
+"الميكرو خدام":"Micro actif","خرج من الفوكال":"Quitter le vocal","انت":"toi","الجماعة":"La place",
+"أول مرة":"Première fois",
+"ما كاين حتى واحد دخل للكونط و الجيميل ديال الأدمين. صاوب الكونط ديالك و تولي انت الأدمين الوحيد.":"Aucun compte admin n'existe encore. Crée le tien et deviens le seul admin.",
+"كود التفعيل (اللي عطيتك)":"Code d'activation (celui que je t'ai donné)","السمية ديال الأدمين":"Nom de l'admin","الجيميل":"Gmail",
+"المود دو باس (على الأقل 6)":"Mot de passe (6 minimum)","عاود المود دو باس":"Répète le mot de passe","ولي الأدمين":"Devenir admin",
+"هاد السمية ديجا عند شي لاعب.":"Ce nom est déjà pris par un joueur.","ما قدرتش نسجل الأدمين:":"Impossible d'enregistrer l'admin :",
+"مرحبا...":"Bienvenue...","دخل بالسمية و المود دو باس ديالك":"Connecte-toi avec ton nom et ton mot de passe",
+"السمية (الأدمين يقدر بالجيميل)":"Nom (l'admin peut utiliser son Gmail)","المود دو باس":"Mot de passe",
+"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
+"كنتأكدو...":"Vérification...","الجيميل ولا المود دو باس غالطين.":"Gmail ou mot de passe incorrect.","المود دو باس غالط.":"Mot de passe incorrect.",
+"هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.":"Ce compte n'existe pas ou n'a pas encore été validé par l'admin.",
+"كونط جديد":"Nouveau compte","السمية (هي اللي غادي تبان فاللعبة)":"Nom (celui affiché dans le jeu)",
+"المود دو باس (على الأقل 4)":"Mot de passe (4 minimum)","سجل و عطيني الكود":"M'inscrire et obtenir le code",
+"هاد السمية ديجا عند شي واحد.":"Ce nom est déjà pris.","ما قدرتش نتصل بالأنترنيت. عاود.":"Pas de connexion. Réessaie.",
+"صيفط الكود للأدمين":"Envoie le code à l'admin",
+"صيفط هاد الكود للأدمين باش يقبلك. ملي يقبلك، دخل بالسمية و المود دو باس ديالك.":"Envoie ce code à l'admin pour qu'il te valide. Ensuite, connecte-toi avec ton nom et ton mot de passe.",
+"صيفط الكود":"Envoyer le code","رجع للدخول":"Retour à la connexion","تكوبيا":"Copié",
+"ما قدرتش نحل المفتاح ديال GitHub.":"Impossible d'ouvrir la clé GitHub.","كنجيبو اللائحة...":"Chargement de la liste...",
+"ما قدرتش نجيب اللائحة:":"Impossible de charger la liste :","الكونطات":"Comptes","قبل اللاعبين بالكود اللي صيفطو ليك":"Valide les joueurs avec le code qu'ils t'envoient",
+"قلب":"Chercher","قبل":"Valider","لا":"Non","اللي مقبولين (":"Comptes validés (","حتى واحد مازال.":"Personne pour l'instant.",
+"الكود خاصو 8 ديال الحروف.":"Le code doit faire 8 caractères.","كنقلبو على الطلب...":"Recherche de la demande...",
+"ما لقيت حتى طلب بهاد الكود.":"Aucune demande avec ce code.","كنقبلو...":"Validation...","تقبل":"Validé :",
+". دابا يقدر يدخل.":". Il peut maintenant se connecter.","ما تقبلش:":"Échec de la validation :",
+"تحيد هاد الكونط؟ ما بقاش يقدر يدخل.":"Supprimer ce compte ? Il ne pourra plus se connecter.","كنحيدو...":"Suppression...",
+"تحيد.":"Supprimé.","ما تحيدش:":"Échec de la suppression :","حتى واحد مازال":"Personne encore",
+"مثلا: زيد":"ex : Zaid","متصل":"en ligne","ماشي متصل":"hors ligne"
+};
+// جمل فيها سميات ولا أرقام
+const FR_RX = [
+  [/^دخل (.+)$/, "$1 est arrivé"], [/^خرج (.+)$/, "$1 est parti"], [/^(.+) تخرج$/, "$1 a été retiré"],
+  [/^النهار (\d+)$/, "Jour $1"], [/^الليلة (\d+)$/, "Nuit $1"], [/^الليلة (\d+):/, "Nuit $1 :"],
+  [/^(\d+) مافيا بيناتكم\.\.\.$/, "$1 mafieux parmi vous..."], [/^حيد (.+)$/, "Supprimer $1"],
+  [/^كود التسجيل ديالي ف مافيا: (.+)$/, "Mon code d'inscription Mafia : $1"]
+];
+const FR_KEYS = Object.keys(FR).filter(k => k.length >= 4).sort((a,b)=>b.length-a.length);
+function trText(t){
+  if(LANG !== "fr" || !t || !/[؀-ۿ]/.test(t)) return t;
+  const core = t.trim();
+  if(FR[core] !== undefined) return t.replace(core, FR[core]);
+  for(const [rx, to] of FR_RX){ if(rx.test(core)) return t.replace(core, core.replace(rx, to)); }
+  let out = t;
+  for(const k of FR_KEYS) if(out.includes(k)) out = out.split(k).join(FR[k]);
+  return out;
+}
+function trNode(root){
+  if(LANG !== "fr") return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let n; while((n = w.nextNode())){ const p = n.parentNode; if(p && (p.nodeName === "SCRIPT" || p.nodeName === "STYLE")) continue; if(p && p.closest && p.closest('[translate="no"]')) continue; const v = trText(n.nodeValue); if(v !== n.nodeValue) n.nodeValue = v; }
+  const els = root.querySelectorAll ? root.querySelectorAll("[placeholder],[aria-label],[title]") : [];
+  for(const e of els) for(const a of ["placeholder","aria-label","title"]){ const v = e.getAttribute(a); if(v){ const t = trText(v); if(t !== v) e.setAttribute(a, t); } }
+}
+const _alert = window.alert.bind(window), _confirm = window.confirm.bind(window);
+window.alert = m => _alert(trText(String(m)));
+window.confirm = m => _confirm(trText(String(m)));
+let trBusy = false;
+const trObs = new MutationObserver(ms => {
+  if(LANG !== "fr" || trBusy) return;
+  trBusy = true;
+  for(const m of ms){
+    const pe = m.target.nodeType === 1 ? m.target : m.target.parentNode;
+    if(pe && pe.closest && pe.closest('[translate="no"]')) continue;
+    if(m.type === "characterData") { const v = trText(m.target.nodeValue); if(v !== m.target.nodeValue) m.target.nodeValue = v; }
+    else m.addedNodes.forEach(nd => nd.nodeType === 3 ? (nd.nodeValue = trText(nd.nodeValue)) : nd.nodeType === 1 && trNode(nd));
+  }
+  trBusy = false;
+});
+function applyLang(){
+  document.documentElement.lang = LANG === "fr" ? "fr" : "ar";
+  document.documentElement.dir = LANG === "fr" ? "ltr" : "rtl";
+  document.title = LANG === "fr" ? "Mafia" : "مافيا";
+  trObs.disconnect();
+  if(LANG === "fr"){ trNode(document.body); trObs.observe(document.body, {childList:true, subtree:true, characterData:true}); }
+}
+const STATIC_HTML = {};
+["net","composer"].forEach(id => { const e = document.getElementById(id); if(e) STATIC_HTML[id] = e.innerHTML; });
+function setLang(l){
+  LANG = l; lsSet("mafia_lang", l);
+  for(const id in STATIC_HTML){ const e = document.getElementById(id); if(e){ const v = e.querySelector("input") ? e.querySelector("input").value : ""; e.innerHTML = STATIC_HTML[id]; const i = e.querySelector("input"); if(i) i.value = v; } }
+  applyLang();
+  lastHtml = ""; vLastBtns = ""; SC.built = false;
+  ACC ? home() : loginScreen();
+}
+function langSwitch(){
+  return `<div class="lang" role="group" aria-label="اللغة / Langue">
+    <button class="${LANG==="ar"?"on":""}" onclick="setLang('ar')" lang="ar">الدارجة</button>
+    <button class="${LANG==="fr"?"on":""}" onclick="setLang('fr')" lang="fr">Français</button></div>`;
+}
+applyLang();
+
+/* ---------- الدرب حي: طيور فالنهار، خفافيش فالليل، مش كيدوز، سحاب كيتحرك ---------- */
+const AMB = {t:null};
+const BIRD = `<svg viewBox="0 0 30 14" class="flap"><path d="M1 7c4-5 9-5 14 1 5-6 10-6 14-1-4-1.5-9 0-14 4-5-4-10-5.5-14-4z" fill="#22252d"/></svg>`;
+const BAT = `<svg viewBox="0 0 40 18" class="flap"><path d="M20 6c1.3 0 2 .9 2 2 2-4 7-6 12-6-1.4 1.6-1.6 3.2-1 4.6-1.6-.4-3 0-3.8 1.4-1.2-.8-2.8-.6-3.6.6C24 10 22 12 20 14c-2-2-4-4-5.6-5.4-.8-1.2-2.4-1.4-3.6-.6-.8-1.4-2.2-1.8-3.8-1.4.6-1.4.4-3-1-4.6 5 0 10 2 12 6 0-1.1.7-2 2-2z" fill="#0a0a0e"/><circle cx="18.8" cy="8" r=".6" fill="#f4c430"/><circle cx="21.2" cy="8" r=".6" fill="#f4c430"/></svg>`;
+const CAT = `<svg viewBox="0 0 46 26"><g class="cat-tail"><path d="M6 14C1 12 1 5 5 3" stroke="#2b2b30" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+  <ellipse cx="20" cy="15" rx="13" ry="6.5" fill="#2b2b30"/><circle cx="35" cy="10" r="6" fill="#2b2b30"/><path d="M31 6l1-5 3 4zM36 5l3-4 1 5z" fill="#2b2b30"/>
+  <circle cx="36.6" cy="9.4" r="1" fill="#f4c430"/><g class="cat-legs" stroke="#2b2b30" stroke-width="3" stroke-linecap="round"><path class="cl1" d="M12 19v5"/><path class="cl2" d="M27 19v5"/></g></svg>`;
+function ambSpawn(){
+  const el = document.getElementById("scene");
+  if(!el || el.style.display === "none" || document.hidden || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const night = el.classList.contains("ph-night");
+  const r = Math.random();
+  const a = document.createElement("div");
+  const rtl = Math.random() < .5;
+  if(r < .62){
+    // طير ولا خفاش كيدوز فالسما
+    a.className = "amb flyer " + (night ? "bat" : "bird") + (rtl ? " rtl" : "");
+    a.innerHTML = night ? BAT : BIRD;
+    a.style.top = (40 + Math.random()*90) + "px";
+    a.style.animationDuration = (night ? 5 + Math.random()*3 : 6 + Math.random()*4) + "s";
+    if(!night && Math.random() < .4){ const b = a.cloneNode(true); b.style.top = (parseFloat(a.style.top) + 12) + "px"; b.style.animationDelay = ".35s"; el.appendChild(b); b.addEventListener("animationend", e=>{ if(e.target === b) b.remove(); }); setTimeout(()=>b.remove(), 20000); }
+  } else {
+    // مش كيتمشى فالزنقة
+    a.className = "amb cat" + (rtl ? " rtl" : "");
+    a.innerHTML = CAT;
+    a.style.top = (el.clientHeight/2 + 40 + Math.random()*12) + "px";
+    a.style.animationDuration = (11 + Math.random()*5) + "s";
+  }
+  el.appendChild(a);
+  a.addEventListener("animationend", e=>{ if(e.target === a) a.remove(); });
+  setTimeout(()=>a.remove(), 20000);
+}
+function ambLoop(){
+  clearTimeout(AMB.t);
+  ambSpawn();
+  AMB.t = setTimeout(ambLoop, 5000 + Math.random()*9000);
+}
+setTimeout(ambLoop, 3000);
+
 /* ---------- البداية ---------- */
 if(location.protocol === "https:" && "serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 // ملي كيرجع التليفون للعبة ولا كيرجع الأنترنيت: نتأكدو من الكونيكسيون دغيا
@@ -1257,7 +2186,7 @@ function wakeNet(){ if(!net) return; if(net.ok) net.check(); else net.reconnect(
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) wakeNet(); });
 window.addEventListener("online", wakeNet);
 window.addEventListener("focus", wakeNet);
-if(lsGet("mafia_me")) rejoin(); else home();
+startApp();
 </script>
 </body>
 </html>

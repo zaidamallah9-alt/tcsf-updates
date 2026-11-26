@@ -1,7 +1,7 @@
 {
-    "build":  2,
-    "sha1":  "f5cea38eeabfd6ed9b7d978481092d572ff3d03d",
-    "size":  140423,
-    "notes":  "Design jdid (derb bel lil), icon jdid, connection fix, auto-update",
-    "date":  "2026-11-26T19:47:58Z"
+    "build":  3,
+    "sha1":  "a7b59274f3f66748504c1291643d11d4281dbbc8",
+    "size":  217311,
+    "notes":  "Comptes + admin, derb anime, personnages, vestiaire, francais",
+    "date":  "2026-11-26T20:04:07Z"
 }
