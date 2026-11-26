@@ -1,0 +1,526 @@
+// Tronc Commun Scientifique Français — interface (routeur par hash).
+// Routes :
+//   #/                          accueil (grille des matières)
+//   #/m/<matiere>               liste des leçons (ou « en cours de construction »)
+//   #/l/<matiere>/<lecon>/<onglet>   leçon (onglets : lecon, revision, …)
+(() => {
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const view = $('#view');
+  const crumbs = $('#crumbs');
+  const backBtn = $('#backBtn');
+  const ICONS = window.TCSF_ICONS || {};
+  const cache = new Map();
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  async function readText(rel) {
+    if (cache.has(rel)) return cache.get(rel);
+    const txt = window.tcsf ? await window.tcsf.readContent(rel) : await fetch('../content/' + rel).then((r) => (r.ok ? r.text() : null)).catch(() => null);
+    cache.set(rel, txt);
+    return txt;
+  }
+  async function readJSON(rel) {
+    const t = await readText(rel);
+    try { return t ? JSON.parse(t) : null; } catch { return null; }
+  }
+
+  const getSubjects = async () => (await readJSON('subjects.json')) || [];
+  async function getSubject(id) { return (await getSubjects()).find((s) => s.id === id); }
+  async function getLessons(subject) { return subject && subject.lessons ? (await readJSON(subject.lessons)) || [] : []; }
+
+  function iconFor(item) {
+    if (item.icon && ICONS[item.icon]) return ICONS[item.icon];
+    const initials = (item.title || '?').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+    return `<span class="initials">${esc(initials)}</span>`;
+  }
+  const tileStyle = (item) => `--c1:${item.color?.[0] || '#4f6bed'};--c2:${item.color?.[1] || '#7a5cf0'}`;
+
+  function setCrumbs(parts) {
+    crumbs.innerHTML = parts.map((p, i) =>
+      i < parts.length - 1 && p.href ? `<a href="${p.href}">${esc(p.label)}</a><span class="sep">›</span>` : `<span class="current">${esc(p.label)}</span>`
+    ).join('');
+  }
+
+  let parentRoute = null;
+  function setParent(route) {
+    parentRoute = route;
+    backBtn.hidden = !route;
+  }
+  function goBack() { if (parentRoute) location.hash = parentRoute; }
+  backBtn.addEventListener('click', goBack);
+
+  // ---------------- Accueil : le cahier ouvert (leçon à reprendre) et l'étagère des cahiers ----------------
+  const GL = (n, s) => (window.TCSF_GLYPH ? window.TCSF_GLYPH(n, s) : '');
+  const HOME_ICON = { philosophie: 'owl' };
+  // « Arabe · اللغة العربية » → ['Arabe', 'اللغة العربية']
+  const splitTitle = (t) => { const i = String(t || '').indexOf(' · '); return i < 0 ? [t, ''] : [t.slice(0, i), t.slice(i + 3)]; };
+  const isArabic = (t) => /[؀-ۿ]/.test(t || '');
+
+  // progression du Parcours d'une matière : leçons prêtes, couronnes, prochaine leçon
+  async function subjectProgress(s, duo) {
+    const pc = s.status === 'ready' && (s.categories || []).find((c) => c.mode === 'cours' && c.status === 'ready');
+    if (!pc) return null;
+    const lessons = (await getLessons(pc)).filter((l) => !l.status || l.status === 'ready');
+    if (!lessons.length) return null;
+    const crowns = (duo && duo.crowns) || {};
+    const doneN = lessons.filter((l) => crowns[s.id + '/' + l.id]).length;
+    const nextI = lessons.findIndex((l) => !crowns[s.id + '/' + l.id]);
+    return { lessons, doneN, next: nextI < 0 ? null : lessons[nextI], nextI };
+  }
+
+  async function renderHome() {
+    setParent(null);
+    setCrumbs([]);
+    const subjects = await getSubjects();
+    const duo = window.TCSF_DUO ? window.TCSF_DUO.state() : null;
+    const prog = {};
+    await Promise.all(subjects.map(async (s) => { prog[s.id] = await subjectProgress(s, duo).catch(() => null); }));
+
+    // matière à reprendre : la dernière ouverte, sinon la première disponible
+    const resume = subjects.find((s) => duo && s.id === duo.lastSubj && prog[s.id]) || subjects.find((s) => prog[s.id]);
+    const P = resume && prog[resume.id];
+    const fresh = !duo || !duo.lastSubj;
+    const goal = duo ? duo.goal || 20 : 20, xp = duo ? Math.min(duo.daily.xp || 0, 9999) : 0;
+    const goalPct = Math.min(100, Math.round((xp / goal) * 100));
+
+    let page = '';
+    if (resume && P) {
+      const [fr] = splitTitle(resume.title);
+      const all = !P.next;
+      const L = P.next || P.lessons[P.lessons.length - 1];
+      const n = all ? P.lessons.length : P.nextI + 1;
+      const href = `#/s/${encodeURIComponent(resume.id)}/${encodeURIComponent(L.id)}`;
+      page = `
+        <article class="nb-page" style="${tileStyle(resume)}" aria-labelledby="nbTitle">
+          <div class="nb-margin" aria-hidden="true"><small>Leçon</small><b>${n}</b><span>sur ${P.lessons.length}</span></div>
+          <div class="nb-body">
+            <h1 id="nbTitle">${esc(L.title)}</h1>
+            ${L.partie || L.module ? `<p class="nb-ctx">${esc(fr)} · ${esc(L.partie || L.module)}</p>` : `<p class="nb-ctx">${esc(fr)}</p>`}
+            ${L.description ? `<p class="nb-sum">${esc(L.description)}</p>` : ''}
+            <div class="nb-track" role="img" aria-label="${P.doneN} leçons terminées sur ${P.lessons.length}">
+              ${P.lessons.map((x, i) => `<i class="${duo && duo.crowns[resume.id + '/' + x.id] ? 'done' : ''}${i === P.nextI ? ' now' : ''}"></i>`).join('')}
+            </div>
+            <p class="nb-count">${GL('crown', 16)} ${P.doneN} leçon${P.doneN > 1 ? 's' : ''} terminée${P.doneN > 1 ? 's' : ''} sur ${P.lessons.length}</p>
+            <div class="nb-actions">
+              <a class="nb-go" href="${href}">${GL('play', 18)}<span>${all ? 'Réviser la leçon' : fresh ? 'Commencer la leçon' : 'Continuer la leçon'}</span></a>
+              <a class="nb-link" href="#/m/${encodeURIComponent(resume.id)}">Ouvrir ${esc(fr)} ${GL('arrow', 16)}</a>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    const shelf = subjects.map((s) => {
+      const [fr, ar] = splitTitle(s.title);
+      const p = prog[s.id];
+      const ready = s.status === 'ready';
+      const ic = HOME_ICON[s.id] && ICONS[HOME_ICON[s.id]] ? ICONS[HOME_ICON[s.id]] : iconFor(s);
+      const sub = ready ? (s.subtitle || 'Disponible') : 'En travaux · bientôt';
+      return `
+        <a class="nb-cover${ready ? '' : ' soon'}" href="#/m/${encodeURIComponent(s.id)}" style="${tileStyle(s)}">
+          <span class="nb-cover-ic">${ic}</span>
+          <span class="nb-label">
+            <b>${esc(fr)}</b>
+            ${ar ? `<span class="nb-ar" dir="${isArabic(ar) ? 'rtl' : 'ltr'}" lang="${isArabic(ar) ? 'ar' : 'en'}">${esc(ar)}</span>` : ''}
+            <small dir="auto">${esc(sub)}</small>
+            ${p ? `<span class="nb-meter" aria-label="${p.doneN} sur ${p.lessons.length} leçons du parcours"><i style="width:${Math.round((p.doneN / p.lessons.length) * 100)}%"></i></span><small class="nb-meter-t">${GL('crown', 13)} ${p.doneN} / ${p.lessons.length}</small>` : ''}
+          </span>
+        </a>`;
+    }).join('');
+
+    view.innerHTML = `
+      <section class="nb-desk${page ? '' : ' no-page'}">
+        ${page}
+        <aside class="nb-today" aria-label="Aujourd'hui">
+          <h2>Aujourd'hui</h2>
+          <div class="nb-goal">
+            <div class="nb-goal-top"><span>Objectif du jour</span><b>${xp} / ${goal} XP</b></div>
+            <div class="nb-hl" role="progressbar" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${xp}" aria-label="Objectif du jour"><i style="width:${goalPct}%"></i></div>
+            <p>${goalPct >= 100 ? 'Objectif atteint. Tout ce que tu fais en plus compte pour la ligue.' : `Encore <b>${goal - xp} XP</b> : une leçon du parcours suffit.`}</p>
+          </div>
+          <div id="todayCard" class="nb-plan" aria-label="Mon planning"></div>
+        </aside>
+      </section>
+      <div class="nb-shelf-h"><h2>Mes cahiers</h2><span>${(() => { const ok = subjects.filter((s) => s.status === 'ready').length, soon = subjects.length - ok; return ok + ' matières' + (soon ? ' · ' + soon + ' bientôt' : ''); })()}</span></div>
+      <section class="nb-shelf" aria-label="Matières">${shelf}</section>`;
+    if (window.TCSF_PLANNER) window.TCSF_PLANNER.todayCard(view.querySelector('#todayCard'), { readJSON, getSubjects }).catch((e) => console.error(e));
+  }
+
+  // ---------------- En maintenance / bientôt disponible ----------------
+  function renderMaintenance(item, color, backHref, backLabel) {
+    view.innerHTML = `
+      <section class="construction" style="${tileStyle(color)}">
+        <div class="construction-icon">${iconFor(item)}</div>
+        <h1>${esc(item.title)}</h1>
+        <div class="badge-soon">${ICONS.tools || ''} En maintenance · Bientôt disponible</div>
+        <p class="muted">Cette partie sera disponible très bientôt grâce à une mise à jour.</p>
+        <a class="btn primary" href="${backHref}">${esc(backLabel)}</a>
+      </section>`;
+  }
+
+  const subjHref = (s) => '#/m/' + encodeURIComponent(s.id);
+  const catHref = (s, c) => `#/c/${encodeURIComponent(s.id)}/${encodeURIComponent(c.id)}`;
+
+  // ---------------- Matière : rubriques (Cours, Examens, Révisions) ----------------
+  async function renderSubject(id) {
+    const subject = await getSubject(id);
+    if (!subject) return renderNotFound();
+    setParent('#/');
+    setCrumbs([{ label: 'Matières', href: '#/' }, { label: subject.title }]);
+    if (subject.status !== 'ready') return renderMaintenance(subject, subject, '#/', 'Revenir aux matières');
+    const cats = subject.categories || [];
+    view.innerHTML = `
+      <section class="subject-head" style="${tileStyle(subject)}">
+        <span class="tile-icon big">${iconFor(subject)}</span>
+        <div><p class="eyebrow">Matière</p><h1>${esc(subject.title)}</h1><p class="muted">Suis ton parcours, ou choisis une rubrique plus bas.</p></div>
+      </section>
+      <h2 class="duo-path-h">🧭 Parcours scientifique</h2>
+      <section id="duoPath"></section>
+      <h2 class="group-title">Toutes les rubriques</h2>
+      <section class="grid cats">
+        ${cats.map((c) => `
+          <a class="tile cat ${c.status === 'ready' ? '' : 'soon'}" href="${catHref(subject, c)}" style="${tileStyle(subject)}">
+            <span class="tile-icon">${iconFor(c)}</span>
+            <span class="tile-title">${esc(c.title)}</span>
+            <span class="muted cat-desc">${esc(c.description || '')}</span>
+            <span class="tile-sub">${c.status === 'ready' ? 'Disponible' : 'En maintenance · Bientôt disponible'}</span>
+          </a>`).join('')}
+      </section>`;
+    const pc = cats.find((c) => c.mode === 'cours' && c.status === 'ready');
+    if (window.TCSF_DUO && pc) {
+      const links = cats.filter((c) => c.status === 'ready' && ['video', 'cours', 'prof', 'methode', 'revision'].includes(c.mode)).map((c) => [({ video: '🎬 Vidéo', cours: '📖 Cours', prof: '👨‍🏫 Prof', methode: '📝 Fiche · Devoir', revision: '🎯 Exercices' })[c.mode], catHref(subject, c).replace('#/c/', '#/l/')]);
+      // les expériences liées à chaque leçon apparaissent aussi dans le parcours
+      const extra = {};
+      const lab = cats.find((c) => c.mode === 'labo' && c.status === 'ready');
+      if (lab) for (const x of await getLessons(lab)) if (x.lesson) (extra[x.lesson] = extra[x.lesson] || []).push([`🔬 ${x.title}`, `${catHref(subject, lab).replace('#/c/', '#/l/')}/${encodeURIComponent(x.id)}`]);
+      window.TCSF_DUO.path(view.querySelector('#duoPath'), subject, await getLessons(pc), links, extra);
+    }
+  }
+
+  // ---------------- Leçon en mode jeu (#/s/<matière>/<leçon>) ----------------
+  async function renderSession(sid, lid) {
+    const subject = await getSubject(sid);
+    const pc = subject && (subject.categories || []).find((c) => c.mode === 'cours');
+    const lesson = lid === '__erreurs' && pc ? { id: lid, title: 'Mes erreurs' } : pc && (await getLessons(pc)).find((l) => l.id === lid);
+    if (!lesson || !window.TCSF_DUO) return renderNotFound();
+    setParent(subjHref(subject)); setCrumbs([]);
+    window.TCSF_DUO.session(view, subject, lesson, lesson.data ? await readJSON(lesson.data) : null, subjHref(subject));
+  }
+
+  // ---------------- Rubrique : liste des fiches ----------------
+  async function renderCategory(sid, cid) {
+    const subject = await getSubject(sid);
+    const cat = subject && (subject.categories || []).find((c) => c.id === cid);
+    if (!subject || !cat) return renderNotFound();
+    setParent(subjHref(subject));
+    setCrumbs([{ label: 'Matières', href: '#/' }, { label: subject.title, href: subjHref(subject) }, { label: cat.title }]);
+    if (subject.status !== 'ready' || cat.status !== 'ready') return renderMaintenance(cat, subject, subjHref(subject), 'Revenir à ' + subject.title);
+    const lessons = await getLessons(cat);
+    if (cat.mode === 'examen') return renderExam(subject, cat, lessons);
+    if (cat.mode === 'dev') return renderDev(subject, cat);
+    const groups = [];
+    for (const l of lessons) {
+      const g = l.partie || l.module || '';
+      let grp = groups.find((x) => x.name === g);
+      if (!grp) groups.push((grp = { name: g, items: [] }));
+      grp.items.push(l);
+    }
+    view.innerHTML = `
+      <section class="subject-head" style="${tileStyle(subject)}">
+        <span class="tile-icon big">${iconFor(subject)}</span>
+        <div><p class="eyebrow">${esc(subject.title)}</p><h1>${esc(cat.title)}</h1><p class="muted">${lessons.filter((l) => l.status === undefined || l.status === 'ready').length} ${esc(T(subject).count)}</p></div>
+      </section>
+      ${groups.map((g) => `
+        ${g.name ? `<h2 class="group-title">${esc(g.name)}</h2>` : ''}
+        <section class="grid lessons">
+          ${g.items.map((l, i) => l.status && l.status !== 'ready' ? `
+            <div class="lesson-card disabled">
+              <span class="lesson-num">${ICONS.tools || ''}</span>
+              <div><h3>${esc(l.title)}</h3><p class="muted">En maintenance · Bientôt disponible</p></div>
+            </div>` : `
+            <a class="lesson-card" href="${catHref(subject, cat).replace('#/c/', '#/l/')}/${encodeURIComponent(l.id)}" style="${tileStyle(subject)}">
+              <span class="lesson-num">${ICONS.lesson || i + 1}</span>
+              <div>
+                <h3>${esc(l.title)}</h3>
+                <p class="muted">${esc(l.description || '')}</p>
+                <div class="chips">${(l.sections || []).map((s) => `<span class="chip">${esc(s.title)}</span>`).join('')}</div>
+              </div>
+            </a>`).join('')}
+        </section>`).join('')}`;
+  }
+
+  // ---------------- Leçon ----------------
+  async function renderLesson(subjectId, catId, lessonId, tabId) {
+    const subject = await getSubject(subjectId);
+    const cat = subject && (subject.categories || []).find((c) => c.id === catId);
+    if (!cat || cat.status !== 'ready') return renderNotFound();
+    const lesson = (await getLessons(cat)).find((l) => l.id === lessonId);
+    if (!subject || !lesson) return renderNotFound();
+    const sections = lesson.sections || [];
+    const tab = sections.find((s) => s.id === tabId) || sections[0];
+    setParent(catHref(subject, cat));
+    setCrumbs([{ label: 'Matières', href: '#/' }, { label: subject.title, href: subjHref(subject) }, { label: cat.title, href: catHref(subject, cat) }, { label: lesson.title }]);
+    const html = cat.mode === 'labo' ? laboHTML(lesson, subject) : lesson.data ? await lessonFromData(lesson, cat, subject) : tab ? await readText(tab.file) : null;
+    const base = `#/l/${encodeURIComponent(subject.id)}/${encodeURIComponent(cat.id)}/${encodeURIComponent(lesson.id)}/`;
+    view.innerHTML = `
+      <section class="lesson-head" style="${tileStyle(subject)}">
+        <div>
+          <p class="eyebrow">${esc(subject.title)}${(lesson.partie || lesson.module) ? ' · ' + esc(lesson.partie || lesson.module) : ''}</p>
+          <h1>${esc(lesson.title)}</h1>
+        </div>
+        <div class="tabs" role="tablist" ${sections.length < 2 ? 'hidden' : ''}>
+          ${sections.map((s) => `<a role="tab" class="tab ${s === tab ? 'active' : ''}" aria-selected="${s === tab}" href="${base}${encodeURIComponent(s.id)}">${esc(s.title)}</a>`).join('')}
+        </div>
+      </section>
+      <div class="lesson-layout${cat.mode === 'prof' || cat.mode === 'labo' || cat.mode === 'methode' || cat.mode === 'video' ? ' no-toc' : ''}">
+        <aside class="toc" aria-label="Sommaire"><p class="toc-title">${esc(T(subject).toc)}</p><ol id="tocList"></ol></aside>
+        <article class="content ${tab ? 'content-' + esc(tab.id) : ''}" id="article">${html ?? '<p class="muted">Contenu introuvable.</p>'}</article>
+      </div>
+      <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>`;
+    buildToc();
+  }
+
+  // ---------------- Langue / sens d'écriture par matière ----------------
+  const I18N = {
+    fr: { toc: 'Sommaire', count: 'fiche(s) disponible(s)', obj: 'Objectifs', retenir: 'À retenir', essentiel: "L'essentiel", cartes: 'Cartes mémoire', exos: 'Exercices interactifs', goRev: 'Passer aux exercices de révision →', sims: 'Refaire les expériences' },
+    ar: { toc: 'الفهرس', count: 'درس متاح', obj: 'الأهداف', retenir: 'ما ينبغي تذكره', essentiel: 'الخلاصة', cartes: 'بطاقات للتذكر', exos: 'تمارين تفاعلية', goRev: '← انتقل إلى تمارين المراجعة' },
+    en: { toc: 'Contents', count: 'lesson(s) available', obj: 'Objectives', retenir: 'Remember', essentiel: 'Key points', cartes: 'Flash cards', exos: 'Interactive practice', goRev: 'Go to the revision exercises →' }
+  };
+  const T = (subject) => I18N[(subject && subject.lang) || 'fr'] || I18N.fr;
+  function applyDir(subject) {
+    const lang = (subject && subject.lang) || 'fr';
+    view.setAttribute('lang', lang);
+    view.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+  }
+
+  // Vidéos d'accompagnement (YouTube, en arabe) d'une leçon
+  const videosHTML = (d) => (d && d.videos && d.videos.length ? `<div class="box vids"><span class="box-title">🎥 Les vidéos de la chaîne Octo Code (en arabe)</span>
+    <ul>${d.videos.map(([t, id]) => `<li><a href="https://www.youtube.com/watch?v=${encodeURIComponent(id)}" target="_blank" rel="noopener"><span class="vid-play">▶</span>${esc(t)}</a></li>`).join('')}</ul>
+    <p class="w-small muted">S’ouvre sur YouTube (Internet nécessaire). Les explications et exercices de l’application sont faits pour accompagner ces vidéos.</p></div>` : '');
+  window.TCSF_VIDEOS = videosHTML;
+  // Leçon décrite en JSON : { title, module, objectifs[], cours[{t,h}], recap, cards[[recto,verso]], exercises{facile,moyen,difficile} }
+  async function lessonFromData(lesson, cat, subject) {
+    const d = await readJSON(lesson.data);
+    if (!d) return null;
+    const t = T(subject);
+    const cards = (d.cards || []).map((c, i) => `<button class="flip f${(i % 4) + 1}"><span class="f-front">${c[0]}</span><span class="f-back">${c[1]}</span></button>`).join('');
+    // leçon écrite à la main en HTML (ex. : Le modèle de l'atome)
+    if (cat.mode === 'prof') {
+      const rc = (subject.categories || []).find((c) => c.mode === 'revision');
+      const rev = rc ? `${catHref(subject, rc).replace('#/c/', '#/l/')}/${encodeURIComponent(lesson.id)}` : '';
+      // programmation : un prof qui fait lire, exécuter, prédire puis écrire du code
+      const w = d.steps ? 'profcode' : 'prof';
+      return `<div data-widget="${w}" data-src="${esc(lesson.data)}" data-title="${esc(lesson.title)}" data-rev="${esc(rev)}"></div>`;
+    }
+    if (cat.mode === 'video') return `<div data-widget="coursvideo" data-src="${esc(lesson.data)}" data-title="${esc(lesson.title)}" data-subject="${esc(subject.id)}"></div>`;
+    if (cat.mode === 'methode') return `<div data-widget="methode" data-src="${esc(lesson.data)}" data-title="${esc(lesson.title)}"></div>`;
+    if (cat.mode === 'revision' && d.revFile) return readText(d.revFile);
+    if (cat.mode === 'cours') {
+      const revCat = (subject.categories || []).find((c) => c.mode === 'revision');
+      if (d.coursFile) return `${(await readText(d.coursFile)) || ''}
+`;
+      const vc = (subject.categories || []).find((c) => c.mode === 'video' && c.status === 'ready');
+      return `${vc ? `<p class="cv-cta"><a class="btn primary" href="#/l/${encodeURIComponent(subject.id)}/${encodeURIComponent(vc.id)}/${encodeURIComponent(lesson.id)}">🎬 Regarder ce cours en vidéo</a></p>` : ''}${d.intro ? `<p class="intro">${d.intro}</p>` : ''}
+        ${videosHTML(d)}
+        ${d.objectifs ?`<div class="box def"><span class="box-title">${t.obj}</span><ul>${d.objectifs.map((o) => `<li>${o}</li>`).join('')}</ul></div>` : ''}
+        ${(d.cours || []).map((s) => `<h2>${s.t}</h2>${s.h}`).join('')}
+        ${d.recap ? `<h2>${t.retenir}</h2><div class="recall"><p>${d.recap}</p></div>` : ''}
+`;
+    }
+    return `<h2>${t.essentiel}</h2><div class="recall"><p>${d.recap || ''}</p></div>
+      ${cards ? `<h2>${t.cartes}</h2><div class="flips">${cards}</div>` : ''}
+      ${d.sims && d.sims.length ? `<h2>${t.sims || 'Expériences'}</h2>${d.sims.map((s) => `<div data-widget="sim" data-sim="${esc(s.split(':')[0])}"${s.includes(':') ? ` data-set="${esc(s.split(':')[1])}"` : ''}></div>`).join('')}` : ''}
+      ${d.exercises ? `<h2>${t.exos}</h2><div data-widget="levels" data-src="${esc(lesson.data)}" data-part="exercises"></div>` : ''}`;
+  }
+
+  // ---------------- Page « Expériences » : une expérience 3D ou 2D + liens vers la leçon ----------------
+  function laboHTML(x, subject) {
+    const cat = (m) => (subject.categories || []).find((c) => c.mode === m);
+    const link = (m, label) => (cat(m) && x.lesson ? `<a class="btn${m === 'prof' ? ' primary' : ''}" href="#/l/${encodeURIComponent(subject.id)}/${encodeURIComponent(cat(m).id)}/${encodeURIComponent(x.lesson)}">${label}</a>` : '');
+    return `<p class="intro"><span class="tag">${x.kind === '3D' ? '🧊 3D' : '📐 2D'}</span> ${esc(x.description || '')}</p>
+      <div data-widget="sim" data-sim="${esc(x.sim)}"${x.set ? ` data-set="${esc(x.set)}"` : ''} data-open="1"></div>
+      <p class="labo-links">${link('cours', '📖 Voir la leçon')} ${link('prof', '👨‍🏫 Apprendre avec le prof')}</p>`;
+  }
+
+  // ---------------- Mode développeur (bac à sable Python) ----------------
+  function renderDev(subject, cat) {
+    view.innerHTML = `
+      <section class="subject-head" style="${tileStyle(subject)}">
+        <span class="tile-icon big">${iconFor(cat)}</span>
+        <div><p class="eyebrow">${esc(subject.title)}</p><h1>${esc(cat.title)}</h1><p class="muted">Écris et exécute tes propres programmes Python, sans Internet. Tes fichiers sont enregistrés sur cet appareil.</p></div>
+      </section>
+      <div data-widget="pydev"></div>`;
+    const fn = (window.TCSF_WIDGETS || {}).pydev;
+    if (fn) fn(view.querySelector('[data-widget=pydev]'));
+  }
+
+  // ---------------- Examens (tirés des exercices de toutes les leçons) ----------------
+  function renderExam(subject, cat, lessons) {
+    view.innerHTML = `
+      <section class="subject-head" style="${tileStyle(subject)}">
+        <span class="tile-icon big">${iconFor(cat)}</span>
+        <div><p class="eyebrow">${esc(subject.title)}</p><h1>${esc(cat.title)}</h1></div>
+      </section>
+      <div class="content"><div data-widget="exam"></div></div>`;
+    const el = view.querySelector('[data-widget=exam]');
+    const fn = (window.TCSF_WIDGETS || {}).exam;
+    if (fn) fn(el, { readJSON, lessons: lessons.filter((l) => l.data), lang: subject.lang || 'fr' });
+  }
+
+  // Raccourcis d'écriture pour les fichiers de leçon :
+  //   <nuc a="27" z="13">Al</nuc>   → symbole du noyau  ²⁷₁₃Al
+  //   <h2>Titre</h2>                → numérotation automatique + sommaire
+  function enhance(article) {
+    article.querySelectorAll('nuc').forEach((n) => {
+      const span = document.createElement('span');
+      span.className = 'nuc';
+      span.innerHTML = `<span class="az"><span>${esc(n.getAttribute('a') || '')}</span><span>${esc(n.getAttribute('z') || '')}</span></span><span class="x">${esc(n.textContent)}</span>`;
+      n.replaceWith(span);
+    });
+    article.querySelectorAll('table').forEach((t) => {
+      if (t.parentElement.classList.contains('table-wrap')) return;
+      const w = document.createElement('div');
+      w.className = 'table-wrap';
+      t.replaceWith(w);
+      w.appendChild(t);
+    });
+    // Cartes à retourner : <button class="flip"><span class="f-front">…</span><span class="f-back">…</span></button>
+    const flips = [...article.querySelectorAll('.flip')];
+    const seen = new Set();
+    flips.forEach((f) => {
+      f.setAttribute('type', 'button');
+      f.addEventListener('click', () => {
+        f.classList.toggle('flipped');
+        // toutes les cartes de la fiche retournées = séance « Mémoriser » faite
+        seen.add(f);
+        if (flips.length >= 3 && seen.size === flips.length && !article.dataset.memoDone) { article.dataset.memoDone = '1'; window.dispatchEvent(new CustomEvent('tcsf:activity', { detail: { act: 'memo' } })); }
+      });
+    });
+    const W = window.TCSF_WIDGETS || {};
+    article.querySelectorAll('[data-widget]').forEach((el) => {
+      const fn = W[el.dataset.widget];
+      if (!fn) return;
+      try { Promise.resolve(fn(el, { readJSON, readText })).catch((e) => console.error(e)); } catch (e) { console.error(e); }
+    });
+    [...article.querySelectorAll('h2')].forEach((h, i) => {
+      h.dataset.title = h.textContent.trim();
+      if (!h.id) h.id = 'sec-' + (i + 1);
+      if (!h.hasAttribute('data-nonum')) h.insertAdjacentHTML('afterbegin', `<span class="num">${i + 1}</span>`);
+    });
+  }
+
+  function buildToc() {
+    const article = $('#article');
+    const list = $('#tocList');
+    enhance(article);
+    const heads = [...article.querySelectorAll('h2')];
+    list.innerHTML = heads.map((h) => `<li><a href="#" data-target="${h.id}">${esc(h.dataset.title)}</a></li>`).join('');
+    list.addEventListener('click', (e) => {
+      const a = e.target.closest('a[data-target]');
+      if (!a) return;
+      e.preventDefault();
+      document.getElementById(a.dataset.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    // Liens internes au contenu (ex. href="#sec-2" ou data-goto)
+    article.addEventListener('click', (e) => {
+      const a = e.target.closest('a[data-goto]');
+      if (!a) return;
+      e.preventDefault();
+      document.getElementById(a.dataset.goto)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    const links = [...list.querySelectorAll('a')];
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      const bar = $('#progressBar');
+      if (bar) bar.style.width = (max > 0 ? (scrollY / max) * 100 : 100) + '%';
+      let current = heads[0];
+      for (const h of heads) if (h.getBoundingClientRect().top < 140) current = h;
+      links.forEach((l) => l.classList.toggle('active', current && l.dataset.target === current.id));
+    };
+    window.onscroll = onScroll;
+    onScroll();
+  }
+
+  function renderNotFound() {
+    setParent('#/');
+    setCrumbs([{ label: 'Matières', href: '#/' }, { label: 'Introuvable' }]);
+    view.innerHTML = `<section class="construction"><h1>Page introuvable</h1><a class="btn primary" href="#/">Revenir aux matières</a></section>`;
+  }
+
+  // ---------------- Routeur ----------------
+  async function route() {
+    window.onscroll = null;
+    const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(decodeURIComponent);
+    try {
+      applyDir(parts[1] ? await getSubject(parts[1]) : null);
+      if (parts[0] !== 's') { document.body.classList.remove('duo-in'); document.querySelectorAll('body > .duo-foot').forEach((x) => x.remove()); }
+      if (parts[0] === 's' && parts[2]) await renderSession(parts[1], parts[2]);
+      else if (parts[0] === 'm' && parts[1]) await renderSubject(parts[1]);
+      else if (parts[0] === 'c' && parts[2]) await renderCategory(parts[1], parts[2]);
+      else if (parts[0] === 'l' && parts[3]) await renderLesson(parts[1], parts[2], parts[3], parts[4]);
+      else if (parts[0] === 'planning' && window.TCSF_PLANNER) {
+        applyDir(null); setParent('#/'); setCrumbs([{ label: 'Matières', href: '#/' }, { label: 'Mon planning' }]);
+        await window.TCSF_PLANNER.render(view, { readJSON, getSubjects, tab: parts[1] });
+      }
+      else await renderHome();
+    } catch (err) {
+      console.error(err);
+      view.innerHTML = `<section class="construction"><h1>Oups…</h1><p class="muted">${esc(err.message)}</p><a class="btn primary" href="#/">Accueil</a></section>`;
+    }
+    window.scrollTo(0, 0);
+    view.focus({ preventScroll: true });
+  }
+  window.addEventListener('hashchange', route);
+
+  document.addEventListener('keydown', (e) => {
+    const typing = /input|textarea|select/i.test(document.activeElement?.tagName || '');
+    if (e.key === 'Escape' && !menu.hidden) return closeMenu();
+    if ((e.altKey && e.key === 'ArrowLeft') || (e.key === 'Backspace' && !typing)) { e.preventDefault(); goBack(); }
+  });
+  // Bouton « précédent » de la souris
+  window.addEventListener('mouseup', (e) => { if (e.button === 3) { e.preventDefault(); goBack(); } });
+
+  // ---------------- Menu mises à jour ----------------
+  // numéro de version affiché : il suit les mises à jour en ligne (mise à jour 9 → 2.2.9)
+  // mise à jour 8-10 → 2.2.8-2.2.10 ; à partir de la 11 → 2.3.0, 2.3.1…
+  const verOf = (i) => (i && i.build >= 15 ? `3.0.${i.build - 15}` : i && i.build >= 12 ? `2.4.${i.build - 12}` : i && i.build >= 11 ? `2.3.${i.build - 11}` : i && i.build >= 8 ? `2.2.${i.build}` : (i && i.appVersion) || '');
+  window.TCSF_VER = verOf;
+  const menu = $('#menu');
+  const menuMsg = $('#menuMsg');
+  async function openMenu() {
+    menuMsg.textContent = '';
+    if (window.tcsf) {
+      const i = await window.tcsf.info();
+      $('#versionLine').textContent = `Version ${verOf(i)} · Contenu ${i.contentVersion}`;
+    }
+    menu.hidden = false;
+  }
+  function closeMenu() { menu.hidden = true; }
+  $('#menuBtn').addEventListener('click', openMenu);
+  $('#closeMenu').addEventListener('click', closeMenu);
+  menu.addEventListener('click', (e) => { if (e.target === menu) closeMenu(); });
+  $('#importBtn').addEventListener('click', async () => {
+    if (!window.tcsf) return;
+    const r = await window.tcsf.importUpdate();
+    menuMsg.textContent = r.message || '';
+  });
+  $('#onlineBtn').addEventListener('click', async () => {
+    if (!window.tcsf) return;
+    menuMsg.textContent = 'Recherche…';
+    // serveur de mises à jour (téléchargement automatique), sinon ancien système .tcsf
+    if (window.tcsf.liveCheck) {
+      const l = await window.tcsf.liveCheck();
+      if (l && l.upToDate) { menuMsg.textContent = '✅ L’application est à jour.'; return; }
+      if (l && l.updated) { menuMsg.textContent = '🎉 Mise à jour téléchargée.'; return; }
+      if (l && l.message && !/non configuré/.test(l.message)) { menuMsg.textContent = l.message; return; }
+    }
+    const r = await window.tcsf.onlineUpdate();
+    menuMsg.textContent = r.message || '';
+  });
+  if (window.tcsf) window.tcsf.onContentChanged(() => {
+    cache.clear();
+    route();
+    window.tcsf.info().then((i) => { $('#versionLine').textContent = `Version ${verOf(i)} · Contenu ${i.contentVersion}`; });
+  });
+
+  route();
+})();

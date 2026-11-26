@@ -1,0 +1,153 @@
+// Onglets latéraux (pour tout le monde) :
+//  « 📚 Leçons »  → chaque matière et ses rubriques (Cours, Cours vidéo, Avec le prof, Révision, Examens…)
+//  « 🧭 Parcours » → le Parcours scientifique : les leçons pas à pas, matière par matière.
+(() => {
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const read = async (rel) => { try { const t = window.tcsf ? await window.tcsf.readContent(rel) : await fetch('../content/' + rel).then((r) => (r.ok ? r.text() : null)); return t ? JSON.parse(t) : null; } catch { return null; } };
+  const G = (n, s = 22) => (window.TCSF_GLYPH ? window.TCSF_GLYPH(n, s) : '');
+  const ICON = { cours: G('book', 16), video: G('video', 16), prof: G('teacher', 16), methode: G('pencil', 16), revision: G('target', 16), examen: G('flag', 16), labo: G('lab', 16) };
+  const enc = encodeURIComponent;
+  const panels = [];
+  function sideTab(cls, ic, label, title, fill) {
+    const tab = document.createElement('button');
+    tab.type = 'button'; tab.className = `acc-side-tab cl-tab ${cls}`; tab.title = title;
+    tab.innerHTML = `<span>${ic}</span><b>${label}</b>`;
+    const side = document.createElement('aside');
+    side.className = 'acc-side cl-side'; side.hidden = true;
+    tab.addEventListener('click', () => { const was = side.hidden; panels.forEach((p) => (p.hidden = true)); if (was) { side.hidden = false; fill(side); } });
+    panels.push(side);
+    document.body.append(tab, side);
+  }
+  const subjectsReady = async () => ((await read('subjects.json')) || []).filter((s) => s.status === 'ready' && (s.categories || []).some((c) => c.status === 'ready'));
+  const head = (side, h, p) => {
+    side.innerHTML = `<div class="acc-side-head"><h3>${h}</h3><button type="button" class="chip-btn acc-close" title="Fermer" aria-label="Fermer">${G('close', 16)}</button></div><p class="w-small muted">${p}</p><div class="cl-list">Chargement…</div>`;
+    side.querySelector('.acc-close').onclick = () => (side.hidden = true);
+    return side.querySelector('.cl-list');
+  };
+  const subjRow = (s) => `<details class="cl-subj" data-s="${esc(s.id)}" style="--c1:${esc((s.color || [])[0] || '#4f6bed')}"><summary><span class="cl-dot"></span>${esc(s.title)}<small class="muted cl-n"></small></summary><div class="cl-cats">…</div></details>`;
+
+  // ---- 📚 Leçons : les rubriques de chaque matière ----
+  async function fillLecons(side) {
+    const list = head(side, 'Les leçons', 'Touche une matière, puis une rubrique : Cours, Cours vidéo, Avec le prof, Révision…');
+    const subjects = await subjectsReady();
+    list.innerHTML = subjects.map(subjRow).join('');
+    list.querySelectorAll('.cl-subj').forEach((d) => d.addEventListener('toggle', () => {
+      if (!d.open || d.dataset.ok) return; d.dataset.ok = 1;
+      const s = subjects.find((x) => x.id === d.dataset.s);
+      const cats = (s.categories || []).filter((c) => c.status === 'ready');
+      d.querySelector('.cl-n').textContent = ` · ${cats.length} rubriques`;
+      d.querySelector('.cl-cats').innerHTML = `<a class="cl-path" href="#/m/${enc(s.id)}">${G('home', 16)} Page de la matière</a>` + cats.map((c) => `<a href="#/c/${enc(s.id)}/${enc(c.id)}">${ICON[c.mode] || G('book', 16)} ${esc(c.title)}</a>`).join('');
+    }));
+  }
+  // ---- 🧭 Parcours scientifique : les leçons pas à pas ----
+  async function fillParcours(side) {
+    const list = head(side, 'Parcours scientifique', 'Les leçons dans l’ordre du programme : apprends pas à pas, gagne des 👑 et des XP.');
+    const subjects = (await subjectsReady()).filter((s) => (s.categories || []).some((c) => c.mode === 'cours' && c.status === 'ready'));
+    const st = (window.TCSF_DUO && window.TCSF_DUO.state()) || { crowns: {} };
+    list.innerHTML = subjects.map(subjRow).join('');
+    list.querySelectorAll('.cl-subj').forEach((d) => d.addEventListener('toggle', async () => {
+      if (!d.open || d.dataset.ok) return; d.dataset.ok = 1;
+      const s = subjects.find((x) => x.id === d.dataset.s), c = s.categories.find((x) => x.mode === 'cours');
+      const lessons = ((await read(c.lessons)) || []).filter((l) => !l.status || l.status === 'ready');
+      const done = lessons.filter((l) => st.crowns[s.id + '/' + l.id]).length;
+      d.querySelector('.cl-n').textContent = ` · ${done}/${lessons.length} 👑`;
+      let mod = null;
+      d.querySelector('.cl-cats').innerHTML = `<a class="cl-path" href="#/m/${enc(s.id)}">🧭 Voir le parcours</a>` + lessons.map((l) => {
+        const m = l.module && l.module !== mod ? `<small class="cl-mod">${esc((mod = l.module))}</small>` : '';
+        return `${m}<a href="#/s/${enc(s.id)}/${enc(l.id)}">${st.crowns[s.id + '/' + l.id] ? '👑' : '⭐'} ${esc(l.title)}</a>`;
+      }).join('');
+    }));
+  }
+  // ---- 🏆 Classement : tous les élèves de l'application, du plus actif au moins actif ----
+  async function fillRank(side) {
+    side.innerHTML = `<div class="acc-side-head"><h3>Classement</h3><button type="button" class="chip-btn acc-close" title="Fermer" aria-label="Fermer">${G('close', 16)}</button></div>
+      <div class="rk-tabs"><button type="button" class="duo-chip on" data-k="week">Cette semaine</button><button type="button" class="duo-chip" data-k="xp">Depuis le début</button><button type="button" class="duo-chip" data-k="les">Leçons</button></div>
+      <div class="rk-list"><p class="muted">Chargement…</p></div><p class="w-small muted">Le classement se met à jour quand chacun ouvre l’application. 🟢 = en ligne.</p>`;
+    side.querySelector('.acc-close').onclick = () => (side.hidden = true);
+    const A = window.TCSF_ACCESS, P = window.TCSF_PROFILE;
+    const list = side.querySelector('.rk-list');
+    if (!A || !A.board) { list.innerHTML = '<p class="muted">Le classement est disponible dans l’application installée.</p>'; return; }
+    const rows = await A.board();
+    let key = 'week';
+    const val = (r) => (key === 'week' ? r.week : key === 'xp' ? r.p.xp || 0 : r.p.les || 0);
+    const unit = () => (key === 'les' ? 'leçons' : 'XP');
+    const draw = () => {
+      const R = rows.slice().sort((a, b) => val(b) - val(a) || (b.p.xp || 0) - (a.p.xp || 0));
+      const medal = ['🥇', '🥈', '🥉'];
+      const top = R.slice(0, 3);
+      list.innerHTML = (top.length ? `<div class="rk-podium">${[1, 0, 2].filter((i) => top[i]).map((i) => `<div class="rk-pod p${i + 1}${top[i].me ? ' me' : ''}">${P ? P.avatarHTML(top[i].av, top[i].n, i ? 48 : 62) : ''}<b>${esc(top[i].n)}</b><small>${val(top[i])} ${unit()}</small><span>${medal[i]}</span></div>`).join('')}</div>` : '')
+        + `<ol class="rk-ol">${R.map((r, i) => `<li class="${r.me ? 'me' : ''}"><span class="rk-n">${i < 3 ? medal[i] : i + 1}</span>${P ? P.avatarHTML(r.av, r.n, 34) : ''}<b>${esc(r.n)}${r.me ? ' <small>(moi)</small>' : ''}${r.on ? ' 🟢' : ''}</b><small>🔥 ${r.p.st || 0}</small><em>${val(r)} ${unit()}</em></li>`).join('')}</ol>`;
+    };
+    draw();
+    side.querySelectorAll('.rk-tabs [data-k]').forEach((b) => (b.onclick = () => { key = b.dataset.k; side.querySelectorAll('.rk-tabs [data-k]').forEach((x) => x.classList.toggle('on', x === b)); draw(); }));
+  }
+  function build() {
+    sideTab('cl-lecons', G('books'), 'Leçons', 'Les matières et leurs rubriques', fillLecons);
+    sideTab('cl-parcours', G('compass'), 'Parcours', 'Le Parcours scientifique', fillParcours);
+    sideTab('cl-rank', G('trophy'), 'Classement', 'Le classement de tous les élèves', fillRank);
+    sideTab('cl-profil', G('user'), 'Profil', 'Mon profil', (side) => {
+      side.innerHTML = `<div class="acc-side-head"><h3>Mon profil</h3><button type="button" class="chip-btn acc-close" title="Fermer" aria-label="Fermer">${G('close', 16)}</button></div><div class="pf-host"></div>`;
+      side.querySelector('.acc-close').onclick = () => (side.hidden = true);
+      if (window.TCSF_PROFILE) window.TCSF_PROFILE.mine(side.querySelector('.pf-host'));
+    });
+    window.addEventListener('hashchange', () => panels.forEach((p) => (p.hidden = true)));
+  }
+  // ---- bouton 🌓 : automatique → clair → sombre ----
+  const TK = 'tcsf:theme';
+  const MODES = [['auto', 'contrast', 'Thème automatique (comme le téléphone)'], ['light', 'sun', 'Mode clair'], ['dark', 'moon', 'Mode sombre']];
+  let mode = 'auto'; try { mode = localStorage.getItem(TK) || 'auto'; } catch {}
+  // les règles « @media (prefers-color-scheme: dark/light) » de toutes les feuilles de style suivent le choix manuel
+  // (sinon, sur un PC réglé en sombre, le mode clair gardait des couleurs du mode sombre : texte illisible)
+  const forceScheme = () => {
+    for (const sh of document.styleSheets) {
+      let rules; try { rules = sh.cssRules; } catch { continue; }
+      const walk = (list) => { for (const r of list) {
+        if (r.media && r.cssRules) {
+          if (r.__orig == null) r.__orig = r.media.mediaText;
+          const o = r.__orig, isDark = /prefers-color-scheme:\s*dark/.test(o), isLight = /prefers-color-scheme:\s*light/.test(o);
+          if (isDark || isLight) {
+            const want = mode === 'auto' ? o : (isDark === (mode === 'dark') ? o.replace(/\(prefers-color-scheme:\s*(dark|light)\)/, '(min-width: 0px)') : 'not all');
+            if (r.media.mediaText !== want) { try { r.media.mediaText = want; } catch {} }
+          }
+          walk(r.cssRules);
+        }
+      } };
+      walk(rules);
+    }
+  };
+  const apply = () => {
+    forceScheme();
+    if (mode === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', mode);
+    const m = document.querySelector('meta[name="theme-color"]') || document.head.appendChild(Object.assign(document.createElement('meta'), { name: 'theme-color' }));
+    const dark = mode === 'dark' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    m.content = dark ? '#11191e' : '#ffffff';
+    try { const SB = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar; if (SB) { SB.setBackgroundColor({ color: m.content }); SB.setStyle({ style: dark ? 'DARK' : 'LIGHT' }); } } catch {}
+  };
+  apply();
+  window.addEventListener('load', forceScheme); // feuilles chargées après ce script
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => mode === 'auto' && apply()); } catch {}
+  function themeBtn() {
+    const top = document.querySelector('.topbar'); if (!top || top.querySelector('.theme-btn')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'icon-btn theme-btn';
+    const paint = () => { const M = MODES.find((x) => x[0] === mode); b.innerHTML = window.TCSF_GLYPH ? window.TCSF_GLYPH(M[1], 20) : ''; b.title = M[2]; b.setAttribute('aria-label', M[2]); };
+    b.onclick = () => { mode = MODES[(MODES.findIndex((x) => x[0] === mode) + 1) % 3][0]; try { localStorage.setItem(TK, mode); } catch {} apply(); paint(); };
+    paint(); top.insertBefore(b, document.getElementById('menuBtn'));
+  }
+  // ---- photo de profil tout en haut à gauche : ouvre « 👤 Mon profil » ----
+  function profileBtn() {
+    const top = document.querySelector('.topbar'); if (!top || top.querySelector('.top-av')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'top-av'; b.title = 'Mon profil';
+    const paint = () => {
+      const P = window.TCSF_PROFILE; if (!P) return;
+      let src = ''; try { src = localStorage.getItem('tcsf:avatar') || ''; } catch {}
+      b.innerHTML = P.avatarHTML(src, P.summary().n, 38);
+    };
+    b.onclick = () => document.querySelector('.cl-profil')?.click();
+    paint(); top.insertBefore(b, top.firstChild);
+    window.addEventListener('storage', paint);
+    window.addEventListener('tcsf:avatar', paint);
+    window.addEventListener('hashchange', paint);
+  }
+  const init = () => { build(); themeBtn(); profileBtn(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();

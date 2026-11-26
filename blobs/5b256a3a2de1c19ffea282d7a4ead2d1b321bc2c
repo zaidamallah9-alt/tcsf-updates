@@ -1,0 +1,418 @@
+// 3.0 · « Parcours » : apprentissage ludique (chemin de leçons, XP, série 🔥, cœurs ❤️, gemmes 💎,
+// objectif du jour, ligue de la semaine, rappels) avec une bande de personnages originaux.
+(() => {
+  const KEY = 'tcsf:duo';
+  const pad = (n) => String(n).padStart(2, '0');
+  const dayOf = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const addDays = (s, n) => { const d = new Date(s + 'T12:00:00'); d.setDate(d.getDate() + n); return dayOf(d); };
+  const weekOf = (d = new Date()) => { const x = new Date(d); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return dayOf(x); };
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
+  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const MAXH = 5, REFILL = 30 * 60 * 1000;
+
+  // ---------------- état ----------------
+  const DEF = { xp: 0, gems: 100, hearts: MAXH, heartsAt: 0, streak: 0, best: 0, last: '', freezes: 1, days: [], daily: { d: '', xp: 0 }, goal: 20, crowns: {}, week: { w: '', xp: 0 }, notif: true, hour: 19, lastSubj: '',
+    quests: { d: '', p: {}, got: [] }, ach: [], mistakes: [], boostUntil: 0, lessons: 0, perfects: 0, combo: 0, superMode: false };
+  // quêtes du jour : [id, texte, objectif]
+  const QUESTS = [['xp', 'Gagner 30 XP', 30], ['lessons', 'Terminer 2 leçons', 2], ['combo', 'Réussir 5 réponses d’affilée', 5], ['perfect', 'Faire une leçon sans faute', 1]];
+  const ACH = [
+    ['🔥', 'Feu de camp', 'Série de 3 jours', (s) => s.best >= 3], ['🌋', 'Volcan', 'Série de 7 jours', (s) => s.best >= 7], ['☄️', 'Comète', 'Série de 30 jours', (s) => s.best >= 30],
+    ['⚡', 'Étincelle', '100 XP au total', (s) => s.xp >= 100], ['🌩️', 'Orage', '1 000 XP au total', (s) => s.xp >= 1000],
+    ['📚', 'Studieux', '10 leçons terminées', (s) => s.lessons >= 10], ['🎯', 'Sniper', '5 leçons sans faute', (s) => s.perfects >= 5],
+    ['💯', 'Inarrêtable', '10 bonnes réponses d’affilée', (s) => s.combo >= 10], ['🧹', 'Perfectionniste', 'Vider « Mes erreurs » après en avoir eu', (s) => s.cleaned]
+  ];
+  let S = DEF;
+  try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY)) || {}); } catch {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} paintHud(); };
+  function tickState() {
+    const t = dayOf();
+    if (S.daily.d !== t) S.daily = { d: t, xp: 0 };
+    if (!S.quests || S.quests.d !== t) S.quests = { d: t, p: {}, got: [] };
+    if (S.week.w !== weekOf()) S.week = { w: weekOf(), xp: 0 };
+    // cœurs : +1 toutes les 30 min
+    if (S.hearts < MAXH) { const n = Math.floor((Date.now() - (S.heartsAt || Date.now())) / REFILL); if (n > 0) { S.hearts = Math.min(MAXH, S.hearts + n); S.heartsAt = S.hearts < MAXH ? S.heartsAt + n * REFILL : 0; } }
+    // série : un « gel » protège une journée manquée
+    if (S.last && S.last !== t && S.last !== addDays(t, -1)) {
+      if (S.freezes > 0 && S.last === addDays(t, -2)) { S.freezes--; S.last = addDays(t, -1); S.days.push(S.last); }
+      else S.streak = 0;
+    }
+  }
+  tickState();
+  const boosted = () => S.boostUntil > Date.now();
+  function quest(id, v, set) { tickState(); S.quests.p[id] = set ? Math.max(S.quests.p[id] || 0, v) : (S.quests.p[id] || 0) + v; }
+  function newBadges() { const got = ACH.filter((a) => a[3](S) && !S.ach.includes(a[1])); got.forEach((a) => S.ach.push(a[1])); return got; }
+  function addXP(n) {
+    tickState();
+    if (boosted()) n *= 2;
+    quest('xp', n);
+    S.xp += n; S.daily.xp += n; S.week.xp += n;
+    const t = dayOf(); let ext = false;
+    if (S.last !== t) { S.streak = S.last === addDays(t, -1) ? S.streak + 1 : 1; S.last = t; S.days = [...S.days.filter((d) => d > addDays(t, -60)), t]; S.best = Math.max(S.best, S.streak); ext = true; }
+    save(); scheduleReminders();
+    return ext;
+  }
+  // cœurs illimités : au choix pour l'administrateur ; pour les autres, 10 min offertes après une leçon sans faute
+  const isAdmin = () => { try { return !!(window.TCSF_ACCESS && window.TCSF_ACCESS.isAdmin && window.TCSF_ACCESS.isAdmin()); } catch { return false; } };
+  const superOn = () => (S.superMode && isAdmin()) || Date.now() < (S.superUntil || 0);
+  function loseHeart() { tickState(); if (superOn()) return; if (S.hearts === MAXH) S.heartsAt = Date.now(); S.hearts = Math.max(0, S.hearts - 1); save(); }
+
+  // ---------------- la bande de personnages (originaux) ----------------
+  const CAST = {
+    tico: { n: 'Tico', c: '#5b6cf5', who: 'le guide de l’appli' },
+    nour: { n: 'Nour', c: '#ec4899', who: 'fan de maths' },
+    volta: { n: 'Volta', c: '#f59e0b', who: 'pile d’énergie (physique-chimie)' },
+    moss: { n: 'Moss', c: '#22c55e', who: 'curieuse de la nature (SVT)' },
+    pixel: { n: 'Pixel', c: '#06b6d4', who: 'petit robot codeur' },
+    rima: { n: 'Rima', c: '#a855f7', who: 'grande lectrice (langues et sciences humaines)' }
+  };
+  const SUBJ = { mathematiques: 'nour', 'physique-chimie': 'volta', svt: 'moss', informatique: 'pixel' };
+  const charOf = (sid) => SUBJ[sid] || (sid ? 'rima' : 'tico');
+  function face(mood, cx = 60, cy = 62) {
+    const eyes = `<ellipse cx="${cx - 13}" cy="${cy}" rx="7.5" ry="9" fill="#fff"/><ellipse cx="${cx + 13}" cy="${cy}" rx="7.5" ry="9" fill="#fff"/><circle cx="${cx - 11}" cy="${cy + 2}" r="4.2" fill="#1e1b4b"/><circle cx="${cx + 15}" cy="${cy + 2}" r="4.2" fill="#1e1b4b"/><circle cx="${cx - 10}" cy="${cy}" r="1.4" fill="#fff"/><circle cx="${cx + 16}" cy="${cy}" r="1.4" fill="#fff"/>`;
+    const m = mood === 'sad' ? `<path d="M${cx - 9} ${cy + 22} q9 -8 18 0" stroke="#1e1b4b" stroke-width="3.2" fill="none" stroke-linecap="round"/>`
+      : mood === 'wow' ? `<ellipse cx="${cx}" cy="${cy + 20}" rx="6" ry="7" fill="#7f1d1d"/>`
+      : `<path d="M${cx - 11} ${cy + 15} q11 12 22 0" fill="#7f1d1d" stroke="#1e1b4b" stroke-width="2.4" stroke-linejoin="round"/>`;
+    return eyes + m + `<ellipse cx="${cx - 24}" cy="${cy + 13}" rx="5" ry="3" fill="#fb7185" opacity=".5"/><ellipse cx="${cx + 24}" cy="${cy + 13}" rx="5" ry="3" fill="#fb7185" opacity=".5"/>`;
+  }
+  function charSVG(id, size = 96, mood = 'happy') {
+    if (id === 'tico' && window.TCSF_MASCOT) return window.TCSF_MASCOT.svg(size);
+    const c = (CAST[id] || CAST.rima).c;
+    const dark = `color-mix(in srgb, ${c} 70%, #000)`;
+    let body = '';
+    if (id === 'nour') body = `<path d="M60 8 L74 40 L110 44 L83 66 L91 102 L60 84 L29 102 L37 66 L10 44 L46 40 Z" fill="${c}" stroke="${dark}" stroke-width="6" stroke-linejoin="round"/>` + face(mood, 60, 58) + `<text x="60" y="30" font-size="14" text-anchor="middle" fill="#fff" font-weight="900">π</text>`;
+    else if (id === 'volta') body = `<rect x="22" y="22" width="76" height="86" rx="22" fill="${c}" stroke="${dark}" stroke-width="5"/><rect x="48" y="10" width="24" height="14" rx="5" fill="${dark}"/><path d="M64 84 l-10 14 h10 l-6 12 l16 -18 h-10 l6 -8 z" fill="#fff"/>` + face(mood, 60, 54);
+    else if (id === 'moss') body = `<path d="M60 18 C100 22 108 60 100 84 C92 106 28 106 20 84 C12 60 20 22 60 18 Z" fill="${c}" stroke="${dark}" stroke-width="5"/><path d="M60 18 q-4 -12 6 -16 q6 10 -6 16" fill="#16a34a"/><path d="M60 20 q10 -14 22 -10 q-6 14 -22 10" fill="#4ade80"/>` + face(mood, 60, 60);
+    else if (id === 'pixel') body = `<line x1="60" y1="6" x2="60" y2="22" stroke="${dark}" stroke-width="4"/><circle cx="60" cy="6" r="5" fill="#f43f5e"/><rect x="16" y="22" width="88" height="82" rx="18" fill="${c}" stroke="${dark}" stroke-width="5"/><rect x="28" y="36" width="64" height="48" rx="10" fill="#0f172a"/>` + face(mood, 60, 56).replace(/#fff"/g, '#67e8f9"');
+    else body = `<circle cx="60" cy="64" r="44" fill="${c}" stroke="${dark}" stroke-width="5"/><circle cx="60" cy="18" r="13" fill="${dark}"/><rect x="34" y="92" width="52" height="16" rx="3" fill="#fde68a" stroke="#b45309" stroke-width="3"/>` + face(mood, 60, 60);
+    return `<svg class="duo-ch duo-${id}" width="${size}" height="${size}" viewBox="0 0 120 120" aria-hidden="true">${body}</svg>`;
+  }
+  const LINES = {
+    good: ['Excellent !', 'Bravo !', 'Parfait !', 'Tu gères !', 'Impressionnant !', 'Exactement !'],
+    bad: ['Pas tout à fait…', 'Presque !', 'On apprend de ses erreurs.', 'Regarde la solution :'],
+    hello: { tico: 'On fait une leçon ensemble ?', nour: 'Les maths, c’est de la logique et un peu de magie ✨', volta: 'Je suis chargée à bloc ⚡ et toi ?', moss: 'La nature cache plein de secrets 🌱', pixel: 'Bip bip ! Prêt à coder ? 🤖', rima: 'Un bon élève lit un peu chaque jour 📚' }
+  };
+
+  // ---------------- barre du haut : 🔥 💎 ❤️ ----------------
+  let hud = null;
+  function paintHud() {
+    if (!hud) {
+      const top = document.querySelector('.topbar'); if (!top) return;
+      hud = document.createElement('button'); hud.type = 'button'; hud.className = 'duo-hud'; hud.title = 'Ma progression';
+      hud.addEventListener('click', openPanel);
+      top.insertBefore(hud, document.getElementById('menuBtn'));
+    }
+    const today = S.last === dayOf();
+    hud.innerHTML = `<span class="duo-stat${today ? ' on' : ''}" title="Série">${window.TCSF_GLYPH ? window.TCSF_GLYPH('flame', 18) : ''}<b>${S.streak}</b></span><span class="duo-stat" title="Gemmes">${window.TCSF_GLYPH ? window.TCSF_GLYPH('gem', 18) : ''}<b>${S.gems}</b></span><span class="duo-stat" title="Cœurs">${window.TCSF_GLYPH ? window.TCSF_GLYPH('heart', 18) : ''}<b>${superOn() ? '∞' : S.hearts}</b></span>${boosted() ? '<span class="duo-stat duo-boost" title="XP doublés">' + (window.TCSF_GLYPH ? window.TCSF_GLYPH('bolt', 18) : '') + '<b>×2</b></span>' : ''}`;
+  }
+
+  // ---------------- panneau : série, objectif, ligue, rappels ----------------
+  function ring(v, max, size = 64, col = '#ff9600') {
+    const r = size / 2 - 6, C = 2 * Math.PI * r, p = Math.min(1, v / max);
+    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C * p} ${C}" transform="rotate(-90 ${size / 2} ${size / 2})"/></svg>`;
+  }
+  const LEAGUES = ['Bronze', 'Argent', 'Or', 'Saphir', 'Rubis', 'Émeraude', 'Diamant'];
+  function league() {
+    // rivaux « bots » : la bande de personnages + quelques élèves imaginaires, XP stable dans la semaine
+    const seed = S.week.w.split('-').reduce((a, b) => a * 31 + +b, 7);
+    const day = ((new Date().getDay() + 6) % 7) + 1;
+    const names = ['Nour', 'Volta', 'Moss', 'Pixel', 'Rima', 'Tico', 'Yassine', 'Salma', 'Amine', 'Hiba', 'Omar', 'Kawtar'];
+    const rows = names.map((n, i) => ({ n, xp: Math.round(((seed * (i + 3)) % 97 + 10) * day * 0.9) }));
+    rows.push({ n: 'Toi', xp: S.week.xp, me: true });
+    rows.sort((a, b) => b.xp - a.xp);
+    const lvl = Math.min(LEAGUES.length - 1, Math.floor(S.xp / 600));
+    return { rows, lvl, rank: rows.findIndex((r) => r.me) + 1 };
+  }
+  function openPanel() {
+    tickState();
+    const t = dayOf();
+    const week = [...Array(7)].map((_, k) => { const d = addDays(t, k - 6); return `<span class="duo-day${S.days.includes(d) ? ' on' : ''}${d === t ? ' today' : ''}">${'LMMJVSD'[(new Date(d + 'T12:00:00').getDay() + 6) % 7]}</span>`; }).join('');
+    const L = league();
+    const m = document.createElement('div'); m.className = 'duo-modal';
+    m.innerHTML = `<div class="duo-sheet" role="dialog" aria-modal="true">
+      <button class="duo-x" aria-label="Fermer">✕</button>
+      <div class="duo-card duo-streak"><div class="duo-flame">🔥</div><div><b class="duo-big">${S.streak} jour${S.streak > 1 ? 's' : ''}</b><p class="muted">de série · record ${S.best} · 🧊 ${S.freezes} gel${S.freezes > 1 ? 's' : ''}</p><div class="duo-week">${week}</div></div></div>
+      <div class="duo-card duo-goal">${ring(S.daily.xp, S.goal, 72)}<div><b>Objectif du jour</b><p class="muted">${Math.min(S.daily.xp, S.goal)} / ${S.goal} XP</p>
+        <div class="duo-goals">${[[10, 'Tranquille'], [20, 'Normal'], [30, 'Sérieux'], [50, 'Intense']].map(([g, l]) => `<button class="duo-chip${S.goal === g ? ' on' : ''}" data-goal="${g}">${l} · ${g}</button>`).join('')}</div></div></div>
+      <div class="duo-card"><b>📜 Quêtes du jour</b>${QUESTS.map(([id, t, g]) => { const v = Math.min(g, S.quests.p[id] || 0); return `<div class="duo-quest"><span>${t}</span><div class="duo-bar"><span style="width:${(v / g) * 100}%"></span></div><small>${v} / ${g}</small></div>`; }).join('')}
+        ${QUESTS.every(([id, , g]) => (S.quests.p[id] || 0) >= g) ? (S.quests.got.includes('chest') ? '<p class="muted">🎁 Coffre ouvert. Reviens demain !</p>' : '<button class="btn primary" data-chest>🎁 Ouvrir le coffre</button>') : '<p class="w-small muted">Termine les 4 quêtes pour ouvrir le coffre 🎁</p>'}</div>
+      <div class="duo-card"><b>👤 Profil</b><div class="duo-prof"><span><b>${S.xp}</b><small>XP total</small></span><span><b>${S.lessons}</b><small>leçons</small></span><span><b>${S.perfects}</b><small>sans faute</small></span><span><b>${Object.keys(S.crowns).length}</b><small>👑 couronnes</small></span><span><b>${S.best}</b><small>record 🔥</small></span></div></div>
+      <div class="duo-card"><b>🏅 Succès · ${S.ach.length} / ${ACH.length}</b><div class="duo-badges">${ACH.map(([i, n, d]) => `<div class="${S.ach.includes(n) ? 'on' : ''}" title="${esc(d)}"><span>${i}</span><small>${esc(n)}</small></div>`).join('')}</div></div>
+      <div class="duo-card duo-super"><b>⭐ Cœurs illimités ∞</b>${isAdmin()
+        ? `<p class="w-small">Réservé à l’administrateur : tu peux les activer quand tu veux.</p><label class="duo-row"><input type="checkbox" data-super ${S.superMode ? 'checked' : ''}> Activer les cœurs illimités ∞</label>`
+        : `<p class="w-small">Termine une leçon <b>sans aucune faute</b> : tu gagnes les cœurs illimités pendant <b>10 minutes</b> !</p>${Date.now() < (S.superUntil || 0) ? `<p class="duo-row">✅ Actifs encore <b>${Math.ceil((S.superUntil - Date.now()) / 60000)} min</b></p>` : ''}`}</div>
+      <div class="duo-card"><b>🏆 Ligue ${LEAGUES[L.lvl]}</b> <span class="muted">· tu es ${L.rank}<sup>e</sup> cette semaine · ${S.xp} XP au total</span>
+        <ol class="duo-league">${L.rows.slice(0, 8).map((r, i) => `<li class="${r.me ? 'me' : ''}${i < 3 ? ' top' : ''}"><span>${i + 1}</span><b>${esc(r.n)}</b><em>${r.xp} XP</em></li>`).join('')}</ol>
+        <p class="w-small muted">Les 3 premiers montent en ligue supérieure dimanche soir.</p></div>
+      <div class="duo-card"><b>🛍️ Boutique</b><div class="duo-shop">
+        <button class="btn" data-buy="heart" ${S.hearts >= MAXH ? 'disabled' : ''}>❤️ Recharger les cœurs · 💎 50</button>
+        <button class="btn" data-buy="freeze" ${S.freezes >= 2 ? 'disabled' : ''}>🧊 Gel de série · 💎 80</button>
+        <button class="btn" data-buy="boost" ${boosted() ? 'disabled' : ''}>⚡ XP × 2 pendant 15 min · 💎 100</button></div></div>
+      <div class="duo-card"><label class="duo-row"><input type="checkbox" data-notif ${S.notif ? 'checked' : ''}> 🔔 Rappels quotidiens de la bande</label>
+        <label class="duo-row">Heure du rappel <select data-hour>${[8, 12, 14, 17, 18, 19, 20, 21].map((h) => `<option ${S.hour === h ? 'selected' : ''}>${h}</option>`).join('')}</select> h</label></div>
+      <div class="duo-cast">${Object.entries(CAST).map(([id, c]) => `<div title="${esc(c.n)} · ${esc(c.who)}">${charSVG(id, 54)}<small>${esc(c.n)}</small></div>`).join('')}</div>
+    </div>`;
+    const close = () => m.remove();
+    m.addEventListener('click', (e) => { if (e.target === m) close(); });
+    m.querySelector('.duo-x').onclick = close;
+    m.querySelectorAll('[data-goal]').forEach((b) => (b.onclick = () => { S.goal = +b.dataset.goal; save(); close(); openPanel(); }));
+    m.querySelectorAll('[data-buy]').forEach((b) => (b.onclick = () => {
+      const w = b.dataset.buy, price = { heart: 50, freeze: 80, boost: 100 }[w];
+      if (S.gems < price) { b.textContent = 'Pas assez de 💎 — fais des leçons !'; return; }
+      S.gems -= price; if (w === 'heart') { S.hearts = MAXH; S.heartsAt = 0; } else if (w === 'freeze') S.freezes++; else S.boostUntil = Date.now() + 15 * 60 * 1000;
+      save(); close(); openPanel();
+    }));
+    const chest = m.querySelector('[data-chest]');
+    if (chest) chest.onclick = () => { const g = 20 + Math.floor(Math.random() * 31); S.gems += g; S.quests.got.push('chest'); if (Math.random() < 0.3) S.boostUntil = Date.now() + 15 * 60 * 1000; save(); chest.outerHTML = `<p class="duo-loot">🎁 +${g} 💎${boosted() ? ' · ⚡ XP × 2 offert !' : ''}</p>`; };
+    const sup = m.querySelector('[data-super]');
+    if (sup) sup.onchange = (e) => { if (!isAdmin()) return; S.superMode = e.target.checked; if (S.superMode) { S.hearts = MAXH; S.heartsAt = 0; } save(); };
+    m.querySelector('[data-notif]').onchange = (e) => { S.notif = e.target.checked; save(); scheduleReminders(); if (S.notif) askPermission(); };
+    m.querySelector('[data-hour]').onchange = (e) => { S.hour = +e.target.value; save(); scheduleReminders(); };
+    document.body.appendChild(m);
+  }
+
+  // ---------------- accueil : carte du jour ----------------
+  function home(el, subjects) {
+    if (!el) return;
+    tickState();
+    const id = S.lastSubj ? charOf(S.lastSubj) : 'tico';
+    const sub = subjects && subjects.find((s) => s.id === S.lastSubj);
+    const left = Math.max(0, S.goal - S.daily.xp);
+    el.className = 'duo-home';
+    el.innerHTML = `<div class="duo-home-ch">${charSVG(id, 110)}</div>
+      <div class="duo-home-txt"><div class="duo-bubble">${left ? (S.streak && S.last !== dayOf() ? `Ta série de <b>${S.streak} jour${S.streak > 1 ? 's' : ''}</b> 🔥 t’attend ! Une leçon suffit.` : `Encore <b>${left} XP</b> pour ton objectif du jour.`) : 'Objectif du jour atteint ! 🎉 Tu peux continuer pour la ligue.'}</div>
+        <div class="duo-home-row">${ring(S.daily.xp, S.goal, 54)}<span><b>${S.daily.xp} / ${S.goal} XP</b><br><small class="muted">aujourd’hui</small></span>
+        ${sub ? `<a class="btn primary" href="#/m/${encodeURIComponent(sub.id)}">Continuer · ${esc(sub.title)}</a>` : '<span class="muted">Choisis une matière pour commencer ton parcours ↓</span>'}</div></div>`;
+  }
+
+  // ---------------- le chemin des leçons ----------------
+  const ICON = ['⭐', '📘', '🧪', '🎯', '💡', '🏅'];
+  function path(el, subject, lessons, links, extra = {}) {
+    S.lastSubj = subject.id; save();
+    const ch = charOf(subject.id);
+    const units = [];
+    lessons.filter((l) => !l.status || l.status === 'ready').forEach((l) => { const g = l.partie || l.module || 'Unité'; let u = units.find((x) => x.g === g); if (!u) units.push((u = { g, items: [] })); u.items.push(l); });
+    const key = (l) => subject.id + '/' + l.id;
+    const cur = lessons.find((l) => !S.crowns[key(l)]);
+    let n = 0;
+    el.className = 'duo-path';
+    el.style.cssText = `--c1:${subject.color?.[0] || '#58a6ff'};--c2:${subject.color?.[1] || '#3b82f6'}`;
+    const nm = S.mistakes.filter((m) => m.s === subject.id).length;
+    el.innerHTML = `<div class="duo-practice"><a class="btn" href="#/s/${encodeURIComponent(subject.id)}/__erreurs">🧠 Mes erreurs${nm ? ` (${nm})` : ''}</a><button class="btn" data-panel>📜 Quêtes · 🏅 Succès</button></div>` + units.map((u, ui) => `
+      <div class="duo-unit"><div><small>UNITÉ ${ui + 1}</small><b>${esc(u.g)}</b></div><span>${u.items.filter((l) => S.crowns[key(l)]).length} / ${u.items.length} ✔</span></div>
+      <div class="duo-nodes">${u.items.map((l, i) => {
+        const k = n++, c = S.crowns[key(l)] || 0, off = Math.round(Math.sin(k * 0.9) * 70);
+        return `<div class="duo-node-w" style="transform:translateX(${off}px)">
+          ${l === cur ? '<span class="duo-start">COMMENCER</span>' : ''}
+          <button class="duo-node${c ? ' done' : ''}${l === cur ? ' cur' : ''}" data-id="${esc(l.id)}" title="${esc(l.title)}">${c ? '👑' : ICON[i % ICON.length]}${c > 1 ? `<i>${c}</i>` : ''}</button></div>`;
+      }).join('')}
+      <div class="duo-side ${ui % 2 ? 'l' : 'r'}">${charSVG(ui % 2 ? 'tico' : ch, 92)}</div></div>`).join('')
+      + `<div class="duo-node-w"><div class="duo-node trophy">🏆</div></div>`;
+    el.querySelector('[data-panel]').onclick = openPanel;
+    el.querySelectorAll('.duo-node[data-id]').forEach((b) => b.addEventListener('click', () => {
+      el.querySelector('.duo-pop')?.remove();
+      const l = lessons.find((x) => x.id === b.dataset.id), c = S.crowns[key(l)] || 0;
+      const p = document.createElement('div'); p.className = 'duo-pop';
+      p.innerHTML = `<b>${esc(l.title)}</b><p>${esc(l.description || '')}</p><p class="w-small">${c ? `👑 × ${c} — rejoue pour gagner encore des XP` : 'Leçon interactive · +10 XP minimum'}</p>
+        <a class="btn primary" href="#/s/${encodeURIComponent(subject.id)}/${encodeURIComponent(l.id)}">${c ? 'S’entraîner' : 'Commencer'} +XP</a>
+        <div class="duo-pop-l">${links.map(([lab, href]) => `<a href="${href}/${encodeURIComponent(l.id)}">${lab}</a>`).join('')}</div>
+        ${(extra[l.id] || []).length ? `<div class="duo-pop-l duo-pop-x">${extra[l.id].map(([lab, href]) => `<a href="${href}">${esc(lab)}</a>`).join('')}</div>` : ''}`;
+      el.querySelectorAll('.duo-node-w').forEach((w) => (w.style.zIndex = ''));
+      b.parentElement.style.zIndex = 10;
+      b.parentElement.appendChild(p);
+      setTimeout(() => document.addEventListener('click', function off(e) { if (!p.contains(e.target) && e.target !== b) { p.remove(); document.removeEventListener('click', off); } }), 0);
+    }));
+    const c0 = el.querySelector('.duo-node.cur'); if (c0) setTimeout(() => { try { c0.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch {} }, 250);
+  }
+
+  // ---------------- une leçon en mode jeu ----------------
+  async function session(view, subject, lesson, d, back) {
+    const Q = window.TCSF_Q;
+    const isMist = lesson.id === '__erreurs', fixed = new Set();
+    if (isMist) d = { exercises: { facile: shuffle(S.mistakes.filter((m) => m.s === subject.id).map((m) => m.q)).slice(0, 10) } };
+    const ex = (d && d.exercises) || {};
+    const ch = charOf(subject.id);
+    let qs = isMist ? ex.facile.slice() : [...shuffle(ex.facile || []).slice(0, 3), ...shuffle(ex.moyen || []).slice(0, 3), ...shuffle(ex.difficile || []).slice(0, 2)].filter((q) => q.type !== 'code' || window.TCSF_PY);
+    const cards = (!isMist && d && d.cards) || [];
+    if (cards.length >= 3) qs.splice(Math.min(4, qs.length), 0, { type: 'match', pairs: shuffle(cards).slice(0, 4) });
+    // pas à pas : une notion est présentée, puis on la pratique tout de suite
+    const arC = (d && d.ar && d.ar.cours) || [];
+    const notions = ((!isMist && d && d.cours) || []).slice(0, 3).map((s, k) => ({ type: 'learn', t: s.t, h: s.h, ar: arC[k] }));
+    let lm = 'fr'; try { lm = localStorage.getItem('tcsf:proflang') || 'fr'; } catch {}
+    notions.forEach((n, k) => qs.splice(Math.min(k * 3, qs.length), 0, n));
+    const nQ = qs.filter((q) => q.type !== 'learn').length || 1;
+    document.body.classList.add('duo-in');
+    const leave = () => { document.body.classList.remove('duo-in'); location.hash = back; };
+    if (!qs.length) { view.innerHTML = `<div class="duo-end">${charSVG(ch, 120, 'wow')}${isMist ? '<h2>Aucune erreur à revoir 🎉</h2><p>Tes erreurs des leçons apparaîtront ici pour les retravailler.</p>' : '<h2>Pas encore d’exercices ici</h2><p>Lis le cours de cette leçon en attendant.</p>'}<button class="btn primary">Retour</button></div>`; view.querySelector('button').onclick = leave; return; }
+    tickState();
+    const total = qs.length, t0 = Date.now(), again = new Set();
+    let i = 0, good = 0, firstGood = 0, combo = 0;
+    const lang = subject.lang || 'fr', STR = Q.STR[lang] || Q.STR.fr;
+    const stage = () => {
+      view.innerHTML = `<div class="duo-sess" lang="${lang}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">
+        <div class="duo-sess-top"><button class="duo-quit" aria-label="Quitter">✕</button><div class="duo-bar"><span style="width:${(good / total) * 100}%"></span></div><span class="duo-hearts">❤️ ${superOn() ? '∞' : S.hearts}</span></div>
+        ${arC.length ? `<div class="duo-lang">${[['fr', 'Français'], ['mix', 'Mixte'], ['ar', 'العربية']].map(([m, l]) => `<button class="duo-chip${m === lm ? ' on' : ''}" data-m="${m}">${l}</button>`).join('')}</div>` : ''}
+        <div class="duo-sess-body"></div></div>`;
+      view.querySelector('.duo-quit').onclick = () => { if (confirm('Quitter la leçon ? Tu perdras la progression de cette leçon.')) leave(); };
+      // la barre du bas est hors de la page (sinon les animations de page la décalent)
+      document.querySelectorAll('body > .duo-foot').forEach((x) => x.remove());
+      const foot = document.createElement('div'); foot.className = 'duo-foot'; document.body.appendChild(foot);
+      return [view.querySelector('.duo-sess-body'), foot];
+    };
+    let redraw = null, lastAr = arC[0] || null;
+    const bindLang = () => view.querySelectorAll('.duo-lang [data-m]').forEach((b) => (b.onclick = () => {
+      if (b.dataset.m === lm) return;
+      lm = b.dataset.m; try { localStorage.setItem('tcsf:proflang', lm); } catch {}
+      try { window.TCSF_SFX && window.TCSF_SFX.tab(); } catch {}
+      view.querySelectorAll('.duo-lang [data-m]').forEach((x) => x.classList.toggle('on', x === b));
+      redraw && redraw();
+    }));
+    const next = () => {
+      if ((S.hearts <= 0 && !superOn()) || !qs.length) document.querySelectorAll('body > .duo-foot').forEach((x) => x.remove());
+      if (S.hearts <= 0 && !superOn()) return noHearts();
+      if (!qs.length) return finish();
+      const q = qs.shift();
+      const [body, foot] = stage();
+      redraw = null;
+      if (q.type === 'match') { bindLang(); return match(q, body, foot); }
+      if (q.type === 'learn') {
+        if (q.ar) lastAr = q.ar;
+        const draw = () => {
+          const arBox = q.ar ? `<div class="duo-learn duo-ar" dir="rtl" lang="ar"><b>${q.ar.t}</b>${q.ar.h}</div>` : '';
+          body.innerHTML = lm === 'ar' && q.ar
+            ? `<p class="duo-kind" dir="rtl">✨ فكرة جديدة</p><div class="duo-q" dir="rtl">${charSVG(ch, 84)}<div class="duo-bubble"><b>${q.ar.t}</b></div></div>${arBox}`
+            : `<p class="duo-kind">✨ Nouvelle notion</p><div class="duo-q">${charSVG(ch, 84)}<div class="duo-bubble"><b>${q.t}</b></div></div><div class="duo-learn">${q.h}</div>${lm === 'mix' ? arBox : ''}
+              ${lm === 'fr' && q.ar ? '<button class="btn duo-noun">🤔 Je n’ai pas compris · ما فهمتش</button><div class="duo-noun-ar" hidden>' + arBox + '</div>' : ''}`;
+          const nb = body.querySelector('.duo-noun'); if (nb) nb.onclick = () => { nb.remove(); body.querySelector('.duo-noun-ar').hidden = false; };
+          foot.className = 'duo-foot show learn';
+          foot.innerHTML = `<div class="duo-foot-in"><span class="muted">${lm === 'ar' ? 'اقرأ جيدا، السؤال قادم 😉' : lm === 'mix' ? 'Lis bien · اقرأ جيدا 😉' : 'Lis bien, la question arrive juste après 😉'}</span><button class="btn primary duo-go">${lm === 'ar' ? 'فهمت' : lm === 'mix' ? 'J’ai compris · فهمت' : 'J’ai compris'}</button></div>`;
+          foot.querySelector('.duo-go').onclick = () => { good++; next(); };
+        };
+        redraw = draw; draw(); bindLang();
+        return;
+      }
+      const KAR = { qcm: 'اختر الجواب الصحيح', calc: 'احسب', code: 'اكتب البرنامج' };
+      const kfr = q.type === 'qcm' ? 'Choisis la bonne réponse' : q.type === 'calc' ? 'Calcule' : q.type === 'code' ? 'Écris le programme' : 'Écris la réponse';
+      body.innerHTML = `<p class="duo-kind"></p><div class="duo-q">${charSVG(ch, 84)}<div class="duo-bubble">${q.q}</div></div><div class="duo-arhelp"></div>`;
+      // la question reste en français (comme à l'examen) ; en Mixte / العربية on ajoute l'aide en arabe
+      redraw = () => {
+        const k = body.querySelector('.duo-kind'); k.textContent = lm === 'ar' ? (KAR[q.type] || 'اكتب الجواب') : lm === 'mix' ? kfr + ' · ' + (KAR[q.type] || 'اكتب الجواب') : kfr;
+        k.dir = lm === 'ar' ? 'rtl' : 'ltr';
+        const h = body.querySelector('.duo-arhelp');
+        h.innerHTML = lm !== 'fr' && lastAr ? `<details class="duo-learn duo-ar" dir="rtl" lang="ar"${lm === 'ar' ? ' open' : ''}><summary>💡 تذكير بالعربية : ${lastAr.t}</summary>${lastAr.h}</details>` : '';
+      };
+      redraw(); bindLang();
+      let done = false;
+      Q.askQuestion(body, q, STR, (ok) => {
+        if (done) return; done = true;
+        body.querySelectorAll('.lv-form input, .lv-form button').forEach((x) => (x.disabled = true));
+        const fb = body.querySelector('.w-fb');
+        verdict(ok, q, fb, foot);
+      });
+    };
+    function verdict(ok, q, fb, foot) {
+      if (ok) { good++; combo++; if (!again.has(q)) firstGood++; quest('combo', combo, true); S.combo = Math.max(S.combo, combo); if (q && isMist) fixed.add(q); }
+      else {
+        combo = 0; loseHeart();
+        if (q && !again.has(q)) { again.add(q); qs.push(q); }
+        // « Mes erreurs » : la question revient plus tard en révision
+        if (q && !isMist && S.mistakes.length < 60 && !S.mistakes.some((m) => m.q.q === q.q)) { S.mistakes.push({ s: subject.id, q }); save(); }
+      }
+      const bar = document.querySelector('.duo-bar span'); if (bar) bar.style.width = (Math.min(good, total) / total) * 100 + '%';
+      const hh = document.querySelector('.duo-hearts'); if (hh) { hh.textContent = '❤️ ' + S.hearts; if (!ok) hh.classList.add('hit'); }
+      foot.className = 'duo-foot show ' + (ok ? 'ok' : 'ko');
+      foot.innerHTML = `<div class="duo-foot-in"><div class="duo-foot-ch">${charSVG(ch, 64, ok ? 'happy' : 'sad')}</div><div class="duo-foot-t"><b>${ok ? pick(LINES.good) + (combo >= 3 ? ` 🔥 ${combo} d’affilée` : '') : pick(LINES.bad)}</b><div class="duo-foot-fb"></div></div><button class="btn duo-go">Continuer</button></div>`;
+      if (fb) { fb.classList.remove('w-fb'); fb.classList.add('duo-fbtxt'); foot.querySelector('.duo-foot-fb').appendChild(fb); }
+      if (window.TCSF_SFX) { try { ok ? window.TCSF_SFX.good() : window.TCSF_SFX.bad(); } catch {} }
+      const go = foot.querySelector('.duo-go'); go.onclick = next; go.focus();
+    }
+    function match(q, body, foot) {
+      body.innerHTML = `<p class="duo-kind">Associe les paires</p><div class="duo-match"><div class="duo-col"></div><div class="duo-col"></div></div>`;
+      const [L, R] = body.querySelectorAll('.duo-col');
+      let sel = null, left = q.pairs.length, miss = false;
+      const mk = (col, html, k, side) => { const b = document.createElement('button'); b.className = 'duo-tile'; b.innerHTML = html; b.dataset.k = k; b.dataset.s = side; col.appendChild(b); b.onclick = () => {
+        if (b.disabled) return;
+        if (!sel || sel.dataset.s === side) { if (sel) sel.classList.remove('sel'); sel = b; b.classList.add('sel'); return; }
+        if (sel.dataset.k === b.dataset.k) { [sel, b].forEach((x) => { x.classList.remove('sel'); x.classList.add('ok'); x.disabled = true; }); sel = null; if (--left === 0) verdict(!miss, null, null, foot); }
+        else { miss = true; const a = sel; [a, b].forEach((x) => x.classList.add('ko')); setTimeout(() => [a, b].forEach((x) => x.classList.remove('ko', 'sel')), 500); sel = null; }
+      }; };
+      shuffle(q.pairs.map((p, k) => [p[0], k])).forEach(([h, k]) => mk(L, h, k, 'l'));
+      shuffle(q.pairs.map((p, k) => [p[1], k])).forEach(([h, k]) => mk(R, h, k, 'r'));
+    }
+    function noHearts() {
+      view.innerHTML = `<div class="duo-end">${charSVG(ch, 130, 'sad')}<h2>Plus de cœurs ❤️</h2><p>Un cœur revient toutes les 30 minutes. Tu peux aussi les recharger avec tes gemmes, ou relire le cours pour en regagner un.</p>
+        <button class="btn primary" data-a="buy">Recharger · 💎 50 (tu as ${S.gems})</button><button class="btn" data-a="read">📖 Relire le cours (+1 ❤️)</button><button class="btn" data-a="quit">Quitter</button></div>`;
+      view.querySelector('[data-a=buy]').onclick = () => { if (S.gems >= 50) { S.gems -= 50; S.hearts = MAXH; S.heartsAt = 0; save(); next(); } };
+      view.querySelector('[data-a=read]').onclick = () => { S.hearts = Math.min(MAXH, S.hearts + 1); save(); document.body.classList.remove('duo-in'); location.hash = back.replace('#/m/', '#/l/') + '/cours/' + encodeURIComponent(lesson.id); };
+      view.querySelector('[data-a=quit]').onclick = leave;
+    }
+    function finish() {
+      const perfect = again.size === 0, acc = Math.round((firstGood / nQ) * 100), secs = Math.round((Date.now() - t0) / 1000);
+      const xp = 10 + firstGood * 2 + (perfect ? 5 : 0), gems = perfect ? 10 : 5;
+      if (isMist) { const had = S.mistakes.length; S.mistakes = S.mistakes.filter((m) => !fixed.has(m.q) || again.has(m.q)); if (had && !S.mistakes.length) S.cleaned = true; }
+      else { const k = subject.id + '/' + lesson.id; S.crowns[k] = (S.crowns[k] || 0) + 1; }
+      // historique (profil) : les 30 dernières leçons
+      S.hist = [[isMist ? subject.id + '/__erreurs' : subject.id + '/' + lesson.id, isMist ? 'Mes erreurs' : lesson.title, dayOf(), acc, secs], ...(S.hist || [])].slice(0, 30);
+      // le planning coche tout seul la séance correspondante (la tâche a vraiment été faite)
+      try { window.dispatchEvent(new CustomEvent('tcsf:activity', { detail: { act: isMist ? 'erreurs' : 'session', subject: subject.id, lesson: isMist ? null : lesson.id, acc } })); } catch {}
+      S.gems += gems; S.lessons++; if (perfect) { S.perfects++; quest('perfect', 1); S.superUntil = Date.now() + 10 * 60000; } quest('lessons', 1);
+      const before = S.daily.xp, ext = addXP(xp), goalNow = before < S.goal && S.daily.xp >= S.goal;
+      const badges = newBadges(); save();
+      view.innerHTML = `<div class="duo-end win">${charSVG(ch, 140, 'wow')}<h2>${perfect ? 'Leçon parfaite ! 🌟' : 'Leçon terminée !'}</h2>${perfect && !(S.superMode && isAdmin()) ? '<p class="duo-gift">🎁 Cadeau : <b>cœurs illimités ∞ pendant 10 minutes</b> !</p>' : ''}
+        <div class="duo-tiles"><div class="y"><small>XP GAGNÉS</small><b>⚡ ${xp}</b></div><div class="g"><small>${acc >= 90 ? 'IMPRESSIONNANT' : 'PRÉCISION'}</small><b>🎯 ${acc} %</b></div><div class="b"><small>TEMPS</small><b>⏱️ ${Math.floor(secs / 60)}:${pad(secs % 60)}</b></div></div>
+        <p class="duo-loot">💎 +${gems} gemmes${goalNow ? ' · 🎉 Objectif du jour atteint !' : ''}</p>
+        ${badges.map((a) => `<p class="duo-newbadge">🏅 Nouveau succès : <b>${a[0]} ${esc(a[1])}</b> — ${esc(a[2])}</p>`).join('')}
+        ${ext ? `<div class="duo-flame-big">🔥<b>${S.streak}</b><span>jour${S.streak > 1 ? 's' : ''} de série !</span></div>` : ''}
+        <button class="btn primary duo-go">Continuer</button></div>`;
+      view.querySelector('.duo-go').onclick = leave;
+      if (Q.burst) Q.burst(view.querySelector('.duo-end'));
+      if (window.TCSF_SFX && window.TCSF_SFX.streak) try { window.TCSF_SFX.streak(5); } catch {}
+    }
+    next();
+  }
+
+  // ---------------- rappels façon « bande de copains » ----------------
+  const MSG = [
+    ['Tico', (s) => s.streak ? `Ta série de ${s.streak} jour${s.streak > 1 ? 's' : ''} 🔥 est en danger ! 5 minutes suffisent.` : 'C’est le moment parfait pour une petite leçon 😉'],
+    ['Nour', () => 'J’ai préparé une leçon de maths rien que pour toi 📐'],
+    ['Volta', () => 'Je suis à plat… une leçon pour me recharger ? ⚡'],
+    ['Moss', () => 'Les plantes poussent un peu chaque jour. Et toi ? 🌱'],
+    ['Pixel', (s) => `Calcul terminé : il te manque ${Math.max(0, s.goal - s.daily.xp) || s.goal} XP pour ton objectif 🤖`],
+    ['Rima', () => 'Une page par jour, et le bac devient facile 📚'],
+    ['Tico', () => 'Ces rappels ne marchent pas, on dirait… Je vais arrêter de t’embêter 😢 (non, reviens !)']
+  ];
+  const N = () => window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
+  async function askPermission() { try { if (N()) { const p = await N().checkPermissions(); if (p.display !== 'granted') await N().requestPermissions(); } else if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); } catch {} }
+  async function scheduleReminders() {
+    const n = N(); if (!n) return;
+    try {
+      const ids = [...Array(7)].map((_, k) => ({ id: 3000 + k }));
+      await n.cancel({ notifications: ids });
+      if (!S.notif) return;
+      const p = await n.checkPermissions(); if (p.display !== 'granted') return;
+      const list = [];
+      for (let k = 0; k < 7; k++) {
+        const at = new Date(); at.setDate(at.getDate() + k); at.setHours(S.hour, 0, 0, 0);
+        if (at <= new Date() || (k === 0 && S.daily.xp > 0)) continue;
+        const [who, f] = MSG[(new Date().getDate() + k) % MSG.length];
+        list.push({ id: 3000 + k, title: who + ' 🔔', body: f(S), schedule: { at, allowWhileIdle: true } });
+      }
+      if (list.length) await n.schedule({ notifications: list });
+    } catch {}
+  }
+  // ordinateur : rappel quand l'application est ouverte le soir sans leçon faite
+  setInterval(() => {
+    tickState();
+    if (!S.notif || N() || S.daily.xp > 0 || new Date().getHours() < S.hour) return;
+    let shown = ''; try { shown = localStorage.getItem('tcsf:duo:rem'); } catch {}
+    if (shown === dayOf()) return;
+    try { localStorage.setItem('tcsf:duo:rem', dayOf()); } catch {}
+    const [who, f] = pick(MSG.slice(0, 6));
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification(who + ' 🔔', { body: f(S), icon: 'icon.png' }); } catch {}
+  }, 5 * 60 * 1000);
+  setTimeout(() => { paintHud(); scheduleReminders(); }, 3000);
+  document.addEventListener('DOMContentLoaded', paintHud);
+  setTimeout(paintHud, 300);
+
+  window.TCSF_DUO = { home, path, session, charSVG, CAST, state: () => S, addXP, openPanel, remind: scheduleReminders };
+})();
