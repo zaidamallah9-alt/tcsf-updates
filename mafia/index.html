@@ -482,6 +482,127 @@ body.hascomp #app{padding-bottom:84px}
 #app.menu .btn{transition:transform .15s}
 #app.menu .btn:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.mstage *,#app.menu > *,#app.menu .hang,#app.menu .hang .board,#app.menu .btn::after{animation:none!important}}
+
+/* ---------- ⋮ menu ---------- */
+.topbar{position:relative;z-index:60;max-width:520px;margin:0 auto;padding:6px 10px 0;display:flex;justify-content:flex-start;height:40px}
+.kebab{width:36px;height:34px;display:grid;place-items:center;border-radius:10px;border:1px solid transparent;background:transparent;color:var(--n5);cursor:pointer;transition:background .15s,color .15s}
+.kebab svg{width:4px;height:18px;fill:currentColor}
+.kebab:hover,.kebab[aria-expanded="true"]{background:var(--n1);color:var(--paper);border-color:var(--n2)}
+.kebab:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+.kmenu{position:absolute;top:44px;right:10px;min-width:230px;padding:6px;border-radius:12px;background:var(--n1);border:1px solid var(--n3);box-shadow:0 14px 34px rgba(0,0,0,.55);animation:kpop .16s ease-out;transform-origin:top right}
+[dir="ltr"] .kmenu{right:auto;left:10px;transform-origin:top left}
+.kmenu[hidden]{display:none}
+@keyframes kpop{from{opacity:0;transform:scale(.94) translateY(-4px)}}
+.kmenu button{width:100%;display:flex;align-items:center;gap:10px;padding:11px 12px;border:0;border-radius:8px;background:transparent;color:var(--paper);font:inherit;font-weight:700;text-align:start;cursor:pointer}
+.kmenu button:hover,.kmenu button:focus-visible{background:var(--n2);outline:none}
+.kmenu .ic{width:18px;height:18px}
+.kmsg{margin:4px 12px 2px;font-size:13px;color:var(--n5);min-height:0}
+.kmsg:empty{display:none}
+.kver{margin:6px 12px 4px;padding-top:6px;border-top:1px solid var(--n2);font-size:11px;color:var(--n4);direction:ltr;text-align:end}
+#app.menu .hang,.hang{margin-top:24px}
+@media (prefers-reduced-motion:reduce){.kmenu{animation:none}}
+
+/* ---------- profile + friends ---------- */
+.topbar{align-items:center;gap:6px}
+#tbSocial{display:flex;align-items:center;gap:6px}
+.tbchip{padding:0;border:0;background:none;cursor:pointer;border-radius:50%}
+.tbchip:focus-visible,.tbbtn:focus-visible{outline:2px solid var(--sig);outline-offset:2px}
+.tbbtn{position:relative;display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--n2);background:var(--n1);color:var(--paper);font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.tbbtn:hover{border-color:var(--n3)}
+.tbbtn .ic{width:16px;height:16px}
+.tbdot{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#2fae66;color:#04140b;font-size:11px;line-height:18px;text-align:center}
+.pfp{position:relative;display:inline-block;flex:none;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 35%,#2a3550,#141a27);box-shadow:0 0 0 2px var(--n2)}
+.pfp img{width:100%;height:100%;object-fit:cover;display:block}
+.pfp-guy{position:absolute;left:50%;top:6%;width:150%;transform:translateX(-50%)}
+.pfp-guy .guy-svg{width:100%;height:auto;display:block}
+.pfp-guy .guy-svg *{animation:none!important}
+.pfp .fedora{display:none!important}
+.pfp.sm{width:34px;height:34px}.pfp.md{width:46px;height:46px}.pfp.xl{width:96px;height:96px;box-shadow:0 0 0 3px var(--sig)}
+#sheet{position:fixed;inset:0;z-index:80;pointer-events:none}
+#sheet .sh-back{position:absolute;inset:0;background:rgba(4,6,10,.6);opacity:0;transition:opacity .25s}
+#sheet .sh-card{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;max-height:88vh;overflow:auto;padding:14px 16px 22px;display:flex;flex-direction:column;gap:12px;
+  background:var(--n0,#0b0d12);border:1px solid var(--n3);border-bottom:0;border-radius:18px 18px 0 0;box-shadow:0 -20px 50px rgba(0,0,0,.6);transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+#sheet.on{pointer-events:auto}
+#sheet.on .sh-back{opacity:1}
+#sheet.on .sh-card{transform:none}
+.sh-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sh-head h2{margin:0;font-size:20px}
+.prof-top{display:flex;align-items:center;gap:16px}
+.prof-name{margin:0 0 4px;font-size:22px;font-weight:900}
+.prof-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.prof-acts label.btn{cursor:pointer}
+.stgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stc{padding:12px 6px;border-radius:12px;background:var(--n1);border:1px solid var(--n2);text-align:center}
+.stc b{display:block;font-size:26px;font-weight:900;line-height:1.1}
+.stc span{font-size:12px;color:var(--n5)}
+.stc.win b{color:var(--sig)}
+.strole{display:flex;flex-direction:column;gap:6px}
+.str{position:relative;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:var(--n1);overflow:hidden}
+.str .ic{width:18px;height:18px;flex:none}
+.str span{flex:1;font-weight:700}
+.str b{font-size:16px}
+.str i{position:absolute;inset-inline-start:0;bottom:0;height:3px;width:var(--w);background:var(--sig);border-radius:2px}
+.frlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fr{position:relative;width:100%;display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:12px;border:1px solid var(--n2);background:var(--n1);color:var(--paper);font:inherit;text-align:start;cursor:pointer}
+.fr:hover{border-color:var(--n3)}
+.fr-t{flex:1;display:flex;flex-direction:column}
+.fr-t small{color:var(--n5);font-size:12px}
+.fr-s{font-weight:900;color:var(--n5);direction:ltr}
+.ondot{position:absolute;inset-inline-start:44px;top:40px;width:11px;height:11px;border-radius:50%;background:#2fae66;box-shadow:0 0 0 2px var(--n1)}
+.ondot.inl{position:static;display:inline-block;width:9px;height:9px;box-shadow:none;vertical-align:middle}
+.empty{text-align:center;color:var(--n5);padding:18px 8px}
+.empty .ic{opacity:.5}
+@media (prefers-reduced-motion:reduce){#sheet .sh-card,#sheet .sh-back{transition:none}}
+
+/* ---------- neon: the derb's signs glow like real neon tubes at night ---------- */
+:root{--neon-pink:#ff3d7f;--neon-cyan:#2ff3ff;--neon-amber:#ffc23d;--neon-green:#3dff9a;--neon-violet:#a66bff}
+body{background:radial-gradient(ellipse at 50% -10%,rgba(166,107,255,.14),transparent 55%),radial-gradient(ellipse at 100% 100%,rgba(47,243,255,.07),transparent 50%),var(--n0)}
+/* board signs: a neon tube traced around the enamel */
+.board{--glow:var(--neon-amber)}
+.b-red{--glow:var(--neon-pink)} .b-cobalt{--glow:var(--neon-cyan)} .b-green{--glow:var(--neon-green)} .b-ochre{--glow:var(--neon-amber)}
+.board::after{content:"";position:absolute;inset:5px;border-radius:calc(var(--r) - 3px);border:1.5px solid var(--glow);pointer-events:none;
+  box-shadow:0 0 6px var(--glow),inset 0 0 6px var(--glow);opacity:.85;animation:neonHum 7s infinite}
+.board .sign{text-shadow:0 0 2px #fff,0 0 10px var(--glow),0 0 22px var(--glow)}
+.board{box-shadow:0 0 28px -6px var(--glow),0 8px 22px rgba(0,0,0,.45)}
+@keyframes neonHum{0%,100%{opacity:.85}92%{opacity:.85}93%{opacity:.3}94%{opacity:.9}96%{opacity:.45}97%{opacity:.9}}
+/* the big hanging sign flickers on like a real tube */
+.hang .board{animation:neonOn 1.4s steps(1) both}
+@keyframes neonOn{0%{filter:brightness(.35)}10%{filter:brightness(1.1)}14%{filter:brightness(.4)}22%{filter:brightness(1.15)}26%{filter:brightness(.6)}34%,100%{filter:none}}
+#app.menu .hang .board{animation:neonOn 1.4s steps(1) both,glow 4s ease-in-out infinite 1.4s}
+/* buttons: neon edge, main button glows amber */
+.btn:not(.sec):not(.green):not(.danger){box-shadow:0 0 0 1px rgba(255,194,61,.6),0 0 18px -2px rgba(255,194,61,.55),0 6px 16px rgba(0,0,0,.35)}
+.btn.sec{box-shadow:0 0 0 1px rgba(47,243,255,.35),0 0 14px -4px rgba(47,243,255,.45)}
+.btn.sec:hover{box-shadow:0 0 0 1px rgba(47,243,255,.7),0 0 20px -2px rgba(47,243,255,.6)}
+.btn.green{box-shadow:0 0 0 1px rgba(61,255,154,.5),0 0 18px -3px rgba(61,255,154,.5)}
+.ghost.danger{box-shadow:0 0 12px -4px rgba(255,61,127,.6)}
+input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,select:focus{border-color:var(--neon-cyan);box-shadow:0 0 0 1px var(--neon-cyan),0 0 16px -4px var(--neon-cyan)}
+/* menu street: neon tubes on the shop signs, a pink "مافيا" glow on the wet cobbles */
+.mshop::before{box-shadow:0 0 8px currentColor,0 0 16px currentColor}
+.mshop.c1::before{background:var(--neon-green);color:var(--neon-green)}.mshop.c2::before{background:var(--neon-pink);color:var(--neon-pink)}.mshop.c3::before{background:var(--neon-cyan);color:var(--neon-cyan)}
+.mshop.c3::before{animation:neonHum 5s infinite 1s}
+.mstage::after{background:radial-gradient(ellipse at 50% 0,rgba(255,61,127,.28),transparent 70%),repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 1px,transparent 1px 18px),linear-gradient(#3c3746,#28252f)}
+.mstage{box-shadow:inset 0 0 40px rgba(166,107,255,.18)}
+/* game street: shop signs become neon at night */
+.ph-night .sshop .sb{box-shadow:0 0 6px currentColor,0 0 14px -2px currentColor;color:var(--neon-cyan)}
+.ph-night .sshop.c-red .sb,.ph-night .sshop.c-r .sb{color:var(--neon-pink)}
+.ph-night .sshop.c-green .sb,.ph-night .sshop.c-g .sb{color:var(--neon-green)}
+.ph-night .hall-sign{box-shadow:0 0 10px var(--neon-green),0 0 24px -4px var(--neon-green)}
+/* top bar + sheet */
+.tbbtn{box-shadow:0 0 12px -5px var(--neon-violet)}
+.tbbtn:hover{border-color:var(--neon-violet);box-shadow:0 0 16px -3px var(--neon-violet)}
+.tbchip .pfp{box-shadow:0 0 0 2px var(--neon-violet),0 0 12px -2px var(--neon-violet)}
+.pfp.xl{box-shadow:0 0 0 3px var(--neon-pink),0 0 24px -4px var(--neon-pink)}
+.stc.win b{color:var(--neon-amber);text-shadow:0 0 12px rgba(255,194,61,.6)}
+.str i{background:var(--neon-cyan);box-shadow:0 0 8px var(--neon-cyan)}
+.ondot,.tbdot{background:var(--neon-green);box-shadow:0 0 8px var(--neon-green)}
+#sheet .sh-card{box-shadow:0 -1px 0 rgba(166,107,255,.5),0 -20px 60px rgba(166,107,255,.18)}
+.kmenu{box-shadow:0 0 0 1px rgba(166,107,255,.35),0 14px 34px rgba(0,0,0,.55),0 0 26px -8px var(--neon-violet)}
+/* switches in the ⋮ menu */
+.tg{margin-inline-start:auto;width:34px;height:20px;border-radius:10px;background:var(--n3);position:relative;transition:background .2s,box-shadow .2s}
+.tg::after{content:"";position:absolute;top:3px;inset-inline-end:3px;width:14px;height:14px;border-radius:50%;background:var(--n5);transition:inset .2s,background .2s}
+.tg.on{background:rgba(61,255,154,.25);box-shadow:0 0 10px -2px var(--neon-green)}
+.tg.on::after{inset-inline-end:17px;background:var(--neon-green)}
+@media (prefers-reduced-motion:reduce){.board::after,.hang .board,#app.menu .hang .board,.mshop.c3::before{animation:none!important}}
 </style>
 </head>
 <body>
@@ -520,6 +641,14 @@ body.hascomp #app{padding-bottom:84px}
 </svg>
 <div id="curtain" aria-hidden="true"></div>
 <div id="net" class="net" role="status" style="display:none"><svg class="ic" aria-hidden="true"><use href="#i-wifioff"/></svg> الكونيكسيون مقطوعة، كنعاودو نتصلو...</div>
+<div id="topbar" class="topbar"><button id="kebab" class="kebab" type="button" aria-label="المينيو" aria-haspopup="true" aria-expanded="false" onclick="kebabToggle()"><svg viewBox="0 0 4 18" aria-hidden="true"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="9" r="2"/><circle cx="2" cy="16" r="2"/></svg></button>
+  <div id="kmenu" class="kmenu" role="menu" hidden>
+    <button type="button" role="menuitem" onclick="checkUpdatesNow()"><svg class="ic" aria-hidden="true"><use href="#i-restart"/></svg> شوف واش كاين أبديت</button>
+    <p id="kmsg" class="kmsg" role="status"></p>
+    <div id="ksnd"></div>
+    <p class="kver" translate="no"></p>
+  </div><div id="tbSocial"></div></div>
+<div id="sheet"></div>
 <div id="voicebar" class="voicebar" style="display:none"><div id="vbtns"></div><div id="vpeers" class="vpeers"></div></div>
 <div id="voiceAudio" style="display:none"></div>
 <div id="scene" class="scene" style="display:none" aria-hidden="true"></div>
@@ -531,8 +660,8 @@ body.hascomp #app{padding-bottom:84px}
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const APP_VERSION = "1.3";
-const BUILD = 9;
+const APP_VERSION = "1.4";
+const BUILD = 10;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -688,6 +817,7 @@ function setComposer(mode){
 }
 let lastHtml = "";
 function render(html){
+  if(!PUB && typeof SND !== "undefined") SND.setMood("menu");
   html += `<p class="credit">تصميم زيد أملاح <span translate="no" style="opacity:.6">· v${APP_VERSION}</span></p>`;
   if(html === lastHtml) return;
   lastHtml = html;
@@ -1456,6 +1586,8 @@ function curtain(label, tone){
   c.classList.remove("run"); void c.offsetWidth; c.classList.add("run");
 }
 function draw(){
+  try{ statsHook(); }catch(e){}
+  try{ soundHook(); }catch(e){}
   if(!PUB || !PRIV || !ME) return;
   if(!me()){ return; }
   const key = PUB.phase + PUB.round;
@@ -1637,7 +1769,7 @@ function signHead(sub){
   return `<div class="hang"><div class="board b-red"><h1 class="sign">مافيا</h1><div class="sub">${sub}</div></div></div>`;
 }
 function loginScreen(){
-  ACC = null; ADMIN_TOKEN = null;
+  ACC = null; ADMIN_TOKEN = null; socStop();
   render(`
     ${signHead("الدرب كيتسد مع الليل")}
     <p class="tag-line">دخل بالسمية و المود دو باس ديالك</p>
@@ -1677,6 +1809,7 @@ async function doLogin(){
     ACC = {n: u.n, d: u.d || n.trim(), h};
   }
   lsSet("mafia_name", ACC.d); lsSet("mafia_seen", 1);
+  socStart();
   const saved = lsGet("mafia_me");
   if(saved && saved.name === ACC.d) rejoin(); else home();
 }
@@ -2268,7 +2401,7 @@ const FR = {
 "هاد السمية ديجا عند شي لاعب.":"Ce nom est déjà pris par un joueur.","ما قدرتش نسجل الأدمين:":"Impossible d'enregistrer l'admin :",
 "مرحبا...":"Bienvenue...","دخل بالسمية و المود دو باس ديالك":"Connecte-toi avec ton nom et ton mot de passe",
 "السمية (الأدمين يقدر بالجيميل)":"Nom (l'admin peut utiliser son Gmail)","المود دو باس":"Mot de passe",
-"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
+"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","شوف واش كاين أبديت":"Vérifier les mises à jour","كنقلبو...":"Recherche…","✅ عندك آخر نسخة.":"✅ L’application est à jour.","⬇️ كننزلو النسخة الجديدة...":"⬇️ Téléchargement de la nouvelle version…","🎉 تنزلات.":"🎉 Mise à jour installée.","🎉 تنزلات. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargée. Elle s’appliquera quand tu quitteras le salon.","🎉 كتنزل. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargement… Elle s’appliquera quand tu quitteras le salon.","كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم.":"Nouvelle version disponible. Elle s’appliquera quand tu quitteras le salon.","🎉 كنحلو النسخة الجديدة...":"🎉 Ouverture de la nouvelle version…","كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.":"Nouvelle version disponible. Elle s’installera toute seule dans quelques minutes.","ما قدرتش نتصل بالأنترنيت. عاود.":"Pas de connexion Internet. Réessaie.","المينيو":"Menu","الموسيقى":"Musique","الأصوات":"Effets sonores","البروفيل ديالي":"Mon profil","الأصدقاء":"Amis","بدل التصويرة":"Changer la photo","حيد التصويرة":"Retirer la photo","لعبتي":"Parties jouées","ربحتي":"Victoires","نسبة الربح":"Taux de victoire","شحال من مرة لعبتي ب...":"Parties jouées en tant que…","بدل الشخصية ديالي":"Changer mon personnage","السمية ديال صاحبك":"Nom de ton ami","زيد":"Ajouter","مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.":"Tu n’as encore aucun ami. Écris son nom en haut.","حيدو من الأصدقاء":"Retirer des amis","متصل دابا":"En ligne","ما بانش مزال":"Jamais vu","هادي السمية ديالك.":"C’est ton propre nom.","ديجا عندك فالأصدقاء.":"Déjà dans tes amis.","ما كاين حتى كونط بهاد السمية.":"Aucun compte avec ce nom.","نحيدو من الأصدقاء؟":"Retirer cet ami ?","مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.":"Pas encore de partie, ou pas encore connecté avec la nouvelle version.","ما قدرتش نقرا هاد التصويرة.":"Impossible de lire cette image.","الأدمين":"Admin","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
 "كنتأكدو...":"Vérification...","الجيميل ولا المود دو باس غالطين.":"Gmail ou mot de passe incorrect.","المود دو باس غالط.":"Mot de passe incorrect.",
 "هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.":"Ce compte n'existe pas ou n'a pas encore été validé par l'admin.",
 "كونط جديد":"Nouveau compte","السمية (هي اللي غادي تبان فاللعبة)":"Nom (celui affiché dans le jeu)",
@@ -2289,6 +2422,7 @@ const FR = {
 };
 // جمل فيها سميات ولا أرقام
 const FR_RX = [
+  [/^بان هادي (\d+) دقيقة$/, "Vu il y a $1 min"], [/^بان هادي (\d+) ساعة$/, "Vu il y a $1 h"], [/^بان هادي (\d+) يوم$/, "Vu il y a $1 j"], [/^مرحبا (.+)، العب مع صحابك أونلاين$/, "Salut $1, joue en ligne avec tes amis"],
   [/^دخل (.+)$/, "$1 est arrivé"], [/^خرج (.+)$/, "$1 est parti"], [/^(.+) تخرج$/, "$1 a été retiré"],
   [/^النهار (\d+)$/, "Jour $1"], [/^الليلة (\d+)$/, "Nuit $1"], [/^الليلة (\d+):/, "Nuit $1 :"],
   [/^(\d+) مافيا بيناتكم\.\.\.$/, "$1 mafieux parmi vous..."], [/^حيد (.+)$/, "Supprimer $1"],
@@ -2405,6 +2539,437 @@ window.addEventListener("focus", wakeNet);
 (function(){ const d = document.createElement("div"); d.setAttribute("aria-hidden","true");
   d.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none";
   d.innerHTML = guyDefs(); document.body.prepend(d); })();
+/* ---------- المينيو ديال ⋮ : شوف واش كاين أبديت (بحال Tronc Commun) ---------- */
+function kebabToggle(open){
+  const m = document.getElementById("kmenu"), b = document.getElementById("kebab");
+  const show = open === undefined ? m.hidden : open;
+  m.hidden = !show; b.setAttribute("aria-expanded", show);
+  if(show){ m.querySelector(".kver").textContent = "v" + APP_VERSION + " · " + BUILD; document.getElementById("ksnd").innerHTML = sndToggles(); }
+  else document.getElementById("kmsg").textContent = "";
+}
+document.addEventListener("click", e => { const m = document.getElementById("kmenu"); if(m && !m.hidden && !e.target.closest(".topbar")) kebabToggle(false); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") kebabToggle(false); });
+let kBusy = false;
+async function checkUpdatesNow(){
+  if(kBusy) return; kBusy = true;
+  const say = t => { const el = document.getElementById("kmsg"); if(el) el.textContent = t; };
+  say("كنقلبو...");
+  try{
+    const v = await (await fetch("https://raw.githubusercontent.com/zaidamallah9-alt/tcsf-updates/main/mafia/version.json?t=" + Date.now(), {cache:"no-store"})).json();
+    if(!(v.build > BUILD)){ say("✅ عندك آخر نسخة."); return; }
+    const inRoom = typeof ME !== "undefined" && ME;
+    if(window.mafiaApp && mafiaApp.checkUpdate){            // PC
+      say("⬇️ كننزلو النسخة الجديدة...");
+      await mafiaApp.checkUpdate();
+      say(inRoom ? "🎉 تنزلات. غادي تتبدل ملي تخرج من الروم." : "🎉 تنزلات.");
+    } else if(window.AndroidApp && AndroidApp.checkUpdate){  // telephone
+      say("⬇️ كننزلو النسخة الجديدة...");
+      AndroidApp.checkUpdate();
+      if(inRoom) say("🎉 كتنزل. غادي تتبدل ملي تخرج من الروم.");
+    } else if(location.protocol === "https:"){              // site
+      if(inRoom){ say("كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم."); return; }
+      say("🎉 كنحلو النسخة الجديدة...");
+      location.replace(location.pathname + "?v=" + v.build);
+    } else {
+      say("كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.");
+    }
+  }catch(e){ say("ما قدرتش نتصل بالأنترنيت. عاود."); }
+  finally{ kBusy = false; }
+}
+
+/* =====================================================================
+   البروفيل و الأصدقاء
+   كل كونط عندو بروفيل (التصويرة، الشخصية، الإحصائيات) كيتخلى فالسيرفور ديال اللعبة
+   (retained) باش الأصدقاء يشوفوه. الإحصائيات كتزاد بوحدها فآخر كل لعبة.
+   ===================================================================== */
+const SOC = {m: null, connecting: null, timer: null, prof: {}, waiters: {}};
+const ROLE_KEYS = ["mafia", "doctor", "detective", "citizen"];
+const profTopic = n => TOPIC_ROOT + "prof/" + n;
+function stKey(){ return "mafia_st_" + (ACC ? ACC.n : "_"); }
+function myStats(){
+  const s = lsGet(stKey()) || {};
+  const r = {}; ROLE_KEYS.forEach(k => r[k] = (s.r && +s.r[k]) || 0);
+  return {p: +s.p || 0, w: +s.w || 0, r, last: s.last || ""};
+}
+function myPhoto(){ return lsGet("mafia_ph_" + (ACC ? ACC.n : "_")) || ""; }
+function myFriends(){ return lsGet("mafia_fr_" + (ACC ? ACC.n : "_")) || []; }
+function setFriends(l){ lsSet("mafia_fr_" + ACC.n, l); }
+
+// آخر كل لعبة: كنزيدو فالإحصائيات (مرة وحدة فكل لعبة)
+function statsHook(){
+  if(!ACC || !PUB || !PRIV || PUB.phase !== "end" || !PRIV.role) return;
+  const key = PUB.room + "|" + PUB.round + "|" + PUB.winner + "|" + PUB.players.map(p => p.pid).join(",");
+  const s = myStats();
+  if(s.last === key) return;
+  s.p++; s.last = key;
+  const myTeam = (ROLES[PRIV.role] || {}).team;
+  if(myTeam === (PUB.winner === "mafia" ? "mafia" : "town")) s.w++;
+  if(s.r[PRIV.role] !== undefined) s.r[PRIV.role]++;
+  lsSet(stKey(), s);
+  socPublish();
+}
+
+// ---------- الكونيكسيون ديال البروفيلات ----------
+async function socConn(){
+  if(SOC.m && SOC.m.ok) return SOC.m;
+  if(SOC.connecting) return SOC.connecting;
+  SOC.connecting = (async () => {
+    const c = await connectAny();
+    c.m.onMsg = socMsg;
+    SOC.m = c.m;
+    Object.keys(SOC.waiters).forEach(n => c.m.subscribe(profTopic(n)));
+    return c.m;
+  })().finally(() => { SOC.connecting = null; });
+  return SOC.connecting;
+}
+function socMsg(topic, payload){
+  const n = topic.slice((TOPIC_ROOT + "prof/").length);
+  let j; try{ j = JSON.parse(typeof payload === "string" ? payload : dec.decode(payload)); }catch(e){ return; }
+  if(!j || j.n !== n) return;
+  SOC.prof[n] = j;
+  // نفس الكونط من جهاز آخر: كناخدو الأكبر فكل رقم
+  if(ACC && n === ACC.n && j.st){
+    const s = myStats(); let ch = false;
+    if((j.st.p||0) > s.p){ s.p = j.st.p; ch = true; }
+    if((j.st.w||0) > s.w){ s.w = j.st.w; ch = true; }
+    ROLE_KEYS.forEach(k => { const v = (j.st.r && j.st.r[k]) || 0; if(v > s.r[k]){ s.r[k] = v; ch = true; } });
+    if(ch) lsSet(stKey(), s);
+    if(j.ph && !myPhoto()) lsSet("mafia_ph_" + ACC.n, j.ph);
+  }
+  (SOC.waiters[n] || []).forEach(f => f(j)); SOC.waiters[n] = [];
+  if(sheetOpen()) sheetRefresh();
+}
+function socWatch(n){
+  if(!SOC.waiters[n]) SOC.waiters[n] = [];
+  socConn().then(m => m.subscribe(profTopic(n))).catch(()=>{});
+}
+async function socPublish(){
+  if(!ACC) return;
+  try{
+    const m = await socConn();
+    const st = myStats();
+    m.publish(profTopic(ACC.n), JSON.stringify({n: ACC.n, d: ACC.d, av: myAv(), ph: myPhoto(), st: {p: st.p, w: st.w, r: st.r}, seen: Date.now()}), true);
+  }catch(e){}
+}
+function socStart(){
+  socStop();
+  socWatch(ACC.n);
+  myFriends().forEach(socWatch);
+  setTimeout(socPublish, 2500);            // بعد ما نقراو البروفيل القديم ديالنا
+  SOC.timer = setInterval(socPublish, 60000);
+  topbarRefresh();
+}
+function socStop(){
+  clearInterval(SOC.timer); SOC.timer = null;
+  if(SOC.m){ try{ SOC.m.close(); }catch(e){} }
+  SOC.m = null; SOC.prof = {}; SOC.waiters = {};
+  sheetClose(); topbarRefresh();
+}
+
+// ---------- الصورة ديال الواحد (تصويرة ولا الشخصية) ----------
+function pfp(n, ph, av, cls){
+  if(ph) return `<span class="pfp ${cls||""}"><img src="${esc(ph)}" alt=""></span>`;
+  return `<span class="pfp ${cls||""}"><span class="pfp-guy">${guySvg(3, av)}</span></span>`;
+}
+function onlineOf(j){ return j && j.seen && Date.now() - j.seen < 3 * 60 * 1000; }
+function seenText(j){
+  if(!j || !j.seen) return "ما بانش مزال";
+  if(onlineOf(j)) return "متصل دابا";
+  const m = Math.round((Date.now() - j.seen) / 60000);
+  if(m < 60) return "بان هادي " + m + " دقيقة";
+  const h = Math.round(m / 60);
+  if(h < 24) return "بان هادي " + h + " ساعة";
+  return "بان هادي " + Math.round(h / 24) + " يوم";
+}
+
+// ---------- الشريط الفوقاني: ⋮ + البروفيل + الأصدقاء ----------
+function topbarRefresh(){
+  const box = document.getElementById("tbSocial"); if(!box) return;
+  if(!ACC){ box.innerHTML = ""; return; }
+  const on = myFriends().filter(n => onlineOf(SOC.prof[n])).length;
+  box.innerHTML = `<button class="tbchip" type="button" onclick="openProfile()" aria-label="البروفيل ديالي">${pfp(ACC.n, myPhoto(), myAv(), "sm")}</button>
+    <button class="tbbtn" type="button" onclick="openFriends()">${ic("users")} <span>الأصدقاء</span>${on ? `<b class="tbdot" translate="no">${on}</b>` : ""}</button>`;
+}
+
+// ---------- الورقة اللي كتطلع فوق كلشي ----------
+const SHEET = {view: null, arg: null, msg: ""};
+function sheetOpen(){ return !!SHEET.view; }
+function sheetClose(){ SHEET.view = null; const el = document.getElementById("sheet"); if(el){ el.classList.remove("on"); setTimeout(()=>{ if(!SHEET.view) el.innerHTML = ""; }, 250); } topbarRefresh(); }
+function sheetShow(view, arg){ SHEET.view = view; SHEET.arg = arg; sheetRefresh(); const el = document.getElementById("sheet"); requestAnimationFrame(()=>el.classList.add("on")); kebabToggle(false); }
+function sheetRefresh(){
+  const el = document.getElementById("sheet"); if(!el || !SHEET.view) return;
+  const body = SHEET.view === "me" ? profileHtml() : SHEET.view === "friends" ? friendsHtml() : friendHtml(SHEET.arg);
+  const keep = document.getElementById("frIn"); const typed = keep ? keep.value : "";
+  el.innerHTML = `<div class="sh-back" onclick="sheetClose()"></div><section class="sh-card" role="dialog" aria-modal="true">${body}</section>`;
+  const inp = document.getElementById("frIn"); if(inp && typed){ inp.value = typed; }
+  topbarRefresh();
+}
+function statsHtml(st){
+  const p = st.p || 0, w = st.w || 0, r = st.r || {};
+  const pct = p ? Math.round(w * 100 / p) : 0;
+  return `<div class="stgrid">
+      <div class="stc"><b translate="no">${p}</b><span>لعبتي</span></div>
+      <div class="stc win"><b translate="no">${w}</b><span>ربحتي</span></div>
+      <div class="stc"><b translate="no">${pct}%</b><span>نسبة الربح</span></div>
+    </div>
+    <p class="sec-h">${ic("hat")} شحال من مرة لعبتي ب...</p>
+    <div class="strole">${ROLE_KEYS.map(k => `<div class="str">${ic(ROLES[k].icon)}<span>${ROLES[k].name}</span><b translate="no">${r[k] || 0}</b><i style="--w:${p ? Math.round((r[k]||0) * 100 / p) : 0}%"></i></div>`).join("")}</div>`;
+}
+function profileHtml(){
+  return `<header class="sh-head"><h2>البروفيل ديالي</h2><button class="ghost" onclick="sheetClose()">${ic("x")}</button></header>
+    <div class="prof-top">
+      ${pfp(ACC.n, myPhoto(), myAv(), "xl")}
+      <div><p class="prof-name" translate="no">${esc(ACC.d)}</p>${ACC.admin ? `<p class="note">${ic("crown")} الأدمين</p>` : ""}
+        <div class="prof-acts">
+          <label class="btn small sec">${ic("plus")} بدل التصويرة<input type="file" accept="image/*" hidden onchange="photoPick(this)"></label>
+          ${myPhoto() ? `<button class="ghost" onclick="photoClear()">حيد التصويرة</button>` : ""}
+        </div></div>
+    </div>
+    ${SHEET.msg ? `<p class="err">${esc(SHEET.msg)}</p>` : ""}
+    ${statsHtml(myStats())}
+    <button class="btn sec" onclick="sheetClose();wardrobe(PUB&&PUB.phase==='lobby'?'lobby':'home')">${ic("users")} بدل الشخصية ديالي</button>`;
+}
+function photoPick(inp){
+  const f = inp.files && inp.files[0]; if(!f) return;
+  SHEET.msg = "";
+  const img = new Image(), url = URL.createObjectURL(f);
+  img.onload = () => {
+    const S = 160, c = document.createElement("canvas"); c.width = c.height = S;
+    const k = Math.max(S / img.width, S / img.height), w = img.width * k, h = img.height * k;
+    c.getContext("2d").drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
+    URL.revokeObjectURL(url);
+    lsSet("mafia_ph_" + ACC.n, c.toDataURL("image/jpeg", .8));
+    socPublish(); sheetRefresh();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); SHEET.msg = "ما قدرتش نقرا هاد التصويرة."; sheetRefresh(); };
+  img.src = url;
+}
+function photoClear(){ lsSet("mafia_ph_" + ACC.n, ""); socPublish(); sheetRefresh(); }
+
+function friendsHtml(){
+  const list = myFriends();
+  return `<header class="sh-head"><h2>الأصدقاء</h2><button class="ghost" onclick="sheetClose()">${ic("x")}</button></header>
+    <form class="row" onsubmit="event.preventDefault();friendAdd()">
+      <input type="text" id="frIn" maxlength="16" placeholder="السمية ديال صاحبك" autocomplete="off">
+      <button class="btn small" type="submit">${ic("plus")} زيد</button>
+    </form>
+    ${SHEET.msg ? `<p class="err">${esc(SHEET.msg)}</p>` : ""}
+    ${list.length ? `<ul class="frlist">${list.map(n => { const j = SOC.prof[n];
+      return `<li><button class="fr" onclick="sheetShow('friend','${esc(n)}')">
+        ${pfp(n, j && j.ph, j && j.av, "md")}${onlineOf(j) ? '<i class="ondot" aria-label="متصل"></i>' : ""}
+        <span class="fr-t"><b translate="no">${esc(j ? j.d : n)}</b><small>${seenText(j)}</small></span>
+        <span class="fr-s" translate="no">${j && j.st ? `${j.st.w||0}/${j.st.p||0}` : "…"}</span></button></li>`; }).join("")}</ul>`
+      : `<div class="empty">${ic("users","huge")}<p>مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.</p></div>`}`;
+}
+function friendHtml(n){
+  const j = SOC.prof[n];
+  return `<header class="sh-head"><button class="ghost" onclick="sheetShow('friends')">رجوع</button><h2 translate="no">${esc(j ? j.d : n)}</h2><span></span></header>
+    <div class="prof-top">${pfp(n, j && j.ph, j && j.av, "xl")}<div><p class="prof-name" translate="no">${esc(j ? j.d : n)}</p><p class="note">${onlineOf(j) ? '<i class="ondot inl"></i> ' : ""}${seenText(j)}</p></div></div>
+    ${j && j.st ? statsHtml(j.st) : `<p class="note center">مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.</p>`}
+    <button class="ghost danger" style="align-self:center" onclick="friendRemove('${esc(n)}')">حيدو من الأصدقاء</button>`;
+}
+async function friendAdd(){
+  const inp = document.getElementById("frIn"); const raw = (inp && inp.value || "").trim();
+  const n = accNorm(raw);
+  SHEET.msg = "";
+  if(!n){ return; }
+  if(n === ACC.n){ SHEET.msg = "هادي السمية ديالك."; return sheetRefresh(); }
+  if(myFriends().includes(n)){ SHEET.msg = "ديجا عندك فالأصدقاء."; return sheetRefresh(); }
+  const users = (await loadUsers()).users || [];
+  if(!ADMIN) ADMIN = await loadAdmin();
+  if(!users.some(u => u.n === n) && !(ADMIN && ADMIN.n === n)){ SHEET.msg = "ما كاين حتى كونط بهاد السمية."; return sheetRefresh(); }
+  setFriends([...myFriends(), n]); socWatch(n);
+  if(inp) inp.value = "";
+  sheetRefresh();
+}
+function friendRemove(n){
+  if(!confirm("نحيدو من الأصدقاء؟")) return;
+  setFriends(myFriends().filter(x => x !== n));
+  sheetShow("friends");
+}
+function openProfile(){ SHEET.msg = ""; sheetShow("me"); }
+function openFriends(){ SHEET.msg = ""; sheetShow("friends"); }
+
+/* =====================================================================
+   الموسيقى و الأصوات: كلشي كيتصاوب هنا بالكود (WebAudio)، بلا ملفات.
+   الموسيقى: درون خفيف + نغمة بحال العود (مقام الحجاز) + دربوكة خفيفة.
+   كتبدل مع المرحلة: المينيو، النهار، التصويت (فيها توتر)، الليل (هادية).
+   ===================================================================== */
+const SND = (() => {
+  const pref = Object.assign({m: 1, s: 1}, (() => { try { return JSON.parse(localStorage.getItem("mafia_snd")) || {}; } catch(e){ return {}; } })());
+  let ctx = null, master, musicBus, sfxBus, echo, started = false, mood = "menu", nextT = 0, step = 0, timer = null, droneNodes = [];
+  // D hijaz: D Eb F# G A Bb C
+  const SCALE = [0, 1, 4, 5, 7, 8, 10];
+  const BASE = 146.83; // D3
+  const hz = (deg, oct) => { const n = SCALE[((deg % 7) + 7) % 7] + 12 * (oct + Math.floor(deg / 7)); return BASE * Math.pow(2, n / 12); };
+  const MOODS = {
+    menu:  {bpm: 84, perc: 1,   mel: .8, oct: 1, drone: .5},
+    day:   {bpm: 92, perc: 1,   mel: .9, oct: 1, drone: .45},
+    vote:  {bpm: 104, perc: 1.4, mel: .6, oct: 0, drone: .6},
+    night: {bpm: 64, perc: 0,   mel: .5, oct: 0, drone: .7},
+    end:   {bpm: 88, perc: .8,  mel: 1,  oct: 1, drone: .4}
+  };
+  function save(){ try { localStorage.setItem("mafia_snd", JSON.stringify(pref)); } catch(e){} }
+  function init(){
+    if(ctx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return false;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination);
+    musicBus = ctx.createGain(); musicBus.gain.value = pref.m ? .13 : 0; musicBus.connect(master);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = pref.s ? .42 : 0; sfxBus.connect(master);
+    // صدى خفيف باش يكون الصوت فيه جو
+    echo = ctx.createDelay(1); echo.delayTime.value = .34;
+    const fb = ctx.createGain(); fb.gain.value = .32; const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1800;
+    echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(musicBus);
+    return true;
+  }
+  function env(g, t, a, peak, d){ g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); }
+  function noiseBuf(){ const b = ctx.createBuffer(1, ctx.sampleRate * .5, ctx.sampleRate), d = b.getChannelData(0); for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; }
+  let NB = null;
+  // ---------- آلات ----------
+  function pluck(f, t, vol, bus, dur){
+    const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), fl = ctx.createBiquadFilter();
+    o.type = "triangle"; o2.type = "sawtooth"; o.frequency.value = f; o2.frequency.value = f * 1.003;
+    fl.type = "lowpass"; fl.frequency.setValueAtTime(f * 6, t); fl.frequency.exponentialRampToValueAtTime(f * 1.5, t + .25);
+    const g2 = ctx.createGain(); g2.gain.value = .25;
+    o.connect(fl); o2.connect(g2); g2.connect(fl); fl.connect(g); g.connect(bus || musicBus); if(!bus) g.connect(echo);
+    env(g, t, .006, vol, dur || .55);
+    o.start(t); o2.start(t); o.stop(t + (dur || .55) + .1); o2.stop(t + (dur || .55) + .1);
+  }
+  function doum(t, vol, bus){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(48, t + .18);
+    o.connect(g); g.connect(bus || musicBus); env(g, t, .004, vol, .28); o.start(t); o.stop(t + .35);
+  }
+  function tak(t, vol, bus, freq){
+    if(!NB) NB = noiseBuf();
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = NB; f.type = "bandpass"; f.frequency.value = freq || 2600; f.Q.value = 1.2;
+    s.connect(f); f.connect(g); g.connect(bus || musicBus); env(g, t, .002, vol, .07); s.start(t); s.stop(t + .1);
+  }
+  function drone(on){
+    droneNodes.forEach(n => { try { n.g.gain.setTargetAtTime(0.0001, ctx.currentTime, .6); n.o.stop(ctx.currentTime + 3); } catch(e){} });
+    droneNodes = [];
+    if(!on) return;
+    const lvl = MOODS[mood].drone * .22;
+    [[BASE / 2, 0], [BASE / 2 * 1.5, 3], [BASE / 2 * 1.006, -3]].forEach(([f, det]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), fl = ctx.createBiquadFilter(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+      o.type = "sawtooth"; o.frequency.value = f; o.detune.value = det;
+      fl.type = "lowpass"; fl.frequency.value = mood === "night" ? 380 : 620; fl.Q.value = .6;
+      lfo.frequency.value = .07 + Math.random() * .05; lg.gain.value = 160; lfo.connect(lg); lg.connect(fl.frequency); lfo.start();
+      o.connect(fl); fl.connect(g); g.connect(musicBus);
+      g.gain.setValueAtTime(0.0001, ctx.currentTime); g.gain.exponentialRampToValueAtTime(lvl, ctx.currentTime + 2.5);
+      o.start(); droneNodes.push({o, g});
+    });
+  }
+  // ---------- الجملة الموسيقية ----------
+  let deg = 0, rest = 0;
+  const RHYTHM = [[1,0,0,1,0,0,1,0],[1,0,1,1,0,1,1,0]]; // maqsoum-ish: doum . . doum . . tak .
+  function tick(){
+    if(!ctx || !started) return;
+    const M = MOODS[mood], spb = 60 / M.bpm / 2; // eighth notes
+    while(nextT < ctx.currentTime + .25){
+      const t = nextT, i = step % 8, bar = Math.floor(step / 8);
+      if(M.perc){
+        const pat = RHYTHM[bar % 4 === 3 ? 1 : 0];
+        if(pat[i]){ if(i === 0 || i === 3) doum(t, .5 * M.perc); else tak(t, .22 * M.perc); }
+        else if(M.perc > 1 && i % 2) tak(t, .09, null, 4200);
+      }
+      // melody: random walk on the maqam, with rests to breathe
+      if(rest > 0) rest--;
+      else if(Math.random() < M.mel * (i % 2 ? .45 : .8)){
+        deg += [-2, -1, -1, 0, 1, 1, 2][Math.floor(Math.random() * 7)];
+        deg = Math.max(-3, Math.min(9, deg));
+        pluck(hz(deg, M.oct), t, .22, null, mood === "night" ? .9 : .5);
+        if(mood === "night" && Math.random() < .3) pluck(hz(deg + 2, M.oct), t + spb * .5, .1, null, .9);
+        if(Math.random() < .12) rest = 3 + Math.floor(Math.random() * 4);
+      }
+      if(i === 7 && bar % 8 === 7){ deg = 0; rest = 4; pluck(hz(0, M.oct), t, .2, null, 1.2); }
+      nextT += spb; step++;
+    }
+  }
+  function start(){
+    if(started || !init()) return;
+    started = true;
+    if(ctx.state === "suspended") ctx.resume();
+    nextT = ctx.currentTime + .1;
+    drone(true);
+    timer = setInterval(tick, 90);
+  }
+  // ---------- الأصوات ----------
+  const fx = {
+    tap(){ const t = ctx.currentTime; tak(t, .25, sfxBus, 3200); },
+    pop(){ const t = ctx.currentTime; pluck(880, t, .25, sfxBus, .18); pluck(1320, t + .06, .2, sfxBus, .2); },
+    join(){ const t = ctx.currentTime; [0, 2, 4].forEach((d, k) => pluck(hz(d, 2), t + k * .09, .3, sfxBus, .4)); },
+    leave(){ const t = ctx.currentTime; [4, 2, 0].forEach((d, k) => pluck(hz(d, 1), t + k * .09, .25, sfxBus, .4)); },
+    night(){ const t = ctx.currentTime;
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine"; o.frequency.setValueAtTime(220, t); o.frequency.exponentialRampToValueAtTime(110, t + 1.6);
+      o.connect(g); g.connect(sfxBus); env(g, t, .02, .5, 2.2); o.start(t); o.stop(t + 2.4);
+      [6, 4, 1, 0].forEach((d, k) => pluck(hz(d, 1), t + .2 + k * .22, .3, sfxBus, .9));
+      // بومة
+      setTimeout(() => { if(!ctx) return; const t2 = ctx.currentTime; [0, .32].forEach(dt => { const h = ctx.createOscillator(), hg = ctx.createGain(); h.type = "sine"; h.frequency.setValueAtTime(440, t2 + dt); h.frequency.linearRampToValueAtTime(390, t2 + dt + .25); h.connect(hg); hg.connect(sfxBus); env(hg, t2 + dt, .05, .18, .25); h.start(t2 + dt); h.stop(t2 + dt + .4); }); }, 1900);
+    },
+    day(){ const t = ctx.currentTime; [0, 2, 4, 7].forEach((d, k) => pluck(hz(d, 2), t + k * .1, .3, sfxBus, .6));
+      for(let k = 0; k < 3; k++){ const b = ctx.createOscillator(), bg = ctx.createGain(), s = t + .6 + k * .14; b.type = "sine"; b.frequency.setValueAtTime(2600, s); b.frequency.exponentialRampToValueAtTime(4200, s + .06); b.connect(bg); bg.connect(sfxBus); env(bg, s, .005, .12, .07); b.start(s); b.stop(s + .1); }
+    },
+    vote(){ const t = ctx.currentTime; for(let k = 0; k < 6; k++) doum(t + k * .07, .2 + k * .06, sfxBus); tak(t + .45, .4, sfxBus); },
+    voted(){ const t = ctx.currentTime; doum(t, .5, sfxBus); tak(t + .02, .3, sfxBus, 1800); },
+    death(){ const t = ctx.currentTime; doum(t, .8, sfxBus); doum(t + .25, .6, sfxBus); pluck(hz(1, 0), t + .1, .35, sfxBus, 1.4); pluck(hz(0, 0) * 1.06, t + .1, .25, sfxBus, 1.4); },
+    shutter(){ if(!NB) NB = noiseBuf(); const t = ctx.currentTime, s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = NB; s.loop = true; f.type = "bandpass"; f.frequency.setValueAtTime(900, t); f.frequency.linearRampToValueAtTime(400, t + .7); f.Q.value = 3;
+      s.connect(f); f.connect(g); g.connect(sfxBus); env(g, t, .05, .18, .7); s.start(t); s.stop(t + .9); },
+    win(){ const t = ctx.currentTime; [0, 2, 4, 7, 4, 7, 9].forEach((d, k) => pluck(hz(d, 2), t + k * .12, .32, sfxBus, .7)); [0, .36, .72].forEach(dt => doum(t + dt, .5, sfxBus)); },
+    lose(){ const t = ctx.currentTime; [4, 3, 1, 0].forEach((d, k) => pluck(hz(d, 1), t + k * .25, .3, sfxBus, 1)); doum(t + 1, .5, sfxBus); },
+    tick(){ const t = ctx.currentTime; tak(t, .3, sfxBus, 5200); }
+  };
+  function play(name){ if(!pref.s || !started || !fx[name]) return; try { fx[name](); } catch(e){} }
+  function setMood(m){
+    if(!MOODS[m] || m === mood) return;
+    mood = m; if(started){ drone(true); }
+  }
+  function setMusic(on){ pref.m = on ? 1 : 0; save(); if(ctx) musicBus.gain.setTargetAtTime(on ? .13 : 0, ctx.currentTime, .3); }
+  function setSfx(on){ pref.s = on ? 1 : 0; save(); if(ctx) sfxBus.gain.setTargetAtTime(on ? .42 : 0, ctx.currentTime, .05); }
+  // الموسيقى كتبدا مع أول لمسة (المتصفح ما كيخليش قبل)
+  const kick = () => { start(); };
+  ["pointerdown", "keydown", "touchstart"].forEach(e => window.addEventListener(e, kick, {passive: true}));
+  // ما نخدموش الصوت ملي التطبيق مخبي
+  document.addEventListener("visibilitychange", () => { if(!ctx) return; if(document.hidden) ctx.suspend(); else ctx.resume(); });
+  return {play, setMood, setMusic, setSfx, pref, start};
+})();
+
+// صوت صغير لكل بوطونة
+document.addEventListener("click", e => { if(e.target.closest("button, .btn, .shop, .wopt")) SND.play("tap"); }, true);
+
+// كنتبعو اللعبة باش نديرو الصوت المناسب
+const SNDW = {phase: null, chat: 0, players: 0, alive: 0, room: null, last: -1};
+function soundHook(){
+  if(!PUB || !PRIV){ SND.setMood("menu"); SNDW.phase = null; SNDW.room = null; return; }
+  const ph = PUB.phase;
+  const mood = ph === "night" ? "night" : (ph === "vote" || ph === "voteResult") ? "vote" : ph === "end" ? "end" : ph === "lobby" ? "menu" : "day";
+  SND.setMood(mood);
+  const alive = PUB.players.filter(p => p.alive).length, chat = (PUB.chat || []).length;
+  if(SNDW.room === PUB.room){
+    if(ph !== SNDW.phase){
+      if(ph === "night"){ SND.play("night"); SND.play("shutter"); }
+      else if(ph === "day"){ SND.play("day"); setTimeout(() => SND.play("shutter"), 400); }
+      else if(ph === "vote") SND.play("vote");
+      else if(ph === "end"){ const maf = PUB.winner === "mafia"; SND.play((ROLES[PRIV.role] || {}).team === (maf ? "mafia" : "town") ? "win" : "lose"); }
+    }
+    if(ph !== "lobby" && alive < SNDW.alive) setTimeout(() => SND.play("death"), ph === "day" ? 900 : 0);
+    if(ph === "lobby" && PUB.players.length > SNDW.players) SND.play("join");
+    if(ph === "lobby" && PUB.players.length < SNDW.players) SND.play("leave");
+    if(chat > SNDW.chat) SND.play("pop");
+  }
+  SNDW.room = PUB.room; SNDW.phase = ph; SNDW.alive = alive; SNDW.players = PUB.players.length; SNDW.chat = chat;
+  // آخر 5 ثواني فالتايمر
+  if(PUB.deadline){ const left = Math.ceil((PUB.deadline - Date.now()) / 1000); if(left <= 5 && left > 0 && left !== SNDW.last){ SNDW.last = left; SND.play("tick"); } }
+}
+setInterval(() => { try { if(PUB && PUB.deadline) soundHook(); } catch(e){} }, 500);
+function sndToggles(){
+  return `<button type="button" role="menuitemcheckbox" aria-checked="${!!SND.pref.m}" onclick="SND.setMusic(!SND.pref.m);SND.start();kebabToggle(true)"><svg class="ic" aria-hidden="true"><use href="#i-speaker"/></svg> الموسيقى <b class="tg ${SND.pref.m ? "on" : ""}"></b></button>
+    <button type="button" role="menuitemcheckbox" aria-checked="${!!SND.pref.s}" onclick="SND.setSfx(!SND.pref.s);kebabToggle(true)"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg> الأصوات <b class="tg ${SND.pref.s ? "on" : ""}"></b></button>`;
+}
+
 startApp();
 // web: kol 10 dqayq kanchoufo wach kayna version jdida f GitHub; kan3awdo ntal9o ghir ila ma kan 7ad f room
 if(location.protocol === "https:"){

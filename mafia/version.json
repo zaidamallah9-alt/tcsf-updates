@@ -1,7 +1,7 @@
 {
-    "build":  9,
-    "sha1":  "9aed23939b863f1c8910509fb2426c4bbaa48147",
-    "size":  233069,
-    "notes":  "v1.3: living menu, first-time visitors go straight to sign-up",
-    "date":  "2026-11-26T20:55:13Z"
+    "build":  10,
+    "sha1":  "093ed62ccac6651e0f11fc1b30ee26970ef09e5d",
+    "size":  274276,
+    "notes":  "v1.4: menu ⋮ (mises a jour, musique, sons), profil + amis, musique et effets sonores, couleurs neon",
+    "date":  "2026-11-26T21:15:12Z"
 }
