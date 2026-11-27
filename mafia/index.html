@@ -500,7 +500,7 @@ body.hascomp #app{padding-bottom:84px}
 .kmsg{margin:4px 12px 2px;font-size:13px;color:var(--n5);min-height:0}
 .kmsg:empty{display:none}
 .knew{display:block;color:var(--n6,#fff)}.knew b{color:var(--neon-green,#3dff9a);text-shadow:0 0 10px rgba(61,255,154,.5)}
-.knotes{display:block;margin-top:4px;color:var(--n5);line-height:1.4}
+.knotes{display:block;margin-top:4px;white-space:normal;overflow-wrap:anywhere;color:var(--n5);line-height:1.4}
 .kinst{width:100%;margin-top:8px;min-height:40px}
 .kver{margin:6px 12px 4px;padding-top:6px;border-top:1px solid var(--n2);font-size:11px;color:var(--n4);direction:ltr;text-align:end}
 #app.menu .hang,.hang{margin-top:24px}
@@ -607,6 +607,50 @@ input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,select
 .tg.on{background:rgba(61,255,154,.25);box-shadow:0 0 10px -2px var(--neon-green)}
 .tg.on::after{inset-inline-end:17px;background:var(--neon-green)}
 @media (prefers-reduced-motion:reduce){.board::after,.hang .board,#app.menu .hang .board,.mshop.c3::before{animation:none!important}}
+
+/* ---------- friends v2: directory, search, add buttons ---------- */
+.sec-h .cnt,.rq-h .cnt{display:inline-block;min-width:20px;padding:0 6px;margin-inline-start:4px;border-radius:10px;background:var(--n2);color:var(--n5);font-size:12px;text-align:center;direction:ltr}
+.frrow{display:flex;align-items:stretch;gap:6px}
+.frrow .fr{flex:1;min-width:0}
+.fr-t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fradd{flex:none;width:48px;border-radius:12px;border:1px solid rgba(61,255,154,.45);background:rgba(61,255,154,.08);color:var(--neon-green,#3dff9a);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 0 12px -6px var(--neon-green,#3dff9a)}
+.fradd:hover{background:rgba(61,255,154,.16)}
+.fradd .ic{width:20px;height:20px}
+#frIn{width:100%}
+.frlist li[hidden]{display:none}
+/* room: profile photo next to each name */
+.rpfp{flex:none;padding:0;border:0;background:none;cursor:pointer;border-radius:50%;line-height:0}
+.rpfp .pfp.sm{width:30px;height:30px}
+.rpfp:focus-visible{outline:2px solid var(--neon-cyan,#2ff3ff);outline-offset:2px}
+.shop-board .rpfp{display:inline-block;vertical-align:middle;margin-inline-end:5px}
+.shop-board .rpfp .pfp.sm{width:20px;height:20px}
+/* admin: new sign-up request pops up on its own */
+.reqpop{position:fixed;inset-inline:12px;bottom:16px;z-index:80;max-width:420px;margin:0 auto;padding:14px 14px 12px;border-radius:16px;background:var(--n1);border:1px solid rgba(255,194,61,.55);
+  box-shadow:0 0 0 1px rgba(255,194,61,.2),0 0 30px -6px rgba(255,194,61,.55),0 18px 40px rgba(0,0,0,.55);animation:rqIn .35s cubic-bezier(.2,.9,.3,1.2)}
+.reqpop .rq-h{margin:0 0 6px;font-size:13px;font-weight:800;color:var(--neon-amber,#ffc23d);display:flex;align-items:center;gap:6px}
+.reqpop .rq-h .ic{width:16px;height:16px}
+.reqpop .rq-n{margin:0 0 10px;font-size:15px;color:var(--paper)}
+.reqpop .rq-n b{font-size:17px}
+.reqpop .rq-w{margin:-4px 0 10px;font-size:12px;color:var(--neon-pink,#ff3d7f)}
+.reqpop .row{gap:8px;flex-wrap:wrap}
+.reqpop .btn{flex:1;min-height:42px}
+.reqpop .err{margin:8px 0 0}
+@keyframes rqIn{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.toast{position:fixed;inset-inline:16px;bottom:22px;z-index:90;max-width:380px;margin:0 auto;padding:11px 14px;border-radius:12px;background:#10141c;color:var(--paper);text-align:center;font-weight:700;font-size:14px;
+  border:1px solid rgba(61,255,154,.5);box-shadow:0 0 22px -6px var(--neon-green,#3dff9a);transition:opacity .5s,transform .5s}
+.toast.off{opacity:0;transform:translateY(10px)}
+@media (prefers-reduced-motion:reduce){.reqpop{animation:none}.toast{transition:none}}
+
+.btn.danger-btn{background:transparent;color:var(--neon-pink,#ff3d7f);border:1px solid rgba(255,61,127,.55);box-shadow:0 0 12px -5px var(--neon-pink,#ff3d7f)}
+.btn.danger-btn:hover{background:rgba(255,61,127,.1)}
+.pitem .btn.small{min-height:34px;padding:4px 10px}
+
+/* wardrobe tabs */
+.wtabs{display:flex;gap:6px;padding:3px;border-radius:14px;background:var(--n1);border:1px solid var(--n2)}
+.wtab{flex:1;min-height:42px;border:0;border-radius:11px;background:transparent;color:var(--n5);font:inherit;font-weight:800;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.wtab .ic{width:16px;height:16px}
+.wtab.on{background:var(--n2);color:var(--paper);box-shadow:0 0 0 1px rgba(47,243,255,.45),0 0 14px -5px var(--neon-cyan,#2ff3ff)}
+.wopt.on{box-shadow:0 0 12px -4px var(--sig)}
 </style>
 </head>
 <body>
@@ -664,8 +708,8 @@ input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,select
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const APP_VERSION = "1.4.2";
-const BUILD = 15;
+const APP_VERSION = "1.4.3";
+const BUILD = 16;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -821,6 +865,7 @@ function setComposer(mode){
 }
 let lastHtml = "";
 function render(html){
+  ui.admin = html.indexOf("data-admin") >= 0;
   if(!PUB && typeof SND !== "undefined") SND.setMood("menu");
   html += `<p class="credit">تصميم زيد أملاح <span translate="no" style="opacity:.6">· v${APP_VERSION}</span></p>`;
   if(html === lastHtml) return;
@@ -1411,7 +1456,7 @@ function shop(p, o){
   const crown = p.pid===PUB.hostPid ? ic("crown") : "";
   const role = p.role ? ROLES[p.role] : null;
   const cls = `shop c-${tone(p.pid)} ${p.alive?"":"dead"} ${o.sel?"sel":""} ${o.shut?"shut":""}`;
-  const inner = `<span class="shop-board">${crown}${esc(p.name)}${p.pid===PRIV.pid?" · انت":""}</span>
+  const inner = `<span class="shop-board">${!o.pick && ACC ? roomPfp(p.name) : ""}${crown}${esc(p.name)}${p.pid===PRIV.pid?" · انت":""}</span>
     ${o.count ? `<span class="count">${o.count}</span>` : ""}
     <span class="shop-door">${role && !o.hideRole ? ic(role.icon) : ""}${o.sub||""}</span>`;
   if(!o.pick) return `<div class="${cls}">${inner}</div>`;
@@ -1442,7 +1487,7 @@ function lobbyView(){
     <div class="row" style="justify-content:center;gap:8px"><button class="ghost" onclick="shareCode()">${ic("share")} بارطاجي الكود</button><button class="ghost" onclick="wardrobe('lobby')">${ic("users")} بدل الشخصية</button></div>
     <p class="sec-h">${ic("users")} اللاعبين</p>
     <div class="plist">${PUB.players.map(p=>`
-      <div class="pitem"><span class="dot ${p.on?"on":""}" title="${p.on?"متصل":"ماشي متصل"}"></span>
+      <div class="pitem"><span class="dot ${p.on?"on":""}" title="${p.on?"متصل":"ماشي متصل"}"></span>${roomPfp(p.name)}
         <span class="n">${p.pid===PUB.hostPid?ic("crown")+" ":""}${esc(p.name)}${p.pid===PRIV.pid?' <span class="muted" style="font-weight:500">(انت)</span>':""}</span>
         ${host && p.pid!==PUB.hostPid ? `<button class="kick" aria-label="خرج ${esc(p.name)}" onclick="hostKick('${p.pid}')">${ic("x")}</button>` : ""}</div>`).join("")}</div>
     ${host ? `
@@ -1765,7 +1810,7 @@ async function startApp(){
   ADMIN = await loadAdmin();
   if(ADMIN === null && SETUP_BOX) return setupScreen();
   // أول مرة كيحل التطبيق فهاد الجهاز: نيشان لصفحة الكونط الجديد
-  if(!lsGet("mafia_name") && !lsGet("mafia_seen")) return registerScreen();
+  if(!lsGet("mafia_seen")) return registerScreen();
   loginScreen();
 }
 
@@ -1804,7 +1849,8 @@ async function doLogin(){
     if(isMail && accNorm(n) !== accNorm(ADMIN_MAIL)){ ADMIN_TOKEN = null; ui.err = "الجيميل ولا المود دو باس غالطين."; return loginScreen(); }
     ACC = {n: ADMIN.n, d: ADMIN.d || nn.trim(), h, admin: true};
   } else {
-    const list = (await loadUsers()).users || [];
+    const all = await loadUsers(), list = all.users || [];
+    if(isBlocked(all, accNorm(n))){ ui.err = "هاد الكونط تبلوكا من عند الأدمين."; return loginScreen(); }
     const u = list.find(x => x.n === accNorm(n));
     if(!u || u.h !== h){
       ui.err = u ? "المود دو باس غالط." : "هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.";
@@ -1830,7 +1876,7 @@ function registerScreen(){
       <label class="fld" for="rgPw2">عاود المود دو باس</label>
       <input type="password" id="rgPw2" maxlength="64" autocomplete="new-password">
       ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ""}
-      <button class="btn" type="submit">${ic("check")} سجل و عطيني الكود</button>
+      <button class="btn" type="submit">${ic("check")} سجل و صيفط الطلب</button>
     </form>
     <div class="spacer"></div>
     <button class="ghost" style="align-self:center" onclick="lsSet('mafia_seen',1);loginScreen()">${ic("door")} عندي كونط، بغيت ندخل</button>
@@ -1847,24 +1893,20 @@ async function doRegister(){
   if(!ADMIN) ADMIN = await loadAdmin();
   if(ADMIN && accNorm(n) === ADMIN.n){ ui.err = "هاد السمية محجوزة."; return registerScreen(); }
   loading("كنصاوبو الكونط...");
-  const list = (await loadUsers()).users || [];
+  const all = await loadUsers(), list = all.users || [];
+  if(isBlocked(all, accNorm(n))){ ui.err = "هاد السمية تبلوكات من عند الأدمين."; return registerScreen(); }
   if(list.some(x => x.n === accNorm(n))){ ui.err = "هاد السمية ديجا عند شي واحد."; return registerScreen(); }
   const h = await accHash(n, pw), code = regCode(h);
   lsSet("mafia_seen", 1); lsSet("mafia_name", n);
-  // كنخليو الطلب فالسيرفور حتى يقراه الأدمين بالكود
-  let sent = false;
-  try{
-    const c = await connectAny();
-    sent = c.m.publish(TOPIC_ROOT + "reg/" + code, JSON.stringify({n: accNorm(n), d: n, h, t: Date.now()}), true);
-    setTimeout(()=>c.m.close(), 1500);
-  }catch(e){}
+  // الطلب كيتخلى فجوج السيرفورات، و كيبان للأدمين بوحدو (قبل / لا)
+  const sent = await pubAll(TOPIC_ROOT + "reg/" + code, JSON.stringify({n: accNorm(n), d: n, h, t: Date.now()}), true);
   if(!sent){ ui.err = "ما قدرتش نتصل بالأنترنيت. عاود."; return registerScreen(); }
   render(`
-    ${signHead("صيفط الكود للأدمين")}
-    <div class="center"><div class="numplate">${code}</div></div>
-    <p class="ask center">${esc(n)}</p>
-    <p class="note center">صيفط هاد الكود للأدمين باش يقبلك. ملي يقبلك، دخل بالسمية و المود دو باس ديالك.</p>
-    <button class="btn sec" onclick="shareText('كود التسجيل ديالي ف مافيا: ${code} (${esc(n).replace(/'/g,"")})')">${ic("share")} صيفط الكود</button>
+    ${signHead("الطلب ديالك تصيفط")}
+    <div class="bigicon">${ic("check","huge")}</div>
+    <p class="ask center" translate="no">${esc(n)}</p>
+    <p class="note center">الطلب ديالك وصل للأدمين. ملي يقبلك، دخل بالسمية و المود دو باس ديالك.</p>
+    <p class="note center muted">إلا طلب منك الأدمين الكود: <b translate="no" style="direction:ltr;display:inline-block">${code}</b></p>
     <div class="spacer"></div>
     <button class="btn" onclick="loginScreen()">${ic("door")} رجع للدخول</button>
   `);
@@ -1908,7 +1950,12 @@ async function adminScreen(reload){
   const rq = adminState.req;
   render(`
     <div class="util"><span>${ic("crown")} الأدمين</span><button class="ghost" onclick="home()">رجوع</button></div>
-    <header class="board b-ochre"><div class="row"><h1 class="sign">الكونطات</h1></div><div class="sub">قبل اللاعبين بالكود اللي صيفطو ليك</div></header>
+    <header class="board b-ochre" data-admin><div class="row"><h1 class="sign">الكونطات</h1></div><div class="sub">الطلبات الجداد كيبانو ليك بوحدهم</div></header>
+    ${(() => { const cs = Object.keys(REQS); return cs.length ? `<p class="sec-h">${ic("plus")} الطلبات <span class="cnt" translate="no">${cs.length}</span></p>
+      <div class="plist">${cs.map(c => `<div class="pitem"><span class="n" translate="no">${esc(REQS[c].d)}</span>
+        <button class="btn green small" data-c="${c}" onclick="reqAccept(this.dataset.c)">${ic("check")} قبل</button>
+        <button class="kick" data-c="${c}" aria-label="ما تقبلش ${esc(REQS[c].d)}" onclick="reqDecline(this.dataset.c)">${ic("x")}</button></div>`).join("")}</div>` : ""; })()}
+    <p class="note">ولا قلب بالكود:</p>
     <form class="row" onsubmit="event.preventDefault();adminLookup()">
       <input type="text" id="adCode" maxlength="9" placeholder="XXXX-XXXX" aria-label="الكود" style="direction:ltr;text-align:center;letter-spacing:3px;font-weight:800;text-transform:uppercase">
       <button class="btn small sec" type="submit">${ic("lens")} قلب</button>
@@ -1918,7 +1965,10 @@ async function adminScreen(reload){
     ${adminState.msg ? `<p class="note center">${esc(adminState.msg)}</p>` : ""}
     <p class="sec-h">${ic("users")} اللي مقبولين (${list.length})</p>
     <div class="plist">${list.map(u=>`<div class="pitem"><span class="n">${esc(u.d||u.n)}</span>
-      <button class="kick" aria-label="حيد ${esc(u.d||u.n)}" onclick="adminRemove('${esc(u.n)}')">${ic("x")}</button></div>`).join("") || '<p class="note center">حتى واحد مازال.</p>'}</div>
+      <button class="btn small danger-btn" data-n="${esc(u.n)}" aria-label="بلوكي ${esc(u.d||u.n)}" onclick="adminBlock(this.dataset.n)">${ic("x")} بلوكي</button></div>`).join("") || '<p class="note center">حتى واحد مازال.</p>'}</div>
+    ${(() => { const bl = (adminState.users && adminState.users.blocked) || []; return bl.length ? `<p class="sec-h">${ic("x")} المبلوكيين <span class="cnt" translate="no">${bl.length}</span></p>
+      <div class="plist">${bl.map(b => `<div class="pitem"><span class="n" translate="no">${esc(b.d||b.n)}</span>
+        <button class="btn small sec" data-n="${esc(b.n)}" onclick="adminUnblock(this.dataset.n)">رجعو</button></div>`).join("")}</div>` : ""; })()}
   `);
   adminState.msg = "";
 }
@@ -1927,44 +1977,77 @@ async function adminLookup(){
   if(code.length !== 8){ adminState.msg = "الكود خاصو 8 ديال الحروف."; return adminScreen(); }
   code = code.slice(0,4) + "-" + code.slice(4);
   loading("كنقلبو على الطلب...");
-  let found = null, c = null;
-  try{
-    c = await connectAny();
-    found = await new Promise(res => {
-      const t = setTimeout(()=>res(null), 6000);
-      c.m.onMsg = (topic, payload) => { try{ const j = JSON.parse(typeof payload === "string" ? payload : dec.decode(payload)); clearTimeout(t); res(j); }catch(e){} };
-      c.m.subscribe(TOPIC_ROOT + "reg/" + code);
-    });
-  }catch(e){}
-  if(c) c.m.close();
-  if(!found || !found.h || regCode(found.h) !== code){ adminState.req = null; adminState.msg = "ما لقيت حتى طلب بهاد الكود."; }
-  else adminState.req = found;
+  if(!REQS[code]){
+    try{ const ms = await socConn(); ms.forEach(m => m.subscribe(TOPIC_ROOT + "reg/" + code)); }catch(e){}
+    for(let i = 0; i < 30 && !REQS[code]; i++) await new Promise(r => setTimeout(r, 200));
+  }
+  if(!REQS[code]){ adminState.req = null; adminState.msg = "ما لقيت حتى طلب بهاد الكود."; }
+  else adminState.req = REQS[code];
   adminScreen();
 }
 async function adminApprove(){
   const rq = adminState.req; if(!rq) return;
   loading("كنقبلو...");
-  try{
-    const g = await ghUsers();
-    const list = (g.users.users || []).filter(u => u.n !== rq.n);
-    list.push({n: rq.n, d: rq.d, h: rq.h, t: new Date().toISOString().slice(0,10)});
-    adminState.sha = await ghSaveUsers({users: list}, g.sha, "Mafia: accept " + rq.n);
-    adminState.users = {users: list}; adminState.msg = "تقبل " + rq.d + ". دابا يقدر يدخل.";
-    try{ const c = await connectAny(); c.m.publish(TOPIC_ROOT + "reg/" + regCode(rq.h), "", true); setTimeout(()=>c.m.close(), 1500); }catch(e){}
-  }catch(e){ adminState.msg = "ما تقبلش: " + e.message; }
+  try{ await acceptReq(rq); adminState.msg = "تقبل " + rq.d + ". دابا يقدر يدخل."; }
+  catch(e){ adminState.msg = "ما تقبلش: " + e.message; }
   adminState.req = null; adminScreen();
 }
-async function adminRemove(n){
-  if(!confirm("تحيد هاد الكونط؟ ما بقاش يقدر يدخل.")) return;
-  loading("كنحيدو...");
+// الأدمين كيحيد و كيبلوكي شي لاعب: ما بقاش يقدر يدخل، و إلا كان كيلعب كيخرج فالحين
+async function adminBlock(n){
+  const u = (((adminState.users || lsGet("mafia_users") || {}).users) || []).find(x => x.n === n);
+  const d = u ? (u.d || u.n) : nameOf(n);
+  if(!confirm("تبلوكي " + d + "؟ ما بقاش يقدر يدخل، و إلا كان كيلعب غادي يخرج دابا.")) return;
+  if(!ADMIN_TOKEN){ alert("ما قدرتش نحل المفتاح ديال GitHub. خرج و عاود دخل."); return; }
+  loading("كنبلوكيو...");
   try{
     const g = await ghUsers();
-    const list = (g.users.users || []).filter(u => u.n !== n);
-    adminState.sha = await ghSaveUsers({users: list}, g.sha, "Mafia: remove " + n);
-    adminState.users = {users: list}; adminState.msg = "تحيد.";
-  }catch(e){ adminState.msg = "ما تحيدش: " + e.message; }
+    const old = (g.users.users || []).find(x => x.n === n) || u || {n, d};
+    const doc = {users: (g.users.users || []).filter(x => x.n !== n),
+                 blocked: [...(g.users.blocked || []).filter(b => b.n !== n), {n, d: old.d || n, h: old.h || "", t: new Date().toISOString().slice(0,10)}]};
+    adminState.sha = await ghSaveUsers(doc, g.sha, "Mafia: block " + n);
+    adminState.users = doc; lsSet("mafia_users", doc);
+    await banSet(n, true);
+    adminState.msg = d + " تبلوكا و تخرج من اللعبة.";
+  }catch(e){ adminState.msg = "ما تبلوكاش: " + e.message; }
+  setFriends(myFriends().filter(x => x !== n));
+  if(SOC.users) SOC.users = SOC.users.filter(x => x.n !== n);
+  sheetClose(); adminScreen(true);
+}
+async function adminUnblock(n){
+  if(!ADMIN_TOKEN) return;
+  loading("كنرجعوه...");
+  try{
+    const g = await ghUsers();
+    const b = (g.users.blocked || []).find(x => x.n === n);
+    const users = (g.users.users || []).filter(x => x.n !== n);
+    if(b && b.h) users.push({n, d: b.d, h: b.h, t: new Date().toISOString().slice(0,10)});
+    const doc = {users, blocked: (g.users.blocked || []).filter(x => x.n !== n)};
+    adminState.sha = await ghSaveUsers(doc, g.sha, "Mafia: unblock " + n);
+    adminState.users = doc; lsSet("mafia_users", doc);
+    await banSet(n, false);
+    adminState.msg = (b ? b.d : n) + (b && b.h ? " رجع يقدر يدخل." : " تحيد من البلوك. خاصو يتسجل من جديد.");
+  }catch(e){ adminState.msg = "ما رجعش: " + e.message; }
   adminScreen();
 }
+// إشارة البلوك: كتبقى فجوج السيرفورات، و اللاعب كيشوفها فالحين
+async function banSet(n, on){
+  const msg = on ? JSON.stringify({n, t: Date.now()}) : "";
+  try{ const ms = await socConn(); ms.forEach(m => m.publish(TOPIC_ROOT + "ban/" + n, msg, true)); }
+  catch(e){ await pubAll(TOPIC_ROOT + "ban/" + n, msg, true); }
+}
+function bannedOut(){
+  if(ME) leave(false);
+  socStop(); ACC = null; ADMIN_TOKEN = null;
+  render(`
+    ${signHead("مافيا")}
+    <div class="bigicon">${ic("x","huge")}</div>
+    <p class="ask center">الأدمين حيدك من اللعبة.</p>
+    <p class="note center">الكونط ديالك تبلوكا، ما بقيتيش تقدر تلعب.</p>
+    <div class="spacer"></div>
+    <button class="btn sec" onclick="loginScreen()">${ic("door")} رجع</button>
+  `);
+}
+const isBlocked = (list, n) => ((list && list.blocked) || []).some(b => b.n === n);
 
 /* =====================================================================
    الدرب المتحرك: كل لاعب عندو محل و شخصية.
@@ -1974,12 +2057,12 @@ async function adminRemove(n){
    ===================================================================== */
 const SC = {pl:{}, built:false, lastChat:0, W:0};
 /* ---------- الشخصيات (2.5D): ضو من الفوق، ظل تحت الرجلين، و كيتنفسو / كيغمضو / كيحكو راسهم ---------- */
-const SKINS = [["#f3cfa8","#d9a37a"],["#e2b087","#b97d55"],["#c08a5f","#8e5b38"],["#9a6644","#6b4127"],["#f6d9bd","#dcae8a"],["#d4a073","#a5714a"]];
-const HAIRS = [["#3a2a20","#120c09"],["#1c1a1f","#050507"],["#6b4426","#3b2313"],["#8a5a2e","#4d3016"],["#9b9b9b","#5c5c5c"]];
-const OUTFITS = [["#2f8a5c","#165237"],["#c33a40","#7c1e24"],["#3d63c6","#213b80"],["#d49a2c","#8f6115"],["#3b3f4a","#191b22"],["#efe6d2","#b9ab8c"]];
-const AV_MAX = {s:6, h:6, c:5, o:6, t:6, g:2, b:2};
+const SKINS = [["#f3cfa8","#d9a37a"],["#e2b087","#b97d55"],["#c08a5f","#8e5b38"],["#9a6644","#6b4127"],["#f6d9bd","#dcae8a"],["#d4a073","#a5714a"],["#7a4a2e","#4f2c18"],["#fbe3cf","#e8bfa0"]];
+const HAIRS = [["#3a2a20","#120c09"],["#1c1a1f","#050507"],["#6b4426","#3b2313"],["#8a5a2e","#4d3016"],["#9b9b9b","#5c5c5c"],["#b0482c","#5e2213"],["#e3bd62","#a37b2c"],["#9a6bff","#4a2a9e"]];
+const OUTFITS = [["#2f8a5c","#165237"],["#c33a40","#7c1e24"],["#3d63c6","#213b80"],["#d49a2c","#8f6115"],["#3b3f4a","#191b22"],["#efe6d2","#b9ab8c"],["#7d4fd1","#46288a"],["#e0457f","#8f1f4b"],["#1fa6a0","#0e5f5b"],["#e8732c","#99420f"]];
+const AV_MAX = {s:8, h:9, c:8, o:10, t:8, g:4, b:4, e:4, a:4, w:5};
 function avOf(av, i){
-  const d = {s: i % 6, h: (i*5+1) % 6, c: (i*3) % 5, o: i % 4, t: [0,1,0,2,0,3][i % 6], g: i % 7 === 5 ? 1 : 0, b: i % 5 === 2 ? 1 : 0};
+  const d = {s: i % 6, h: (i*5+1) % 6, c: (i*3) % 5, o: i % 4, t: [0,1,0,2,0,3][i % 6], g: i % 7 === 5 ? 1 : 0, b: i % 5 === 2 ? 1 : 0, e: i % 4 === 1 ? 1 : 0, a: 0, w: [0,2,0,1,4,0][i % 6]};
   const o = {};
   for(const k in AV_MAX){ const v = av && Number.isInteger(av[k]) ? av[k] : d[k]; o[k] = Math.max(0, Math.min(AV_MAX[k]-1, v)); }
   return o;
@@ -2005,7 +2088,13 @@ function hairSvg(h, hr){
     `<g fill="${f}"><circle cx="13" cy="13.5" r="3.6"/><circle cx="17.5" cy="10.5" r="3.8"/><circle cx="22.5" cy="10.3" r="3.8"/><circle cx="27" cy="13.3" r="3.6"/><circle cx="29.5" cy="17" r="2.6"/><circle cx="10.5" cy="17" r="2.6"/></g>`,
     `<path d="M10 20c0-8 4.5-12 10-12s10 4 10 12c-1.5-2.4-5-4.4-10-4.4S11.5 17.6 10 20z" fill="${f}"/>`,
     `<path d="M10.6 17c.6-5.6 4.4-8.6 9.4-8.6s8.8 3 9.4 8.6c-2.4-1.8-5.6-2.6-9.4-2.6s-7 .8-9.4 2.6z" fill="${f}" opacity=".9"/>`,
-    `<path d="M10.2 18.6c-.2-6.8 4.2-10.8 9.8-10.8s10 4 9.8 10.8c-1-2.8-2.8-4.2-4.6-4.7.4 1.3-.3 2.4-.3 2.4s-.8-2.6-4.9-2.6-4.9 2.6-4.9 2.6-.7-1.1-.3-2.4c-1.8.5-3.6 1.9-4.6 4.7z" fill="${f}"/>`
+    `<path d="M10.2 18.6c-.2-6.8 4.2-10.8 9.8-10.8s10 4 9.8 10.8c-1-2.8-2.8-4.2-4.6-4.7.4 1.3-.3 2.4-.3 2.4s-.8-2.6-4.9-2.6-4.9 2.6-4.9 2.6-.7-1.1-.3-2.4c-1.8.5-3.6 1.9-4.6 4.7z" fill="${f}"/>`,
+    // شينيون
+    `<circle cx="20" cy="6.6" r="3.8" fill="${f}"/><path d="M10 19c0-7 4.5-11 10-11s10 4 10 11c-2-3-5-5.2-10-5.2S12 16 10 19z" fill="${f}"/><path d="M18 5.2c1-.6 2.4-.7 3.4-.2" stroke="#fff" stroke-opacity=".3" stroke-width="1" fill="none" stroke-linecap="round"/>`,
+    // طويل مكركب
+    `<g fill="${f}"><circle cx="13" cy="13.5" r="3.6"/><circle cx="17.5" cy="10.5" r="3.8"/><circle cx="22.5" cy="10.3" r="3.8"/><circle cx="27" cy="13.3" r="3.6"/><circle cx="29.8" cy="17.4" r="2.8"/><circle cx="10.2" cy="17.4" r="2.8"/></g>`,
+    // مايل
+    `<path d="M10 19c0-7 4.5-11 10-11s10 4 10 11c-1-2.6-3-4.2-6-4.8-3.6-.6-8.6.9-14 4.8z" fill="${f}"/><path d="M11.6 16.4c3-5 9.4-6.8 16-3.8-5-.3-10 1-16 3.8z" fill="${f}"/><path d="M15 11.4c3-1.6 6.6-1.8 10-.4" stroke="#fff" stroke-opacity=".25" stroke-width="1.1" fill="none" stroke-linecap="round"/>`
   ][h];
 }
 function hatSvg(t, o){
@@ -2015,23 +2104,70 @@ function hatSvg(t, o){
     `<g class="hat"><path d="M13 14.6l1.2-8c.2-1 1-1.6 2-1.6h7.6c1 0 1.8.6 2 1.6l1.2 8c-2.4.7-4.8 1-7 1s-4.6-.3-7-1z" fill="url(#gfez)"/><path d="M14.6 7.6c1.6-.4 3.4-.6 5.4-.6" stroke="#fff" stroke-opacity=".3" stroke-width="1" fill="none"/>
       <path d="M20 5.2c2.6 0 4.4 1.2 5.4 3.6l.6 4.6" stroke="#1b1b1b" stroke-width=".9" fill="none"/><path class="tassel" d="M25.6 12.6l1.4 4" stroke="#1b1b1b" stroke-width="1.6" stroke-linecap="round"/></g>`,
     // كاسكيطة
-    `<g class="hat"><path d="M10.4 15.6c0-5.4 4.2-9 9.6-9s9.6 3.6 9.6 9z" fill="url(#go${(o+2)%6})"/><path d="M9.6 15.2h8c-3.8 0-8 1-11.6 2.4-.9.3-1.6-.7-.8-1.3.9-.6 2.6-1.1 4.4-1.1z" fill="url(#go${(o+2)%6})"/><circle cx="20" cy="6.8" r=".9" fill="#fff" fill-opacity=".6"/><path d="M13 11c1.6-2 4-3 6-3.2" stroke="#fff" stroke-opacity=".3" stroke-width="1" fill="none"/></g>`,
+    `<g class="hat"><path d="M10.4 15.6c0-5.4 4.2-9 9.6-9s9.6 3.6 9.6 9z" fill="url(#go${(o+2)%10})"/><path d="M9.6 15.2h8c-3.8 0-8 1-11.6 2.4-.9.3-1.6-.7-.8-1.3.9-.6 2.6-1.1 4.4-1.1z" fill="url(#go${(o+2)%10})"/><circle cx="20" cy="6.8" r=".9" fill="#fff" fill-opacity=".6"/><path d="M13 11c1.6-2 4-3 6-3.2" stroke="#fff" stroke-opacity=".3" stroke-width="1" fill="none"/></g>`,
     // بونيه
-    `<g class="hat"><path d="M10 16.6c0-6 4.4-10 10-10s10 4 10 10z" fill="url(#go${(o+3)%6})"/><path d="M9.6 15.4h20.8v2.8H9.6z" rx="1" fill="url(#go${(o+3)%6})" opacity=".85"/><path d="M12 15.4v2.8M15 15.4v2.8M18 15.4v2.8M21 15.4v2.8M24 15.4v2.8M27 15.4v2.8" stroke="#000" stroke-opacity=".2" stroke-width=".8"/><circle cx="20" cy="5.6" r="2.4" fill="url(#go${(o+3)%6})"/></g>`,
+    `<g class="hat"><path d="M10 16.6c0-6 4.4-10 10-10s10 4 10 10z" fill="url(#go${(o+3)%10})"/><path d="M9.6 15.4h20.8v2.8H9.6z" rx="1" fill="url(#go${(o+3)%10})" opacity=".85"/><path d="M12 15.4v2.8M15 15.4v2.8M18 15.4v2.8M21 15.4v2.8M24 15.4v2.8M27 15.4v2.8" stroke="#000" stroke-opacity=".2" stroke-width=".8"/><circle cx="20" cy="5.6" r="2.4" fill="url(#go${(o+3)%10})"/></g>`,
     // الشاش (عمامة)
     `<g class="hat"><path d="M9.4 17c-.4-6.6 4.6-10.4 10.6-10.4S31 10.4 30.6 17c-3-1.4-6.6-2-10.6-2s-7.6.6-10.6 2z" fill="url(#gchech)"/><path d="M10.4 12.6c4-2 9.6-2.4 15.6.6M10 15c5.4-2.6 12.4-2.6 20 .4" stroke="#9c9178" stroke-width=".9" fill="none"/></g>`,
     // الفولار
-    `<g class="hat"><path d="M8.6 22c-.8-8.6 4.4-14.4 11.4-14.4S32.2 13.4 31.4 22c-.4 4.2-1.6 7.4-3.4 9.6h-16c-1.8-2.2-3-5.4-3.4-9.6zm4 .2c0 4.6 3.4 8 7.4 8s7.4-3.4 7.4-8c0-5.2-3.2-8.6-7.4-8.6s-7.4 3.4-7.4 8.6z" fill="url(#go${(o+1)%6})" fill-rule="evenodd"/></g>`
+    `<g class="hat"><path d="M8.6 22c-.8-8.6 4.4-14.4 11.4-14.4S32.2 13.4 31.4 22c-.4 4.2-1.6 7.4-3.4 9.6h-16c-1.8-2.2-3-5.4-3.4-9.6zm4 .2c0 4.6 3.4 8 7.4 8s7.4-3.4 7.4-8c0-5.2-3.2-8.6-7.4-8.6s-7.4 3.4-7.4 8.6z" fill="url(#go${(o+1)%6})" fill-rule="evenodd"/></g>`,
+    // بوب (bob)
+    `<g class="hat"><path d="M12.2 14.4c.3-5 3.6-8.2 7.8-8.2s7.5 3.2 7.8 8.2z" fill="url(#go${(o+4)%10})"/><path d="M8.2 16c2.6-1.8 6.8-2.6 11.8-2.6s9.2.8 11.8 2.6c-.4 1.1-1.5 1.8-3.2 1.8H11.4c-1.7 0-2.8-.7-3.2-1.8z" fill="url(#go${(o+4)%10})"/><path d="M12.4 13.8h15.2" stroke="#000" stroke-opacity=".25" stroke-width="1.1"/><path d="M15 9.6c1.4-1.6 3-2.2 4.8-2.3" stroke="#fff" stroke-opacity=".3" stroke-width="1" fill="none"/></g>`,
+    // كاسك (casque)
+    `<g class="hat"><path d="M9.2 19.4c0-7.6 4.8-12.4 10.8-12.4s10.8 4.8 10.8 12.4" stroke="#1b1d24" stroke-width="2.4" fill="none"/><path d="M11 12.6c2.4-3 5.6-4.4 9-4.4" stroke="#fff" stroke-opacity=".25" stroke-width=".9" fill="none"/>
+      <rect x="6.4" y="17" width="4.8" height="8" rx="2.2" fill="#23262f"/><rect x="28.8" y="17" width="4.8" height="8" rx="2.2" fill="#23262f"/>
+      <rect x="7.3" y="18.6" width="1.3" height="4.8" rx=".65" fill="#2ff3ff"/><rect x="31.4" y="18.6" width="1.3" height="4.8" rx=".65" fill="#2ff3ff"/></g>`
   ][t];
 }
 function guySvg(i, avIn){
   const av = avOf(avIn, i);
   const sk = av.s, hr = av.c, ot = `url(#go${av.o})`, hand = `url(#gs${sk})`;
   const scarf = av.t === 5;
-  const hairBack = !scarf && av.h === 3 ? `<path d="M9 20c-1-9 4-15 11-15s12 6 11 15c1 6-1 12-3 15H12c-2-3-4-9-3-15z" fill="url(#gh${hr})"/>` : "";
-  const hairTop = scarf ? "" : (av.t === 1 || av.t === 4 ? hairSvg(4, hr) : hairSvg(av.h, hr));
-  const beard = av.b ? `<path d="M12.6 22.6c.6 5 3.6 8.4 7.4 8.4s6.8-3.4 7.4-8.4c-1 1.6-2.6 2.4-4.2 2.4-1 0-1.6-.6-3.2-.6s-2.2.6-3.2.6c-1.6 0-3.2-.8-4.2-2.4z" fill="url(#gh${hr})" opacity=".92"/>` : "";
-  const glasses = av.g ? `<g fill="#9fd3ff" fill-opacity=".18" stroke="#1b1b20" stroke-width="1"><circle cx="16.3" cy="21" r="2.7"/><circle cx="23.7" cy="21" r="2.7"/></g><path d="M19 21h2" stroke="#1b1b20" stroke-width="1"/>` : "";
+  const hairBack = !scarf && av.h === 3 ? `<path d="M9 20c-1-9 4-15 11-15s12 6 11 15c1 6-1 12-3 15H12c-2-3-4-9-3-15z" fill="url(#gh${hr})"/>`
+    : !scarf && av.h === 7 ? `<g fill="url(#gh${hr})"><circle cx="10" cy="22" r="3.2"/><circle cx="10.6" cy="27" r="3"/><circle cx="12" cy="31.4" r="2.6"/><circle cx="30" cy="22" r="3.2"/><circle cx="29.4" cy="27" r="3"/><circle cx="28" cy="31.4" r="2.6"/></g>` : "";
+  const hairTop = scarf ? "" : (av.t === 1 || av.t === 4 || av.t === 6 ? hairSvg(4, hr) : hairSvg(av.h, hr));
+  const hc = `url(#gh${hr})`;
+  const beard = [
+    "",
+    `<path d="M12.6 22.6c.6 5 3.6 8.4 7.4 8.4s6.8-3.4 7.4-8.4c-1 1.6-2.6 2.4-4.2 2.4-1 0-1.6-.6-3.2-.6s-2.2.6-3.2.6c-1.6 0-3.2-.8-4.2-2.4z" fill="${hc}" opacity=".92"/>`,
+    `<path d="M16 25c1.3-1.2 2.9-1.2 4-.4 1.1-.8 2.7-.8 4 .4-1.1 1-2.6 1.1-4 .5-1.4.6-2.9.5-4-.5z" fill="${hc}"/>`,
+    `<path d="M16.8 24.9c1.1-.8 2.3-.8 3.2-.2.9-.6 2.1-.6 3.2.2-.9.6-2.1.7-3.2.3-1.1.4-2.3.3-3.2-.3z" fill="${hc}"/><path d="M18.2 27.6c.4 1.9 1 3 1.8 3s1.4-1.1 1.8-3c-.6.3-1.2.4-1.8.4s-1.2-.1-1.8-.4z" fill="${hc}"/>`
+  ][av.b];
+  const glasses = [
+    "",
+    `<g fill="#9fd3ff" fill-opacity=".18" stroke="#1b1b20" stroke-width="1"><circle cx="16.3" cy="21" r="2.7"/><circle cx="23.7" cy="21" r="2.7"/></g><path d="M19 21h2" stroke="#1b1b20" stroke-width="1"/>`,
+    `<g fill="#0d0e12"><rect x="12.7" y="19" width="6.5" height="4.2" rx="1.7"/><rect x="20.8" y="19" width="6.5" height="4.2" rx="1.7"/></g><path d="M19.2 20.3h1.6" stroke="#0d0e12" stroke-width="1"/><path d="M13.8 20.1h2.2M21.9 20.1h2.2" stroke="#fff" stroke-opacity=".55" stroke-width=".7" stroke-linecap="round"/>`,
+    `<rect x="11.4" y="18.8" width="17.2" height="4.4" rx="2.2" fill="#2ff3ff" fill-opacity=".32" stroke="#2ff3ff" stroke-width=".9"/><path d="M13 20h5" stroke="#fff" stroke-opacity=".7" stroke-width=".7" stroke-linecap="round"/>`
+  ][av.g];
+  const brows = [
+    `<path d="M14.2 17.4q2-1.2 4 0M21.8 17.4q2-1.2 4 0" stroke="#2a1d16" stroke-width="1" fill="none" stroke-linecap="round"/>`,
+    `<path d="M14.2 16.8q2-1.6 4 0M21.8 16.8q2-1.6 4 0" stroke="#2a1d16" stroke-width="1" fill="none" stroke-linecap="round"/>`,
+    `<path d="M14.2 16.4l4 1.6M25.8 16.4l-4 1.6" stroke="#2a1d16" stroke-width="1.2" fill="none" stroke-linecap="round"/>`,
+    `<path d="M14.2 17.8q2-.6 4 0M21.8 17.8q2-.6 4 0" stroke="#2a1d16" stroke-width="1" fill="none" stroke-linecap="round"/>`
+  ][av.e];
+  const mouth = [
+    `<path class="mouth" d="M18.2 25.6q1.8 1.3 3.6 0" stroke="#7a3a2c" stroke-width="1" fill="#7a3a2c" stroke-linecap="round"/>`,
+    `<path class="mouth" d="M17.4 25.1q2.6 3 5.2 0z" stroke="#7a3a2c" stroke-width=".8" fill="#5a2418" stroke-linejoin="round"/><path d="M18.3 25.4h3.4" stroke="#fff" stroke-width=".7"/>`,
+    `<path class="mouth" d="M18.2 26.4q1.8-1 3.6 0" stroke="#7a3a2c" stroke-width="1.1" fill="none" stroke-linecap="round"/>`,
+    `<path class="mouth" d="M18.4 25.9q1.9.7 3.6-.9" stroke="#7a3a2c" stroke-width="1" fill="none" stroke-linecap="round"/>`
+  ][av.e];
+  const lids = av.e === 3 ? `<path d="M14.3 21.1c0-1.7.9-2.5 2-2.5s2 .8 2 2.5zM21.7 21.1c0-1.7.9-2.5 2-2.5s2 .8 2 2.5z" fill="url(#gs${sk})"/>` : "";
+  const W = av.w;
+  const style = [
+    `<path d="M17 29.2l3 4.2 3-4.2" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.3" stroke-linejoin="round"/>`,
+    `<path d="M17.4 29.2l2.6 7 2.6-7z" fill="#f4efe2"/><path d="M20 30.6l-1 1.2 1 7 1-7z" fill="#b02a30"/><path d="M16.8 29.4l3.2 8-4-3.4 1.3-1.5-2.4-2zM23.2 29.4l-3.2 8 4-3.4-1.3-1.5 2.4-2z" fill="#000" fill-opacity=".3"/><circle cx="20" cy="41" r=".6" fill="#000" fill-opacity=".4"/>`,
+    `<path d="M20 30v15.6" stroke="#fff" stroke-opacity=".55" stroke-width=".7"/><path d="M11.6 35.6l-1.3 8.6M28.4 35.6l1.3 8.6" stroke="#fff" stroke-width="1.2" stroke-opacity=".85" stroke-linecap="round"/><path d="M17.4 29.4c1.6 1.2 3.6 1.2 5.2 0" stroke="#fff" stroke-opacity=".6" stroke-width="1" fill="none"/>`,
+    `<path d="M12.4 31.2c-1.4-2.6-1.2-5.2.4-7h14.4c1.6 1.8 1.8 4.4.4 7z" fill="${ot}"/><path d="M12.4 31.2c-1.4-2.6-1.2-5.2.4-7h14.4c1.6 1.8 1.8 4.4.4 7z" fill="#000" fill-opacity=".25"/><path d="M11.8 44.6h16.4l2.6 9.6c.3 1.1-.5 2-1.6 2H10.8c-1.1 0-1.9-.9-1.6-2z" fill="${ot}"/><path d="M20 30.4v25.4" stroke="#f2c14e" stroke-opacity=".75" stroke-width=".8" stroke-dasharray="1.3 1"/>`,
+    `<path d="M17 29.2l3 4.2 3-4.2" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.3" stroke-linejoin="round"/><path d="M12.2 34.6c.6-3 2.6-5 5.2-5.4l2.6 8v8.8h-8.4c-1.4 0-2.2-1-1.9-2.4zM27.8 34.6c-.6-3-2.6-5-5.2-5.4l-2.6 8v8.8h8.4c1.4 0 2.2-1 1.9-2.4z" fill="#000" fill-opacity=".38"/><circle cx="18.6" cy="40" r=".6" fill="#f2c14e"/><circle cx="18.6" cy="42.6" r=".6" fill="#f2c14e"/>`
+  ][W];
+  const armStripe = W === 2 ? (d) => `<path d="${d}" stroke="#fff" stroke-opacity=".8" stroke-width=".9" stroke-linecap="round" fill="none"/>` : () => "";
+  const acc = [
+    "",
+    `<path d="M16.2 29.6q3.8 5 7.6 0" stroke="#f2c14e" stroke-width="1" fill="none"/><circle cx="20" cy="33.4" r="1.2" fill="#f2c14e"/>`,
+    `<path d="M15.2 28.4c2.9 1.7 6.7 1.7 9.6 0l.9 2.5c-3.5 1.9-7.9 1.9-11.4 0z" fill="#c33a40"/><path d="M15.4 29.6c2.9 1.4 6.3 1.4 9.2 0" stroke="#f4efe2" stroke-width=".6" stroke-dasharray="1 1" fill="none"/><path d="M23.4 30.6l1.8 5.8-2.4.2-.8-5.4z" fill="#a52a30"/>`,
+    ""
+  ][av.a];
+  const earring = av.a === 3 && !scarf ? `<circle cx="9.4" cy="24.6" r="1" fill="#f2c14e"/><circle cx="9.1" cy="24.3" r=".3" fill="#fff"/>` : "";
   return `<svg class="guy-svg" viewBox="0 0 40 62" aria-hidden="true">
     <ellipse class="gshadow" cx="20" cy="59" rx="12" ry="3" fill="url(#gshadow)"/>
     <g class="legs">
@@ -2039,35 +2175,37 @@ function guySvg(i, avIn){
       <g class="lg l2"><path d="M20.4 43H25v12.5h-4.6z" fill="url(#gpants)"/><path d="M26.8 55.2c0-1.3-1-2-2.3-2h-4.1v4.4h5.2c.7 0 1.2-.5 1.2-1.2z" fill="#191919"/></g>
     </g>
     <g class="upper">
-      <g class="arm armB"><path d="M28.8 33.2c2 1 3 3.4 3 6.4v4" stroke="${ot}" stroke-width="4.4" stroke-linecap="round" fill="none"/><circle cx="31.8" cy="44.2" r="2.3" fill="${hand}"/></g>
+      <g class="arm armB"><path d="M28.8 33.2c2 1 3 3.4 3 6.4v4" stroke="${ot}" stroke-width="4.4" stroke-linecap="round" fill="none"/>${armStripe("M29.6 34.4c1.4 1 2.2 3 2.2 5.4v3.6")}<circle cx="31.8" cy="44.2" r="2.3" fill="${hand}"/></g>
       <g class="torso">
         <path d="M12 46c-1.6 0-2.5-1.2-2.2-2.8l1.8-8.4c.8-3.6 3.8-6 7.4-6h2c3.6 0 6.6 2.4 7.4 6l1.8 8.4c.3 1.6-.6 2.8-2.2 2.8z" fill="${ot}"/>
-        <path d="M17 29.2l3 4.2 3-4.2" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.3" stroke-linejoin="round"/>
+        ${style}
         <path d="M12.6 35c.7-3 3-4.8 5.6-5.2" stroke="url(#gshine)" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M10.6 42.4h18.8" stroke="#000" stroke-opacity=".18" stroke-width="1.6"/>
+        ${W === 3 ? "" : `<path d="M10.6 42.4h18.8" stroke="#000" stroke-opacity=".18" stroke-width="1.6"/>`}
+        ${acc}
       </g>
       <g class="head">
         ${hairBack}
-        ${scarf ? "" : `<ellipse cx="9.6" cy="21.6" rx="1.9" ry="2.6" fill="url(#gs${sk})"/><ellipse cx="30.4" cy="21.6" rx="1.9" ry="2.6" fill="url(#gs${sk})"/>`}
+        ${scarf ? "" : `<ellipse cx="9.6" cy="21.6" rx="1.9" ry="2.6" fill="url(#gs${sk})"/><ellipse cx="30.4" cy="21.6" rx="1.9" ry="2.6" fill="url(#gs${sk})"/>`}${earring}
         <path d="M17.6 26.5h4.8v3.6h-4.8z" fill="url(#gs${sk})"/>
         <ellipse cx="20" cy="19.6" rx="10.2" ry="10.4" fill="url(#gs${sk})"/>
         ${hairTop}
         <ellipse cx="14.6" cy="24.4" rx="2" ry="1.2" fill="#e0706a" opacity=".28"/><ellipse cx="25.4" cy="24.4" rx="2" ry="1.2" fill="#e0706a" opacity=".28"/>
-        <g class="brows"><path d="M14.2 17.4q2-1.2 4 0M21.8 17.4q2-1.2 4 0" stroke="#2a1d16" stroke-width="1" fill="none" stroke-linecap="round"/></g>
+        <g class="brows">${brows}</g>
         <g class="eyes">
           <ellipse cx="16.3" cy="21" rx="1.9" ry="2.2" fill="#fff"/><ellipse cx="23.7" cy="21" rx="1.9" ry="2.2" fill="#fff"/>
           <g class="pupils"><circle cx="16.6" cy="21.3" r="1.25" fill="#1b130f"/><circle cx="24" cy="21.3" r="1.25" fill="#1b130f"/>
           <circle cx="17.1" cy="20.7" r=".45" fill="#fff"/><circle cx="24.5" cy="20.7" r=".45" fill="#fff"/></g>
+          ${lids}
         </g>
         ${beard}
-        <path class="mouth" d="M18.2 25.6q1.8 1.3 3.6 0" stroke="#7a3a2c" stroke-width="1" fill="#7a3a2c" stroke-linecap="round"/>
+        ${mouth}
         ${glasses}
         ${hatSvg(av.t, av.o)}
         <g class="fedora"><path d="M7.5 13.6c3.6 1.6 8 2.3 12.5 2.3s8.9-.7 12.5-2.3c-.3 1.3-2 2.4-4.3 3-2.6.6-5.4.9-8.2.9s-5.6-.3-8.2-.9c-2.3-.6-4-1.7-4.3-3z" fill="#16161b"/>
           <path d="M11.8 14.4l1.6-6.8c.4-1.6 1.9-2.4 3.4-1.8l1.4.6c1.2.5 2.4.5 3.6 0l1.4-.6c1.5-.6 3 .2 3.4 1.8l1.6 6.8c-2.8.8-5.4 1.2-8.2 1.2s-5.4-.4-8.2-1.2z" fill="#22222a"/>
           <path d="M12.3 12.2c2.6.8 5.2 1.2 7.7 1.2s5.1-.4 7.7-1.2l-.4-1.8c-2.4.7-4.8 1-7.3 1s-4.9-.3-7.3-1z" fill="#b02a30"/></g>
       </g>
-      <g class="arm armF"><path d="M11.2 33.2c-2 1-3 3.4-3 6.4v4" stroke="${ot}" stroke-width="4.4" stroke-linecap="round" fill="none"/><circle class="handF" cx="8.2" cy="44.2" r="2.3" fill="${hand}"/></g>
+      <g class="arm armF"><path d="M11.2 33.2c-2 1-3 3.4-3 6.4v4" stroke="${ot}" stroke-width="4.4" stroke-linecap="round" fill="none"/>${armStripe("M10.4 34.4c-1.4 1-2.2 3-2.2 5.4v3.6")}<circle class="handF" cx="8.2" cy="44.2" r="2.3" fill="${hand}"/></g>
     </g>
   </svg>`;
 }
@@ -2090,33 +2228,38 @@ function menuStage(){
 
 /* ---------- الخزانة: كل واحد كيختار الشخصية ديالو قبل ما يلعب ---------- */
 function myAv(){ return avOf(lsGet("mafia_av"), 0); }
-const AV_LABELS = {s:"اللون ديال الجلد", h:"الشعر", c:"لون الشعر", o:"الحوايج", t:"على الراس", g:"اللونيط", b:"اللحية"};
-const HAT_NAMES = ["والو","طربوش","كاسكيطة","بونيه","شاش","فولار"];
-const HAIR_NAMES = ["قصير","مفروق","مكركب","طويل","قرعة","واقف"];
+const AV_LABELS = {s:"اللون ديال الجلد", e:"التعبير", g:"اللونيط", b:"اللحية", t:"على الراس", h:"الشعر", c:"لون الشعر", w:"نوع الحوايج", o:"لون الحوايج", a:"الإكسسوار"};
+const HAT_NAMES = ["والو","طربوش","كاسكيطة","بونيه","شاش","فولار","بوب","كاسك"];
+const HAIR_NAMES = ["قصير","مفروق","مكركب","طويل","قرعة","واقف","شينيون","طويل مكركب","مايل"];
+const AV_NAMES = {
+  e: ["عادي","فرحان","معصب","كول"],
+  g: ["لا","دايرين","ديال الشمس","نيون"],
+  b: ["لا","لحية","شلاغم","لحية صغيرة"],
+  w: ["تيشورت","كوستيم","سبور","جلابة","جيلي"],
+  a: ["والو","سنسلة","شال","حلقة"],
+  t: HAT_NAMES, h: HAIR_NAMES
+};
+const WARD_TABS = [["face","الوجه","users",["s","e","g","b"]], ["hair","الشعر","hat",["t","h","c"]], ["clothes","الحوايج","gear",["w","o","a"]]];
+const dotOf = (pal, v) => `<span class="dotc" style="background:linear-gradient(135deg,${pal[v][0]},${pal[v][1]})"></span>`;
 function wardrobe(from){
   ui.ward = true;
   ui.wardFrom = from || ui.wardFrom || "home";
+  const tab = WARD_TABS.find(t => t[0] === ui.wtab) || WARD_TABS[0];
   const av = myAv();
-  const sw = (k, n, render) => `<div class="wrow"><span class="wlab">${AV_LABELS[k]}</span><div class="wopts" role="radiogroup" aria-label="${AV_LABELS[k]}">${
-    Array.from({length:n}, (_,v)=>`<button class="wopt ${av[k]===v?"on":""}" role="radio" aria-checked="${av[k]===v}" onclick="avSet('${k}',${v})">${render(v)}</button>`).join("")}</div></div>`;
+  const label = (k, v) => k === "s" ? dotOf(SKINS, v) : k === "c" ? dotOf(HAIRS, v) : k === "o" ? dotOf(OUTFITS, v) : esc(AV_NAMES[k][v]);
+  const sw = k => `<div class="wrow"><span class="wlab">${AV_LABELS[k]}</span><div class="wopts" role="radiogroup" aria-label="${AV_LABELS[k]}">${
+    Array.from({length: AV_MAX[k]}, (_,v)=>`<button class="wopt ${av[k]===v?"on":""}" role="radio" aria-checked="${av[k]===v}" onclick="avSet('${k}',${v})">${label(k, v)}</button>`).join("")}</div></div>`;
   render(`
     <div class="util"><span>${ic("users")} الشخصية ديالك</span><button class="ghost" onclick="wardrobeDone()">رجوع</button></div>
     <header class="board b-cobalt"><div class="row"><h1 class="sign">الخزانة</h1></div><div class="sub">لبس الشخصية ديالك كيف بغيتي</div></header>
     <div class="wstage"><div class="guy big">${guySvg(0, av)}</div></div>
-    <div class="panel wpanel">
-      ${sw("s", 6, v=>`<span class="dotc" style="background:linear-gradient(135deg,${SKINS[v][0]},${SKINS[v][1]})"></span>`)}
-      ${sw("t", 6, v=>HAT_NAMES[v])}
-      ${sw("h", 6, v=>HAIR_NAMES[v])}
-      ${sw("c", 5, v=>`<span class="dotc" style="background:linear-gradient(135deg,${HAIRS[v][0]},${HAIRS[v][1]})"></span>`)}
-      ${sw("o", 6, v=>`<span class="dotc" style="background:linear-gradient(135deg,${OUTFITS[v][0]},${OUTFITS[v][1]})"></span>`)}
-      ${sw("g", 2, v=>v?"آه":"لا")}
-      ${sw("b", 2, v=>v?"آه":"لا")}
-    </div>
+    <div class="wtabs" role="tablist">${WARD_TABS.map(t => `<button class="wtab ${t === tab ? "on" : ""}" role="tab" aria-selected="${t === tab}" onclick="ui.wtab='${t[0]}';wardrobe()">${ic(t[2])} ${t[1]}</button>`).join("")}</div>
+    <div class="panel wpanel" role="tabpanel">${tab[3].map(sw).join("")}</div>
     <div class="row"><button class="btn sec" onclick="avRandom()">${ic("dice")} عشوائي</button><button class="btn" onclick="wardrobeDone()">${ic("check")} مزيان هكا</button></div>
   `);
 }
-function avSet(k, v){ const av = myAv(); av[k] = v; lsSet("mafia_av", av); wardrobe(); }
-function avRandom(){ const av = {}; for(const k in AV_MAX) av[k] = Math.floor(Math.random()*AV_MAX[k]); lsSet("mafia_av", av); wardrobe(); }
+function avSet(k, v){ const av = myAv(); av[k] = v; lsSet("mafia_av", av); wardrobe(); if(ACC) socPublish(); }
+function avRandom(){ const av = {}; for(const k in AV_MAX) av[k] = Math.floor(Math.random()*AV_MAX[k]); lsSet("mafia_av", av); wardrobe(); if(ACC) socPublish(); }
 function wardrobeDone(){
   ui.ward = false;
   if(PUB && PRIV && ME){
@@ -2405,7 +2548,7 @@ const FR = {
 "هاد السمية ديجا عند شي لاعب.":"Ce nom est déjà pris par un joueur.","ما قدرتش نسجل الأدمين:":"Impossible d'enregistrer l'admin :",
 "مرحبا...":"Bienvenue...","دخل بالسمية و المود دو باس ديالك":"Connecte-toi avec ton nom et ton mot de passe",
 "السمية (الأدمين يقدر بالجيميل)":"Nom (l'admin peut utiliser son Gmail)","المود دو باس":"Mot de passe",
-"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","شوف واش كاين أبديت":"Vérifier les mises à jour","كنقلبو...":"Recherche…","✅ عندك آخر نسخة.":"✅ L’application est à jour.","⬇️ كننزلو النسخة الجديدة...":"⬇️ Téléchargement de la nouvelle version…","🎉 تنزلات.":"🎉 Mise à jour installée.","🎉 تنزلات. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargée. Elle s’appliquera quand tu quitteras le salon.","🎉 كتنزل. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargement… Elle s’appliquera quand tu quitteras le salon.","كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم.":"Nouvelle version disponible. Elle s’appliquera quand tu quitteras le salon.","🎉 كنحلو النسخة الجديدة...":"🎉 Ouverture de la nouvelle version…","كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.":"Nouvelle version disponible. Elle s’installera toute seule dans quelques minutes.","ما قدرتش نتصل بالأنترنيت. عاود.":"Pas de connexion Internet. Réessaie.","المينيو":"Menu","كاينة نسخة جديدة":"Nouvelle version disponible","نزّل دابا":"Installer maintenant","ما قدرتش ننزلها. عاود.":"Échec du téléchargement. Réessaie.","⬇️ كتوصل... (GitHub كيوجدها، شي دقايق على الأكثر)":"⬇️ En route… (GitHub la prépare, quelques minutes au plus)","الموسيقى":"Musique","الأصوات":"Effets sonores","البروفيل ديالي":"Mon profil","الأصدقاء":"Amis","بدل التصويرة":"Changer la photo","حيد التصويرة":"Retirer la photo","لعبتي":"Parties jouées","ربحتي":"Victoires","نسبة الربح":"Taux de victoire","شحال من مرة لعبتي ب...":"Parties jouées en tant que…","بدل الشخصية ديالي":"Changer mon personnage","السمية ديال صاحبك":"Nom de ton ami","زيد":"Ajouter","مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.":"Tu n’as encore aucun ami. Écris son nom en haut.","حيدو من الأصدقاء":"Retirer des amis","متصل دابا":"En ligne","ما بانش مزال":"Jamais vu","هادي السمية ديالك.":"C’est ton propre nom.","ديجا عندك فالأصدقاء.":"Déjà dans tes amis.","ما كاين حتى كونط بهاد السمية.":"Aucun compte avec ce nom.","نحيدو من الأصدقاء؟":"Retirer cet ami ?","مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.":"Pas encore de partie, ou pas encore connecté avec la nouvelle version.","ما قدرتش نقرا هاد التصويرة.":"Impossible de lire cette image.","الأدمين":"Admin","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
+"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","شوف واش كاين أبديت":"Vérifier les mises à jour","كنقلبو...":"Recherche…","✅ عندك آخر نسخة.":"✅ L’application est à jour.","⬇️ كننزلو النسخة الجديدة...":"⬇️ Téléchargement de la nouvelle version…","🎉 تنزلات.":"🎉 Mise à jour installée.","🎉 تنزلات. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargée. Elle s’appliquera quand tu quitteras le salon.","🎉 كتنزل. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargement… Elle s’appliquera quand tu quitteras le salon.","كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم.":"Nouvelle version disponible. Elle s’appliquera quand tu quitteras le salon.","🎉 كنحلو النسخة الجديدة...":"🎉 Ouverture de la nouvelle version…","كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.":"Nouvelle version disponible. Elle s’installera toute seule dans quelques minutes.","ما قدرتش نتصل بالأنترنيت. عاود.":"Pas de connexion Internet. Réessaie.","المينيو":"Menu","الوجه":"Visage","الشعر":"Cheveux","الحوايج":"Vêtements","التعبير":"Expression","نوع الحوايج":"Style","لون الحوايج":"Couleur","الإكسسوار":"Accessoire","عادي":"Normal","فرحان":"Content","معصب":"Fâché","كول":"Cool","دايرين":"Rondes","ديال الشمس":"Solaires","نيون":"Néon","لحية":"Barbe","شلاغم":"Moustache","لحية صغيرة":"Bouc","تيشورت":"T-shirt","كوستيم":"Costume","سبور":"Survêtement","جلابة":"Djellaba","جيلي":"Gilet","سنسلة":"Chaîne","شال":"Écharpe","حلقة":"Boucle d’oreille","بوب":"Bob","كاسك":"Casque","شينيون":"Chignon","طويل مكركب":"Long bouclé","مايل":"Mèche","لون الشعر":"Couleur des cheveux","بلوكي":"Bloquer","رجعو":"Rétablir","المبلوكيين":"Bloqués","بلوكي و خرجو من اللعبة":"Bloquer et l’exclure du jeu","الأدمين حيدك من اللعبة.":"L’admin t’a retiré du jeu.","الكونط ديالك تبلوكا، ما بقيتيش تقدر تلعب.":"Ton compte a été bloqué, tu ne peux plus jouer.","هاد الكونط تبلوكا من عند الأدمين.":"Ce compte a été bloqué par l’admin.","هاد السمية تبلوكات من عند الأدمين.":"Ce nom a été bloqué par l’admin.","هاد اللاعب كان مبلوكي.":"Ce joueur était bloqué.","كنبلوكيو...":"Blocage…","رجع":"Retour","قلب على لاعب بالسمية":"Chercher un joueur","الأصدقاء ديالي":"Mes amis","كل اللاعبين":"Tous les joueurs","كنجيبو اللاعبين...":"Chargement des joueurs…","ما كاين حتى لاعب آخر مزال.":"Aucun autre joueur pour l’instant.","ما لقيت حتى لاعب بهاد السمية.":"Aucun joueur avec ce nom.","مازال ما زدتي حتى صاحب. اختار من اللاعبين لتحت (+).":"Pas encore d’amis. Choisis parmi les joueurs en dessous (+).","كنجيبو البروفيل ديالو...":"Chargement du profil…","مازال ما بان البروفيل ديالو. غادي يبان ملي يدخل للعبة.":"Profil pas encore disponible. Il apparaîtra quand il ouvrira le jeu.","زيدو للأصدقاء":"Ajouter aux amis","كاينين بزاف. اختار واحد من اللائحة.":"Plusieurs résultats. Choisis dans la liste.","طلب جديد":"Nouvelle demande","بغا يدخل للعبة. نقبلوه؟":"veut rejoindre le jeu. Accepter ?","قبل":"Accepter","لا":"Non","من بعد":"Plus tard","هاد السمية ديجا عند لاعب. إلا قبلتيه غادي ياخد بلاصتو.":"Ce nom est déjà pris. L’accepter remplacera l’ancien compte.","الطلب ديالك تصيفط":"Demande envoyée","الطلب ديالك وصل للأدمين. ملي يقبلك، دخل بالسمية و المود دو باس ديالك.":"Ta demande est arrivée chez l’admin. Une fois accepté, connecte-toi avec ton nom et ton mot de passe.","إلا طلب منك الأدمين الكود:":"Si l’admin te demande le code :","الطلبات الجداد كيبانو ليك بوحدهم":"Les nouvelles demandes s’affichent toutes seules","الطلبات":"Demandes","ولا قلب بالكود:":"Ou cherche par code :","سجل و صيفط الطلب":"S’inscrire et envoyer la demande","كاينة نسخة جديدة":"Nouvelle version disponible","نزّل دابا":"Installer maintenant","ما قدرتش ننزلها. عاود.":"Échec du téléchargement. Réessaie.","⬇️ كتوصل... (GitHub كيوجدها، شي دقايق على الأكثر)":"⬇️ En route… (GitHub la prépare, quelques minutes au plus)","الموسيقى":"Musique","الأصوات":"Effets sonores","البروفيل ديالي":"Mon profil","الأصدقاء":"Amis","بدل التصويرة":"Changer la photo","حيد التصويرة":"Retirer la photo","لعبتي":"Parties jouées","ربحتي":"Victoires","نسبة الربح":"Taux de victoire","شحال من مرة لعبتي ب...":"Parties jouées en tant que…","بدل الشخصية ديالي":"Changer mon personnage","السمية ديال صاحبك":"Nom de ton ami","زيد":"Ajouter","مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.":"Tu n’as encore aucun ami. Écris son nom en haut.","حيدو من الأصدقاء":"Retirer des amis","متصل دابا":"En ligne","ما بانش مزال":"Jamais vu","هادي السمية ديالك.":"C’est ton propre nom.","ديجا عندك فالأصدقاء.":"Déjà dans tes amis.","ما كاين حتى كونط بهاد السمية.":"Aucun compte avec ce nom.","نحيدو من الأصدقاء؟":"Retirer cet ami ?","مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.":"Pas encore de partie, ou pas encore connecté avec la nouvelle version.","ما قدرتش نقرا هاد التصويرة.":"Impossible de lire cette image.","الأدمين":"Admin","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
 "كنتأكدو...":"Vérification...","الجيميل ولا المود دو باس غالطين.":"Gmail ou mot de passe incorrect.","المود دو باس غالط.":"Mot de passe incorrect.",
 "هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.":"Ce compte n'existe pas ou n'a pas encore été validé par l'admin.",
 "كونط جديد":"Nouveau compte","السمية (هي اللي غادي تبان فاللعبة)":"Nom (celui affiché dans le jeu)",
@@ -2614,7 +2757,7 @@ async function installUpdateNow(build){
    كل كونط عندو بروفيل (التصويرة، الشخصية، الإحصائيات) كيتخلى فالسيرفور ديال اللعبة
    (retained) باش الأصدقاء يشوفوه. الإحصائيات كتزاد بوحدها فآخر كل لعبة.
    ===================================================================== */
-const SOC = {m: null, connecting: null, timer: null, prof: {}, waiters: {}};
+const SOC = {ms: null, connecting: null, timer: null, prof: {}, waiters: {}, since: {}, users: null, gen: 0};
 const ROLE_KEYS = ["mafia", "doctor", "detective", "citizen"];
 const profTopic = n => TOPIC_ROOT + "prof/" + n;
 function stKey(){ return "mafia_st_" + (ACC ? ACC.n : "_"); }
@@ -2642,23 +2785,45 @@ function statsHook(){
 }
 
 // ---------- الكونيكسيون ديال البروفيلات ----------
-async function socConn(){
-  if(SOC.m && SOC.m.ok) return SOC.m;
+// كل جهاز يقدر يتصل بسيرفور مختلف (إلا واحد ما خدمش عندو)، داكشي علاش البروفيلات
+// و طلبات التسجيل كيتكتبو و كيتقراو فجوج السيرفورات بجوج.
+function profPayload(){
+  const st = myStats();
+  return JSON.stringify({n: ACC.n, d: ACC.d, av: myAv(), ph: myPhoto(), st: {p: st.p, w: st.w, r: st.r}, seen: Date.now()});
+}
+function socConn(){
+  if(SOC.ms && SOC.ms.length) return Promise.resolve(SOC.ms);
   if(SOC.connecting) return SOC.connecting;
-  SOC.connecting = (async () => {
-    const c = await connectAny();
-    c.m.onMsg = socMsg;
-    SOC.m = c.m;
-    Object.keys(SOC.waiters).forEach(n => c.m.subscribe(profTopic(n)));
-    return c.m;
-  })().finally(() => { SOC.connecting = null; });
+  const gen = SOC.gen;
+  SOC.connecting = new Promise((res, rej) => {
+    let failed = 0;
+    SOC.ms = [];
+    BROKERS.forEach(u => {
+      const m = new Mqtt(u, socMsg, ok => { if(ok && ACC && SOC.ms && SOC.ms.includes(m)) m.publish(profTopic(ACC.n), profPayload(), true); });
+      m.connect().then(() => {
+        if(gen !== SOC.gen || !SOC.ms){ m.close(); return; }
+        SOC.ms.push(m);
+        Object.keys(SOC.waiters).forEach(n => m.subscribe(profTopic(n)));
+        if(ACC && ACC.admin) m.subscribe(TOPIC_ROOT + "reg/+");
+        else if(ACC) m.subscribe(TOPIC_ROOT + "ban/" + ACC.n);
+        if(SOC.ms.length > 1 && ACC && SOC.pubOnce) m.publish(profTopic(ACC.n), profPayload(), true);   // السيرفور اللي جا معطل
+        res(SOC.ms);
+      }).catch(() => { m.closed = true; if(++failed === BROKERS.length){ SOC.ms = null; rej(new Error("no broker")); } });
+    });
+  }).finally(() => { SOC.connecting = null; });
   return SOC.connecting;
 }
 function socMsg(topic, payload){
+  if(topic.indexOf(TOPIC_ROOT + "reg/") === 0) return regMsg(topic.slice((TOPIC_ROOT + "reg/").length), payload);
+  if(topic.indexOf(TOPIC_ROOT + "ban/") === 0){
+    if(payload && ACC && !ACC.admin && topic === TOPIC_ROOT + "ban/" + ACC.n){ try{ if(JSON.parse(payload).n === ACC.n) bannedOut(); }catch(e){} }
+    return;
+  }
   const n = topic.slice((TOPIC_ROOT + "prof/").length);
   let j; try{ j = JSON.parse(typeof payload === "string" ? payload : dec.decode(payload)); }catch(e){ return; }
   if(!j || j.n !== n) return;
-  SOC.prof[n] = j;
+  const old = SOC.prof[n];
+  if(!old || (j.seen || 0) >= (old.seen || 0)) SOC.prof[n] = j;     // جوج السيرفورات: كناخدو الأجدد
   // نفس الكونط من جهاز آخر: كناخدو الأكبر فكل رقم
   if(ACC && n === ACC.n && j.st){
     const s = myStats(); let ch = false;
@@ -2666,21 +2831,26 @@ function socMsg(topic, payload){
     if((j.st.w||0) > s.w){ s.w = j.st.w; ch = true; }
     ROLE_KEYS.forEach(k => { const v = (j.st.r && j.st.r[k]) || 0; if(v > s.r[k]){ s.r[k] = v; ch = true; } });
     if(ch) lsSet(stKey(), s);
-    if(j.ph && !myPhoto()) lsSet("mafia_ph_" + ACC.n, j.ph);
+    // التصويرة: غير إلا هاد الجهاز عمرو ما كانت عندو (ماشي إلا مسحتيها)
+    if(j.ph && lsGet("mafia_ph_" + ACC.n) === null) lsSet("mafia_ph_" + ACC.n, j.ph);
   }
   (SOC.waiters[n] || []).forEach(f => f(j)); SOC.waiters[n] = [];
   if(sheetOpen()) sheetRefresh();
+  topbarRefresh();
+  pfpRefresh(n);
 }
 function socWatch(n){
+  if(!n) return;
   if(!SOC.waiters[n]) SOC.waiters[n] = [];
-  socConn().then(m => m.subscribe(profTopic(n))).catch(()=>{});
+  if(!SOC.since[n]){ SOC.since[n] = Date.now(); setTimeout(() => { if(sheetOpen()) sheetRefresh(); }, 9000); }
+  socConn().then(ms => ms.forEach(m => m.subscribe(profTopic(n)))).catch(()=>{});
 }
 async function socPublish(){
   if(!ACC) return;
   try{
-    const m = await socConn();
-    const st = myStats();
-    m.publish(profTopic(ACC.n), JSON.stringify({n: ACC.n, d: ACC.d, av: myAv(), ph: myPhoto(), st: {p: st.p, w: st.w, r: st.r}, seen: Date.now()}), true);
+    const ms = await socConn(), p = profPayload();
+    ms.forEach(m => m.publish(profTopic(ACC.n), p, true));
+    SOC.prof[ACC.n] = JSON.parse(p); SOC.pubOnce = true;
   }catch(e){}
 }
 function socStart(){
@@ -2693,9 +2863,20 @@ function socStart(){
 }
 function socStop(){
   clearInterval(SOC.timer); SOC.timer = null;
-  if(SOC.m){ try{ SOC.m.close(); }catch(e){} }
-  SOC.m = null; SOC.prof = {}; SOC.waiters = {};
-  sheetClose(); topbarRefresh();
+  SOC.gen++;
+  (SOC.ms || []).forEach(m => { try{ m.close(); }catch(e){} });
+  SOC.ms = null; SOC.prof = {}; SOC.waiters = {}; SOC.since = {}; SOC.users = null; SOC.pubOnce = false;
+  for(const k in REQS) delete REQS[k];
+  reqPopRefresh(); sheetClose(); topbarRefresh();
+}
+// كنصيفطو لجوج السيرفورات (التسجيل: مازال ما عندناش كونط)
+async function pubAll(topic, payload, retain){
+  const rs = await Promise.all(BROKERS.map(async u => {
+    const m = new Mqtt(u, ()=>{}, ()=>{});
+    try{ await m.connect(); const ok = m.publish(topic, payload, retain); setTimeout(() => m.close(), 1500); return ok; }
+    catch(e){ m.closed = true; return false; }
+  }));
+  return rs.some(Boolean);
 }
 
 // ---------- الصورة ديال الواحد (تصويرة ولا الشخصية) ----------
@@ -2704,8 +2885,8 @@ function pfp(n, ph, av, cls){
   return `<span class="pfp ${cls||""}"><span class="pfp-guy">${guySvg(3, av)}</span></span>`;
 }
 function onlineOf(j){ return j && j.seen && Date.now() - j.seen < 3 * 60 * 1000; }
-function seenText(j){
-  if(!j || !j.seen) return "ما بانش مزال";
+function seenText(j, n){
+  if(!j || !j.seen) return n && profWaiting(n) ? "..." : "ما بانش مزال";
   if(onlineOf(j)) return "متصل دابا";
   const m = Math.round((Date.now() - j.seen) / 60000);
   if(m < 60) return "بان هادي " + m + " دقيقة";
@@ -2731,9 +2912,14 @@ function sheetShow(view, arg){ SHEET.view = view; SHEET.arg = arg; sheetRefresh(
 function sheetRefresh(){
   const el = document.getElementById("sheet"); if(!el || !SHEET.view) return;
   const body = SHEET.view === "me" ? profileHtml() : SHEET.view === "friends" ? friendsHtml() : friendHtml(SHEET.arg);
-  const keep = document.getElementById("frIn"); const typed = keep ? keep.value : "";
+  const keep = document.getElementById("frIn"); const typed = keep ? keep.value : "", foc = keep && document.activeElement === keep;
+  const sc = el.querySelector(".sh-card"), top = sc ? sc.scrollTop : 0;
   el.innerHTML = `<div class="sh-back" onclick="sheetClose()"></div><section class="sh-card" role="dialog" aria-modal="true">${body}</section>`;
-  const inp = document.getElementById("frIn"); if(inp && typed){ inp.value = typed; }
+  const inp = document.getElementById("frIn");
+  if(inp && typed){ inp.value = typed; }
+  if(inp && foc){ inp.focus(); try{ inp.setSelectionRange(typed.length, typed.length); }catch(e){} }
+  const sc2 = el.querySelector(".sh-card"); if(sc2) sc2.scrollTop = top;
+  frFilter();
   topbarRefresh();
 }
 function statsHtml(st){
@@ -2778,49 +2964,171 @@ function photoPick(inp){
 }
 function photoClear(){ lsSet("mafia_ph_" + ACC.n, ""); socPublish(); sheetRefresh(); }
 
+// كل اللاعبين اللي قبلهم الأدمين (+ الأدمين) كيبانو فالأصدقاء، تقدر تقلب فيهم و تزيدهم
+async function loadPlayers(){
+  const users = (await loadUsers()).users || [];
+  if(!ADMIN) ADMIN = await loadAdmin();
+  const all = users.map(u => ({n: u.n, d: u.d || u.n}));
+  if(ADMIN && !all.some(u => u.n === ADMIN.n)) all.unshift({n: ADMIN.n, d: ADMIN.d || ADMIN.n});
+  if(!ACC) return;
+  SOC.users = all.filter(u => u.n !== ACC.n);
+  SOC.users.forEach(u => socWatch(u.n));
+  if(sheetOpen()) sheetRefresh();
+}
+function nameOf(n){ const j = SOC.prof[n], u = (SOC.users || []).find(x => x.n === n); return j && j.d ? j.d : u ? u.d : n; }
+function frRow(n, isFr){
+  const j = SOC.prof[n], name = nameOf(n);
+  return `<li data-k="${esc(accNorm(name) + " " + n)}"><div class="frrow"><button class="fr" data-n="${esc(n)}" onclick="sheetShow('friend',this.dataset.n)">
+      ${pfp(n, j && j.ph, j && j.av, "md")}${onlineOf(j) ? '<i class="ondot" aria-label="متصل"></i>' : ""}
+      <span class="fr-t"><b translate="no">${esc(name)}</b><small>${seenText(j, n)}</small></span>
+      ${j && j.st ? `<span class="fr-s" translate="no">${j.st.w||0}/${j.st.p||0}</span>` : ""}</button>
+    ${isFr ? "" : `<button class="fradd" type="button" data-n="${esc(n)}" aria-label="زيد ${esc(name)} للأصدقاء" onclick="friendAddN(this.dataset.n)">${ic("plus")}</button>`}</div></li>`;
+}
+function byActivity(a, b){ const ja = SOC.prof[a] || {}, jb = SOC.prof[b] || {}; return (onlineOf(jb) - onlineOf(ja)) || ((jb.seen || 0) - (ja.seen || 0)); }
 function friendsHtml(){
-  const list = myFriends();
+  const fr = myFriends().slice().sort(byActivity);
+  const others = SOC.users ? SOC.users.map(u => u.n).filter(n => !fr.includes(n)).sort(byActivity) : null;
   return `<header class="sh-head"><h2>الأصدقاء</h2><button class="ghost" onclick="sheetClose()">${ic("x")}</button></header>
     <form class="row" onsubmit="event.preventDefault();friendAdd()">
-      <input type="text" id="frIn" maxlength="16" placeholder="السمية ديال صاحبك" autocomplete="off">
-      <button class="btn small" type="submit">${ic("plus")} زيد</button>
+      <input type="text" inputmode="search" enterkeyhint="search" id="frIn" maxlength="16" placeholder="قلب على لاعب بالسمية" autocomplete="off" oninput="frFilter()" aria-label="قلب على لاعب بالسمية">
     </form>
     ${SHEET.msg ? `<p class="err">${esc(SHEET.msg)}</p>` : ""}
-    ${list.length ? `<ul class="frlist">${list.map(n => { const j = SOC.prof[n];
-      return `<li><button class="fr" onclick="sheetShow('friend','${esc(n)}')">
-        ${pfp(n, j && j.ph, j && j.av, "md")}${onlineOf(j) ? '<i class="ondot" aria-label="متصل"></i>' : ""}
-        <span class="fr-t"><b translate="no">${esc(j ? j.d : n)}</b><small>${seenText(j)}</small></span>
-        <span class="fr-s" translate="no">${j && j.st ? `${j.st.w||0}/${j.st.p||0}` : "…"}</span></button></li>`; }).join("")}</ul>`
-      : `<div class="empty">${ic("users","huge")}<p>مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.</p></div>`}`;
+    <p class="sec-h">${ic("users")} الأصدقاء ديالي <span class="cnt" translate="no">${fr.length}</span></p>
+    ${fr.length ? `<ul class="frlist">${fr.map(n => frRow(n, true)).join("")}</ul>`
+      : `<p class="note">مازال ما زدتي حتى صاحب. اختار من اللاعبين لتحت (+).</p>`}
+    <p class="sec-h">${ic("lens")} كل اللاعبين ${others ? `<span class="cnt" translate="no">${others.length}</span>` : ""}</p>
+    ${others === null ? `<p class="note center">كنجيبو اللاعبين...</p>`
+      : others.length ? `<ul class="frlist">${others.map(n => frRow(n, false)).join("")}</ul>`
+      : `<p class="note center">ما كاين حتى لاعب آخر مزال.</p>`}
+    <p class="note center fr-none" hidden>ما لقيت حتى لاعب بهاد السمية.</p>`;
+}
+function frFilter(){
+  const inp = document.getElementById("frIn"); if(!inp) return;
+  const q = accNorm(inp.value); let shown = 0;
+  document.querySelectorAll("#sheet li[data-k]").forEach(li => { const ok = !q || li.dataset.k.includes(q); li.hidden = !ok; if(ok) shown++; });
+  const none = document.querySelector("#sheet .fr-none"); if(none) none.hidden = !q || shown > 0;
 }
 function friendHtml(n){
-  const j = SOC.prof[n];
-  return `<header class="sh-head"><button class="ghost" onclick="sheetShow('friends')">رجوع</button><h2 translate="no">${esc(j ? j.d : n)}</h2><span></span></header>
-    <div class="prof-top">${pfp(n, j && j.ph, j && j.av, "xl")}<div><p class="prof-name" translate="no">${esc(j ? j.d : n)}</p><p class="note">${onlineOf(j) ? '<i class="ondot inl"></i> ' : ""}${seenText(j)}</p></div></div>
-    ${j && j.st ? statsHtml(j.st) : `<p class="note center">مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.</p>`}
-    <button class="ghost danger" style="align-self:center" onclick="friendRemove('${esc(n)}')">حيدو من الأصدقاء</button>`;
+  const j = SOC.prof[n], name = nameOf(n), isFr = myFriends().includes(n), me = ACC && n === ACC.n;
+  return `<header class="sh-head"><button class="ghost" onclick="${SHEET.back === "room" ? "sheetClose()" : "sheetShow('friends')"}">رجوع</button><h2 translate="no">${esc(name)}</h2><span></span></header>
+    <div class="prof-top">${pfp(n, j && j.ph, j && j.av, "xl")}<div><p class="prof-name" translate="no">${esc(name)}</p><p class="note">${onlineOf(j) ? '<i class="ondot inl"></i> ' : ""}${seenText(j, n)}</p></div></div>
+    ${j && j.st ? statsHtml(j.st) : `<p class="note center">${profWaiting(n) ? "كنجيبو البروفيل ديالو..." : "مازال ما بان البروفيل ديالو. غادي يبان ملي يدخل للعبة."}</p>`}
+    ${me ? "" : isFr ? `<button class="ghost danger" style="align-self:center" data-n="${esc(n)}" onclick="friendRemove(this.dataset.n)">حيدو من الأصدقاء</button>`
+      : `<button class="btn" data-n="${esc(n)}" onclick="friendAddN(this.dataset.n)">${ic("plus")} زيدو للأصدقاء</button>`}
+    ${ACC && ACC.admin && !me ? `<button class="btn small danger-btn" style="align-self:center" data-n="${esc(n)}" onclick="adminBlock(this.dataset.n)">${ic("crown")} بلوكي و خرجو من اللعبة</button>` : ""}`;
+}
+function profWaiting(n){ return !SOC.since[n] || Date.now() - SOC.since[n] < 8000; }
+function friendAddN(n){
+  if(!n || n === ACC.n || myFriends().includes(n)) return;
+  setFriends([...myFriends(), n]); socWatch(n);
+  SHEET.msg = ""; sheetRefresh();
+  toast("تزاد " + nameOf(n) + " للأصدقاء.");
 }
 async function friendAdd(){
   const inp = document.getElementById("frIn"); const raw = (inp && inp.value || "").trim();
   const n = accNorm(raw);
   SHEET.msg = "";
-  if(!n){ return; }
+  if(!n) return;
   if(n === ACC.n){ SHEET.msg = "هادي السمية ديالك."; return sheetRefresh(); }
   if(myFriends().includes(n)){ SHEET.msg = "ديجا عندك فالأصدقاء."; return sheetRefresh(); }
-  const users = (await loadUsers()).users || [];
-  if(!ADMIN) ADMIN = await loadAdmin();
-  if(!users.some(u => u.n === n) && !(ADMIN && ADMIN.n === n)){ SHEET.msg = "ما كاين حتى كونط بهاد السمية."; return sheetRefresh(); }
-  setFriends([...myFriends(), n]); socWatch(n);
+  if(!SOC.users) await loadPlayers();
+  const hits = (SOC.users || []).filter(u => u.n === n || accNorm(u.d).includes(n));
+  const hit = hits.find(u => u.n === n) || (hits.length === 1 ? hits[0] : null);
+  if(!hit){ SHEET.msg = hits.length ? "كاينين بزاف. اختار واحد من اللائحة." : "ما كاين حتى كونط بهاد السمية."; return sheetRefresh(); }
   if(inp) inp.value = "";
-  sheetRefresh();
+  friendAddN(hit.n);
 }
 function friendRemove(n){
   if(!confirm("نحيدو من الأصدقاء؟")) return;
   setFriends(myFriends().filter(x => x !== n));
   sheetShow("friends");
 }
-function openProfile(){ SHEET.msg = ""; sheetShow("me"); }
-function openFriends(){ SHEET.msg = ""; sheetShow("friends"); }
+function openProfile(){ SHEET.msg = ""; SHEET.back = ""; sheetShow("me"); }
+function openFriends(){ SHEET.msg = ""; SHEET.back = ""; sheetShow("friends"); loadPlayers(); }
+// فالروم: التصويرة ديال كل لاعب حدا السمية ديالو، تبرك عليها كيبان البروفيل ديالو (و زيدو للأصدقاء)
+function openPlayer(n){
+  if(!ACC || !n) return;
+  SHEET.msg = ""; SHEET.back = "room"; socWatch(n);
+  if(!SOC.users) loadPlayers();
+  sheetShow(n === ACC.n ? "me" : "friend", n);
+}
+function roomPfp(name){
+  const n = accNorm(name);
+  if(ACC) socWatch(n);
+  const j = SOC.prof[n];
+  return `<button type="button" class="rpfp" data-n="${esc(n)}" aria-label="البروفيل ديال ${esc(name)}" onclick="event.stopPropagation();openPlayer(this.dataset.n)">${pfp(n, j && j.ph, j && j.av, "sm")}</button>`;
+}
+// ملي كيوصل شي بروفيل، كنبدلو غير التصويرات ديالو فالروم (بلا ما نعاودو الصفحة)
+function pfpRefresh(n){
+  const j = SOC.prof[n]; if(!j) return;
+  document.querySelectorAll('#app .rpfp[data-n="' + CSS.escape(n) + '"]').forEach(b => { b.innerHTML = pfp(n, j.ph, j.av, "sm"); });
+}
+
+/* ---------- الأدمين: الطلبات ديال التسجيل كيبانو ليه بوحدهم (قبل / لا) ---------- */
+const REQS = {};            // code -> {n, d, h, t}
+const REQ_LATER = new Set();
+function regMsg(code, payload){
+  if(!ACC || !ACC.admin) return;
+  if(!payload){ delete REQS[code]; return reqPopRefresh(); }
+  let j; try{ j = JSON.parse(payload); }catch(e){ return; }
+  if(!j || !j.h || !j.n || regCode(j.h) !== code) return;
+  const users = ((adminState.users || lsGet("mafia_users") || {}).users) || [];
+  if(users.some(u => u.n === j.n && u.h === j.h)){ regClear(code); return; }   // ديجا مقبول
+  j.dup = users.some(u => u.n === j.n);
+  j.wasBlocked = isBlocked(adminState.users || lsGet("mafia_users"), j.n);
+  REQS[code] = j;
+  reqPopRefresh();
+  if(ui.admin) adminScreen();
+}
+async function regClear(code){
+  delete REQS[code]; reqPopRefresh();
+  try{ const ms = await socConn(); ms.forEach(m => m.publish(TOPIC_ROOT + "reg/" + code, "", true)); }catch(e){}
+}
+function reqPopRefresh(){
+  let el = document.getElementById("reqpop");
+  const codes = Object.keys(REQS).filter(c => !REQ_LATER.has(c)).sort((a, b) => (REQS[a].t || 0) - (REQS[b].t || 0));
+  if(!codes.length || !ACC || !ACC.admin){ if(el) el.remove(); return; }
+  if(!el){ el = document.createElement("div"); el.id = "reqpop"; el.className = "reqpop"; el.setAttribute("role", "alertdialog"); el.setAttribute("aria-live", "assertive"); document.body.appendChild(el); }
+  const c = codes[0], r = REQS[c];
+  el.innerHTML = `<p class="rq-h">${ic("crown")} <span>طلب جديد</span> ${codes.length > 1 ? `<span class="cnt" translate="no">+${codes.length - 1}</span>` : ""}</p>
+    <p class="rq-n"><b translate="no">${esc(r.d)}</b> <span>بغا يدخل للعبة. نقبلوه؟</span></p>
+    ${r.dup ? `<p class="rq-w">هاد السمية ديجا عند لاعب. إلا قبلتيه غادي ياخد بلاصتو.</p>` : ""}
+    ${r.wasBlocked ? `<p class="rq-w">هاد اللاعب كان مبلوكي.</p>` : ""}
+    <div class="row"><button class="btn green small" data-c="${c}" onclick="reqAccept(this.dataset.c)">${ic("check")} قبل</button>
+      <button class="btn sec small" data-c="${c}" onclick="reqDecline(this.dataset.c)">${ic("x")} لا</button>
+      <button class="ghost" data-c="${c}" onclick="REQ_LATER.add(this.dataset.c);reqPopRefresh()">من بعد</button></div>
+    ${el.dataset.msg ? `<p class="err">${esc(el.dataset.msg)}</p>` : ""}`;
+  el.dataset.msg = "";
+}
+async function acceptReq(r){
+  const g = await ghUsers();
+  const list = (g.users.users || []).filter(u => u.n !== r.n);
+  list.push({n: r.n, d: r.d, h: r.h, t: new Date().toISOString().slice(0,10)});
+  const doc = {users: list, blocked: (g.users.blocked || []).filter(b => b.n !== r.n)};
+  adminState.sha = await ghSaveUsers(doc, g.sha, "Mafia: accept " + r.n);
+  adminState.users = doc; lsSet("mafia_users", doc);
+  banSet(r.n, false);
+  await regClear(regCode(r.h));
+}
+async function reqAccept(c){
+  const r = REQS[c]; let el = document.getElementById("reqpop"); if(!r) return;
+  if(!ADMIN_TOKEN){ if(el) el.dataset.msg = "ما قدرتش نحل المفتاح ديال GitHub. خرج و عاود دخل."; return reqPopRefresh(); }
+  if(el) el.querySelectorAll("button").forEach(b => b.disabled = true);
+  try{ await acceptReq(r); toast("تقبل " + r.d + ". دابا يقدر يدخل."); }
+  catch(e){ el = document.getElementById("reqpop"); if(el) el.dataset.msg = "ما تقبلش: " + e.message; reqPopRefresh(); }
+  if(SOC.users) loadPlayers();
+  if(ui.admin) adminScreen();
+}
+function reqDecline(c){
+  const r = REQS[c]; if(!r) return;
+  if(!confirm("ما تقبلش " + r.d + "؟ الطلب ديالو غادي يتمسح.")) return;
+  regClear(c);
+  if(ui.admin) adminScreen();
+}
+function toast(t){
+  const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); el.textContent = t;
+  document.body.appendChild(el); setTimeout(() => el.classList.add("off"), 2600); setTimeout(() => el.remove(), 3200);
+}
 
 /* =====================================================================
    الموسيقى و الأصوات: كلشي كيتصاوب هنا بالكود (WebAudio)، بلا ملفات.
