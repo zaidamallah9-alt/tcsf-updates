@@ -1,7 +1,7 @@
 {
-    "build":  12,
-    "sha1":  "6a9576a873a67f5409cc2a4d300bfca8187886a1",
+    "build":  13,
+    "sha1":  "061c2068c77b87c52b2f7ec4532a021780186746",
     "size":  278630,
-    "notes":  "bouton mises a jour: version via l\u0027API GitHub (sans cache), reessaie tout seul",
-    "date":  "2026-11-27T07:43:31Z"
+    "notes":  "test de vitesse des mises a jour",
+    "date":  "2026-11-27T07:52:57Z"
 }
