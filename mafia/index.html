@@ -708,8 +708,8 @@ input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,select
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const APP_VERSION = "1.4.4";
-const BUILD = 17;
+const APP_VERSION = "1.4.5";
+const BUILD = 18;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -2556,7 +2556,7 @@ const FR = {
 "هاد السمية ديجا عند شي لاعب.":"Ce nom est déjà pris par un joueur.","ما قدرتش نسجل الأدمين:":"Impossible d'enregistrer l'admin :",
 "مرحبا...":"Bienvenue...","دخل بالسمية و المود دو باس ديالك":"Connecte-toi avec ton nom et ton mot de passe",
 "السمية (الأدمين يقدر بالجيميل)":"Nom (l'admin peut utiliser son Gmail)","المود دو باس":"Mot de passe",
-"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","شوف واش كاين أبديت":"Vérifier les mises à jour","كنقلبو...":"Recherche…","✅ عندك آخر نسخة.":"✅ L’application est à jour.","⬇️ كننزلو النسخة الجديدة...":"⬇️ Téléchargement de la nouvelle version…","🎉 تنزلات.":"🎉 Mise à jour installée.","🎉 تنزلات. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargée. Elle s’appliquera quand tu quitteras le salon.","🎉 كتنزل. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargement… Elle s’appliquera quand tu quitteras le salon.","كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم.":"Nouvelle version disponible. Elle s’appliquera quand tu quitteras le salon.","🎉 كنحلو النسخة الجديدة...":"🎉 Ouverture de la nouvelle version…","كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.":"Nouvelle version disponible. Elle s’installera toute seule dans quelques minutes.","ما قدرتش نتصل بالأنترنيت. عاود.":"Pas de connexion Internet. Réessaie.","المينيو":"Menu","الوجه":"Visage","الشعر":"Cheveux","الحوايج":"Vêtements","التعبير":"Expression","نوع الحوايج":"Style","لون الحوايج":"Couleur","الإكسسوار":"Accessoire","عادي":"Normal","فرحان":"Content","معصب":"Fâché","كول":"Cool","دايرين":"Rondes","ديال الشمس":"Solaires","نيون":"Néon","لحية":"Barbe","شلاغم":"Moustache","لحية صغيرة":"Bouc","تيشورت":"T-shirt","كوستيم":"Costume","سبور":"Survêtement","جلابة":"Djellaba","جيلي":"Gilet","سنسلة":"Chaîne","شال":"Écharpe","حلقة":"Boucle d’oreille","بوب":"Bob","كاسك":"Casque","شينيون":"Chignon","طويل مكركب":"Long bouclé","مايل":"Mèche","لون الشعر":"Couleur des cheveux","بلوكي":"Bloquer","رجعو":"Rétablir","المبلوكيين":"Bloqués","بلوكي و خرجو من اللعبة":"Bloquer et l’exclure du jeu","الأدمين حيدك من اللعبة.":"L’admin t’a retiré du jeu.","الكونط ديالك تبلوكا، ما بقيتيش تقدر تلعب.":"Ton compte a été bloqué, tu ne peux plus jouer.","هاد الكونط تبلوكا من عند الأدمين.":"Ce compte a été bloqué par l’admin.","هاد السمية تبلوكات من عند الأدمين.":"Ce nom a été bloqué par l’admin.","هاد اللاعب كان مبلوكي.":"Ce joueur était bloqué.","كنبلوكيو...":"Blocage…","رجع":"Retour","قلب على لاعب بالسمية":"Chercher un joueur","الأصدقاء ديالي":"Mes amis","كل اللاعبين":"Tous les joueurs","كنجيبو اللاعبين...":"Chargement des joueurs…","ما كاين حتى لاعب آخر مزال.":"Aucun autre joueur pour l’instant.","ما لقيت حتى لاعب بهاد السمية.":"Aucun joueur avec ce nom.","مازال ما زدتي حتى صاحب. اختار من اللاعبين لتحت (+).":"Pas encore d’amis. Choisis parmi les joueurs en dessous (+).","كنجيبو البروفيل ديالو...":"Chargement du profil…","مازال ما بان البروفيل ديالو. غادي يبان ملي يدخل للعبة.":"Profil pas encore disponible. Il apparaîtra quand il ouvrira le jeu.","زيدو للأصدقاء":"Ajouter aux amis","كاينين بزاف. اختار واحد من اللائحة.":"Plusieurs résultats. Choisis dans la liste.","طلب جديد":"Nouvelle demande","بغا يدخل للعبة. نقبلوه؟":"veut rejoindre le jeu. Accepter ?","قبل":"Accepter","لا":"Non","من بعد":"Plus tard","هاد السمية ديجا عند لاعب. إلا قبلتيه غادي ياخد بلاصتو.":"Ce nom est déjà pris. L’accepter remplacera l’ancien compte.","الطلب ديالك تصيفط":"Demande envoyée","الطلب ديالك وصل للأدمين. ملي يقبلك، دخل بالسمية و المود دو باس ديالك.":"Ta demande est arrivée chez l’admin. Une fois accepté, connecte-toi avec ton nom et ton mot de passe.","إلا طلب منك الأدمين الكود:":"Si l’admin te demande le code :","الطلبات الجداد كيبانو ليك بوحدهم":"Les nouvelles demandes s’affichent toutes seules","الطلبات":"Demandes","ولا قلب بالكود:":"Ou cherche par code :","سجل و صيفط الطلب":"S’inscrire et envoyer la demande","كاينة نسخة جديدة":"Nouvelle version disponible","نزّل دابا":"Installer maintenant","ما قدرتش ننزلها. عاود.":"Échec du téléchargement. Réessaie.","⬇️ كتوصل... (GitHub كيوجدها، شي دقايق على الأكثر)":"⬇️ En route… (GitHub la prépare, quelques minutes au plus)","الموسيقى":"Musique","الأصوات":"Effets sonores","البروفيل ديالي":"Mon profil","الأصدقاء":"Amis","بدل التصويرة":"Changer la photo","حيد التصويرة":"Retirer la photo","لعبتي":"Parties jouées","ربحتي":"Victoires","نسبة الربح":"Taux de victoire","شحال من مرة لعبتي ب...":"Parties jouées en tant que…","بدل الشخصية ديالي":"Changer mon personnage","السمية ديال صاحبك":"Nom de ton ami","زيد":"Ajouter","مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.":"Tu n’as encore aucun ami. Écris son nom en haut.","حيدو من الأصدقاء":"Retirer des amis","متصل دابا":"En ligne","ما بانش مزال":"Jamais vu","هادي السمية ديالك.":"C’est ton propre nom.","ديجا عندك فالأصدقاء.":"Déjà dans tes amis.","ما كاين حتى كونط بهاد السمية.":"Aucun compte avec ce nom.","نحيدو من الأصدقاء؟":"Retirer cet ami ?","مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.":"Pas encore de partie, ou pas encore connecté avec la nouvelle version.","ما قدرتش نقرا هاد التصويرة.":"Impossible de lire cette image.","الأدمين":"Admin","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
+"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","شوف واش كاين أبديت":"Vérifier les mises à jour","كنقلبو...":"Recherche…","✅ عندك آخر نسخة.":"✅ L’application est à jour.","⬇️ كننزلو النسخة الجديدة...":"⬇️ Téléchargement de la nouvelle version…","🎉 تنزلات.":"🎉 Mise à jour installée.","🎉 تنزلات. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargée. Elle s’appliquera quand tu quitteras le salon.","🎉 كتنزل. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargement… Elle s’appliquera quand tu quitteras le salon.","كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم.":"Nouvelle version disponible. Elle s’appliquera quand tu quitteras le salon.","🎉 كنحلو النسخة الجديدة...":"🎉 Ouverture de la nouvelle version…","كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.":"Nouvelle version disponible. Elle s’installera toute seule dans quelques minutes.","ما قدرتش نتصل بالأنترنيت. عاود.":"Pas de connexion Internet. Réessaie.","المينيو":"Menu","الراوي":"Narrateur","الوجه":"Visage","الشعر":"Cheveux","الحوايج":"Vêtements","التعبير":"Expression","نوع الحوايج":"Style","لون الحوايج":"Couleur","الإكسسوار":"Accessoire","عادي":"Normal","فرحان":"Content","معصب":"Fâché","كول":"Cool","دايرين":"Rondes","ديال الشمس":"Solaires","نيون":"Néon","لحية":"Barbe","شلاغم":"Moustache","لحية صغيرة":"Bouc","تيشورت":"T-shirt","كوستيم":"Costume","سبور":"Survêtement","جلابة":"Djellaba","جيلي":"Gilet","سنسلة":"Chaîne","شال":"Écharpe","حلقة":"Boucle d’oreille","بوب":"Bob","كاسك":"Casque","شينيون":"Chignon","طويل مكركب":"Long bouclé","مايل":"Mèche","لون الشعر":"Couleur des cheveux","بلوكي":"Bloquer","رجعو":"Rétablir","المبلوكيين":"Bloqués","بلوكي و خرجو من اللعبة":"Bloquer et l’exclure du jeu","الأدمين حيدك من اللعبة.":"L’admin t’a retiré du jeu.","الكونط ديالك تبلوكا، ما بقيتيش تقدر تلعب.":"Ton compte a été bloqué, tu ne peux plus jouer.","هاد الكونط تبلوكا من عند الأدمين.":"Ce compte a été bloqué par l’admin.","هاد السمية تبلوكات من عند الأدمين.":"Ce nom a été bloqué par l’admin.","هاد اللاعب كان مبلوكي.":"Ce joueur était bloqué.","كنبلوكيو...":"Blocage…","رجع":"Retour","قلب على لاعب بالسمية":"Chercher un joueur","الأصدقاء ديالي":"Mes amis","كل اللاعبين":"Tous les joueurs","كنجيبو اللاعبين...":"Chargement des joueurs…","ما كاين حتى لاعب آخر مزال.":"Aucun autre joueur pour l’instant.","ما لقيت حتى لاعب بهاد السمية.":"Aucun joueur avec ce nom.","مازال ما زدتي حتى صاحب. اختار من اللاعبين لتحت (+).":"Pas encore d’amis. Choisis parmi les joueurs en dessous (+).","كنجيبو البروفيل ديالو...":"Chargement du profil…","مازال ما بان البروفيل ديالو. غادي يبان ملي يدخل للعبة.":"Profil pas encore disponible. Il apparaîtra quand il ouvrira le jeu.","زيدو للأصدقاء":"Ajouter aux amis","كاينين بزاف. اختار واحد من اللائحة.":"Plusieurs résultats. Choisis dans la liste.","طلب جديد":"Nouvelle demande","بغا يدخل للعبة. نقبلوه؟":"veut rejoindre le jeu. Accepter ?","قبل":"Accepter","لا":"Non","من بعد":"Plus tard","هاد السمية ديجا عند لاعب. إلا قبلتيه غادي ياخد بلاصتو.":"Ce nom est déjà pris. L’accepter remplacera l’ancien compte.","الطلب ديالك تصيفط":"Demande envoyée","الطلب ديالك وصل للأدمين. ملي يقبلك، دخل بالسمية و المود دو باس ديالك.":"Ta demande est arrivée chez l’admin. Une fois accepté, connecte-toi avec ton nom et ton mot de passe.","إلا طلب منك الأدمين الكود:":"Si l’admin te demande le code :","الطلبات الجداد كيبانو ليك بوحدهم":"Les nouvelles demandes s’affichent toutes seules","الطلبات":"Demandes","ولا قلب بالكود:":"Ou cherche par code :","سجل و صيفط الطلب":"S’inscrire et envoyer la demande","كاينة نسخة جديدة":"Nouvelle version disponible","نزّل دابا":"Installer maintenant","ما قدرتش ننزلها. عاود.":"Échec du téléchargement. Réessaie.","⬇️ كتوصل... (GitHub كيوجدها، شي دقايق على الأكثر)":"⬇️ En route… (GitHub la prépare, quelques minutes au plus)","الموسيقى":"Musique","الأصوات":"Effets sonores","البروفيل ديالي":"Mon profil","الأصدقاء":"Amis","بدل التصويرة":"Changer la photo","حيد التصويرة":"Retirer la photo","لعبتي":"Parties jouées","ربحتي":"Victoires","نسبة الربح":"Taux de victoire","شحال من مرة لعبتي ب...":"Parties jouées en tant que…","بدل الشخصية ديالي":"Changer mon personnage","السمية ديال صاحبك":"Nom de ton ami","زيد":"Ajouter","مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.":"Tu n’as encore aucun ami. Écris son nom en haut.","حيدو من الأصدقاء":"Retirer des amis","متصل دابا":"En ligne","ما بانش مزال":"Jamais vu","هادي السمية ديالك.":"C’est ton propre nom.","ديجا عندك فالأصدقاء.":"Déjà dans tes amis.","ما كاين حتى كونط بهاد السمية.":"Aucun compte avec ce nom.","نحيدو من الأصدقاء؟":"Retirer cet ami ?","مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.":"Pas encore de partie, ou pas encore connecté avec la nouvelle version.","ما قدرتش نقرا هاد التصويرة.":"Impossible de lire cette image.","الأدمين":"Admin","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
 "كنتأكدو...":"Vérification...","الجيميل ولا المود دو باس غالطين.":"Gmail ou mot de passe incorrect.","المود دو باس غالط.":"Mot de passe incorrect.",
 "هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.":"Ce compte n'existe pas ou n'a pas encore été validé par l'admin.",
 "كونط جديد":"Nouveau compte","السمية (هي اللي غادي تبان فاللعبة)":"Nom (celui affiché dans le jeu)",
@@ -3144,7 +3144,7 @@ function toast(t){
    كتبدل مع المرحلة: المينيو، النهار، التصويت (فيها توتر)، الليل (هادية).
    ===================================================================== */
 const SND = (() => {
-  const pref = Object.assign({m: 1, s: 1}, (() => { try { return JSON.parse(localStorage.getItem("mafia_snd")) || {}; } catch(e){ return {}; } })());
+  const pref = Object.assign({m: 1, s: 1, n: 1}, (() => { try { return JSON.parse(localStorage.getItem("mafia_snd")) || {}; } catch(e){ return {}; } })());
   let ctx = null, master, musicBus, sfxBus, echo, started = false, mood = "menu", nextT = 0, step = 0, timer = null, droneNodes = [];
   // D hijaz: D Eb F# G A Bb C
   const SCALE = [0, 1, 4, 5, 7, 8, 10];
@@ -3277,31 +3277,70 @@ const SND = (() => {
   }
   function setMusic(on){ pref.m = on ? 1 : 0; save(); if(ctx) musicBus.gain.setTargetAtTime(on ? .13 : 0, ctx.currentTime, .3); }
   function setSfx(on){ pref.s = on ? 1 : 0; save(); if(ctx) sfxBus.gain.setTargetAtTime(on ? .42 : 0, ctx.currentTime, .05); }
+  function setNarr(on){ pref.n = on ? 1 : 0; save(); if(!on && typeof NAR !== "undefined") NAR.stop(); }
+  function duck(on){ if(ctx && pref.m) musicBus.gain.setTargetAtTime(on ? .035 : .13, ctx.currentTime, on ? .15 : .6); }
   // الموسيقى كتبدا مع أول لمسة (المتصفح ما كيخليش قبل)
   const kick = () => { start(); };
   ["pointerdown", "keydown", "touchstart"].forEach(e => window.addEventListener(e, kick, {passive: true}));
   // ما نخدموش الصوت ملي التطبيق مخبي
   document.addEventListener("visibilitychange", () => { if(!ctx) return; if(document.hidden) ctx.suspend(); else ctx.resume(); });
-  return {play, setMood, setMusic, setSfx, pref, start};
+  return {play, setMood, setMusic, setSfx, setNarr, duck, pref, start};
 })();
 
 // صوت صغير لكل بوطونة
 document.addEventListener("click", e => { if(e.target.closest("button, .btn, .shop, .wopt")) SND.play("tap"); }, true);
 
 // كنتبعو اللعبة باش نديرو الصوت المناسب
+/* ---------- الراوي: صوت كيحكي القصة (الدارجة ولا الفرنسية حسب اللغة ديال اللعبة) ----------
+   الملفات كاينين ف voice/ (tools/make-voice.py)، كيتجابو غير ملي كيحتاجهم. */
+const NAR = (() => {
+  const COUNT = {"start": 2, "night": 2, "kill": 2, "saved": 2, "quiet": 2, "vote": 2, "out": 2, "noout": 2, "town": 1, "mafia": 1};
+  const BASE = /^https?:$/.test(location.protocol) ? "voice/" : "https://zaidamallah9-alt.github.io/tcsf-updates/mafia/voice/";
+  let audio = null, queue = [], timer = null;
+  const last = {};
+  function url(key){
+    const n = COUNT[key] || 1; let i = Math.floor(Math.random() * n);
+    if(n > 1 && i === last[key]) i = (i + 1) % n; last[key] = i;
+    return BASE + (LANG === "fr" ? "fr" : "ma") + "_" + key + i + ".mp3";
+  }
+  function next(){
+    if(!queue.length){ audio = null; SND.duck(false); return; }
+    const a = new Audio(url(queue.shift())); audio = a; a.volume = 1;
+    SND.duck(true);
+    const go = () => { if(audio === a) next(); };
+    a.onended = go; a.onerror = go;
+    a.play().catch(go);
+  }
+  // keys: واحد ولا بزاف (كيتقراو ورا بعضياتهم). delay بالميلي ثانية.
+  function say(keys, delay){
+    if(!SND.pref.n) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => { stop(true); queue = [].concat(keys); next(); }, delay || 0);
+  }
+  function stop(keepDuck){ queue = []; if(audio){ const a = audio; audio = null; try{ a.pause(); }catch(e){} } if(!keepDuck) SND.duck(false); }
+  document.addEventListener("visibilitychange", () => { if(document.hidden) stop(); });
+  return {say, stop};
+})();
+
 const SNDW = {phase: null, chat: 0, players: 0, alive: 0, room: null, last: -1};
 function soundHook(){
-  if(!PUB || !PRIV){ SND.setMood("menu"); SNDW.phase = null; SNDW.room = null; return; }
+  if(!PUB || !PRIV){ SND.setMood("menu"); if(SNDW.room) NAR.stop(); SNDW.phase = null; SNDW.room = null; return; }
   const ph = PUB.phase;
   const mood = ph === "night" ? "night" : (ph === "vote" || ph === "voteResult") ? "vote" : ph === "end" ? "end" : ph === "lobby" ? "menu" : "day";
   SND.setMood(mood);
   const alive = PUB.players.filter(p => p.alive).length, chat = (PUB.chat || []).length;
   if(SNDW.room === PUB.room){
     if(ph !== SNDW.phase){
-      if(ph === "night"){ SND.play("night"); SND.play("shutter"); }
-      else if(ph === "day"){ SND.play("day"); setTimeout(() => SND.play("shutter"), 400); }
-      else if(ph === "vote") SND.play("vote");
-      else if(ph === "end"){ const maf = PUB.winner === "mafia"; SND.play((ROLES[PRIV.role] || {}).team === (maf ? "mafia" : "town") ? "win" : "lose"); }
+      if(ph === "night"){ SND.play("night"); SND.play("shutter"); NAR.say(SNDW.phase === "lobby" ? ["start", "night"] : "night", 700); }
+      else if(ph === "day"){
+        SND.play("day"); setTimeout(() => SND.play("shutter"), 400);
+        const news = (PUB.news || []).join(" ");
+        NAR.say(news.indexOf("تقتل") >= 0 ? "kill" : news.indexOf("نقذ") >= 0 ? "saved" : "quiet", 900);
+      }
+      else if(ph === "vote"){ SND.play("vote"); NAR.say("vote", 500); }
+      else if(ph === "voteResult") NAR.say(PUB.result && PUB.result.out ? "out" : "noout", 600);
+      else if(ph === "end"){ const maf = PUB.winner === "mafia"; SND.play((ROLES[PRIV.role] || {}).team === (maf ? "mafia" : "town") ? "win" : "lose"); NAR.say(maf ? "mafia" : "town", 1400); }
+      else if(ph === "lobby") NAR.stop();
     }
     if(ph !== "lobby" && alive < SNDW.alive) setTimeout(() => SND.play("death"), ph === "day" ? 900 : 0);
     if(ph === "lobby" && PUB.players.length > SNDW.players) SND.play("join");
@@ -3315,7 +3354,8 @@ function soundHook(){
 setInterval(() => { try { if(PUB && PUB.deadline) soundHook(); } catch(e){} }, 500);
 function sndToggles(){
   return `<button type="button" role="menuitemcheckbox" aria-checked="${!!SND.pref.m}" onclick="SND.setMusic(!SND.pref.m);SND.start();kebabToggle(true)"><svg class="ic" aria-hidden="true"><use href="#i-speaker"/></svg> الموسيقى <b class="tg ${SND.pref.m ? "on" : ""}"></b></button>
-    <button type="button" role="menuitemcheckbox" aria-checked="${!!SND.pref.s}" onclick="SND.setSfx(!SND.pref.s);kebabToggle(true)"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg> الأصوات <b class="tg ${SND.pref.s ? "on" : ""}"></b></button>`;
+    <button type="button" role="menuitemcheckbox" aria-checked="${!!SND.pref.s}" onclick="SND.setSfx(!SND.pref.s);kebabToggle(true)"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg> الأصوات <b class="tg ${SND.pref.s ? "on" : ""}"></b></button>
+    <button type="button" role="menuitemcheckbox" aria-checked="${!!SND.pref.n}" onclick="SND.setNarr(!SND.pref.n);kebabToggle(true)"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg> الراوي <b class="tg ${SND.pref.n ? "on" : ""}"></b></button>`;
 }
 
 startApp();
