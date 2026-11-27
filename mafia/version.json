@@ -1,7 +1,7 @@
 {
-    "build":  11,
-    "sha1":  "aaf5fe43c387209685391f2298815234f029a6a4",
-    "size":  277460,
-    "notes":  "bouton ⋮ plus visible",
-    "date":  "2026-11-26T21:31:09Z"
+    "build":  12,
+    "sha1":  "6a9576a873a67f5409cc2a4d300bfca8187886a1",
+    "size":  278630,
+    "notes":  "bouton mises a jour: version via l\u0027API GitHub (sans cache), reessaie tout seul",
+    "date":  "2026-11-27T07:43:31Z"
 }
