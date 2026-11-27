@@ -1,7 +1,8 @@
 {
-    "build":  13,
-    "sha1":  "061c2068c77b87c52b2f7ec4532a021780186746",
-    "size":  278630,
-    "notes":  "test de vitesse des mises a jour",
-    "date":  "2026-11-27T07:52:57Z"
+    "build":  15,
+    "version":  "1.4.2",
+    "sha1":  "9569eebe3f12ec1cf1e90068ddbd2a05c499c2c6",
+    "size":  276193,
+    "notes":  "الأبديت ولّا غير بالبوطونة: ⋮ ← شوف واش كاين أبديت ← نزّل دابا",
+    "date":  "2026-11-27T08:11:52Z"
 }

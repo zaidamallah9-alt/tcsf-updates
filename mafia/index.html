@@ -499,6 +499,9 @@ body.hascomp #app{padding-bottom:84px}
 .kmenu .ic{width:18px;height:18px}
 .kmsg{margin:4px 12px 2px;font-size:13px;color:var(--n5);min-height:0}
 .kmsg:empty{display:none}
+.knew{display:block;color:var(--n6,#fff)}.knew b{color:var(--neon-green,#3dff9a);text-shadow:0 0 10px rgba(61,255,154,.5)}
+.knotes{display:block;margin-top:4px;color:var(--n5);line-height:1.4}
+.kinst{width:100%;margin-top:8px;min-height:40px}
 .kver{margin:6px 12px 4px;padding-top:6px;border-top:1px solid var(--n2);font-size:11px;color:var(--n4);direction:ltr;text-align:end}
 #app.menu .hang,.hang{margin-top:24px}
 @media (prefers-reduced-motion:reduce){.kmenu{animation:none}}
@@ -661,8 +664,8 @@ input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,select
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const APP_VERSION = "1.4";
-const BUILD = 13;
+const APP_VERSION = "1.4.2";
+const BUILD = 15;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -2402,7 +2405,7 @@ const FR = {
 "هاد السمية ديجا عند شي لاعب.":"Ce nom est déjà pris par un joueur.","ما قدرتش نسجل الأدمين:":"Impossible d'enregistrer l'admin :",
 "مرحبا...":"Bienvenue...","دخل بالسمية و المود دو باس ديالك":"Connecte-toi avec ton nom et ton mot de passe",
 "السمية (الأدمين يقدر بالجيميل)":"Nom (l'admin peut utiliser son Gmail)","المود دو باس":"Mot de passe",
-"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","شوف واش كاين أبديت":"Vérifier les mises à jour","كنقلبو...":"Recherche…","✅ عندك آخر نسخة.":"✅ L’application est à jour.","⬇️ كننزلو النسخة الجديدة...":"⬇️ Téléchargement de la nouvelle version…","🎉 تنزلات.":"🎉 Mise à jour installée.","🎉 تنزلات. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargée. Elle s’appliquera quand tu quitteras le salon.","🎉 كتنزل. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargement… Elle s’appliquera quand tu quitteras le salon.","كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم.":"Nouvelle version disponible. Elle s’appliquera quand tu quitteras le salon.","🎉 كنحلو النسخة الجديدة...":"🎉 Ouverture de la nouvelle version…","كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.":"Nouvelle version disponible. Elle s’installera toute seule dans quelques minutes.","ما قدرتش نتصل بالأنترنيت. عاود.":"Pas de connexion Internet. Réessaie.","المينيو":"Menu","⬇️ كتوصل... (GitHub كيوجدها، شي دقايق على الأكثر)":"⬇️ En route… (GitHub la prépare, quelques minutes au plus)","الموسيقى":"Musique","الأصوات":"Effets sonores","البروفيل ديالي":"Mon profil","الأصدقاء":"Amis","بدل التصويرة":"Changer la photo","حيد التصويرة":"Retirer la photo","لعبتي":"Parties jouées","ربحتي":"Victoires","نسبة الربح":"Taux de victoire","شحال من مرة لعبتي ب...":"Parties jouées en tant que…","بدل الشخصية ديالي":"Changer mon personnage","السمية ديال صاحبك":"Nom de ton ami","زيد":"Ajouter","مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.":"Tu n’as encore aucun ami. Écris son nom en haut.","حيدو من الأصدقاء":"Retirer des amis","متصل دابا":"En ligne","ما بانش مزال":"Jamais vu","هادي السمية ديالك.":"C’est ton propre nom.","ديجا عندك فالأصدقاء.":"Déjà dans tes amis.","ما كاين حتى كونط بهاد السمية.":"Aucun compte avec ce nom.","نحيدو من الأصدقاء؟":"Retirer cet ami ?","مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.":"Pas encore de partie, ou pas encore connecté avec la nouvelle version.","ما قدرتش نقرا هاد التصويرة.":"Impossible de lire cette image.","الأدمين":"Admin","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
+"ما عندكش كونط؟ تسجل":"Pas de compte ? Inscris-toi","شوف واش كاين أبديت":"Vérifier les mises à jour","كنقلبو...":"Recherche…","✅ عندك آخر نسخة.":"✅ L’application est à jour.","⬇️ كننزلو النسخة الجديدة...":"⬇️ Téléchargement de la nouvelle version…","🎉 تنزلات.":"🎉 Mise à jour installée.","🎉 تنزلات. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargée. Elle s’appliquera quand tu quitteras le salon.","🎉 كتنزل. غادي تتبدل ملي تخرج من الروم.":"🎉 Téléchargement… Elle s’appliquera quand tu quitteras le salon.","كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم.":"Nouvelle version disponible. Elle s’appliquera quand tu quitteras le salon.","🎉 كنحلو النسخة الجديدة...":"🎉 Ouverture de la nouvelle version…","كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.":"Nouvelle version disponible. Elle s’installera toute seule dans quelques minutes.","ما قدرتش نتصل بالأنترنيت. عاود.":"Pas de connexion Internet. Réessaie.","المينيو":"Menu","كاينة نسخة جديدة":"Nouvelle version disponible","نزّل دابا":"Installer maintenant","ما قدرتش ننزلها. عاود.":"Échec du téléchargement. Réessaie.","⬇️ كتوصل... (GitHub كيوجدها، شي دقايق على الأكثر)":"⬇️ En route… (GitHub la prépare, quelques minutes au plus)","الموسيقى":"Musique","الأصوات":"Effets sonores","البروفيل ديالي":"Mon profil","الأصدقاء":"Amis","بدل التصويرة":"Changer la photo","حيد التصويرة":"Retirer la photo","لعبتي":"Parties jouées","ربحتي":"Victoires","نسبة الربح":"Taux de victoire","شحال من مرة لعبتي ب...":"Parties jouées en tant que…","بدل الشخصية ديالي":"Changer mon personnage","السمية ديال صاحبك":"Nom de ton ami","زيد":"Ajouter","مازال ما زدتي حتى صاحب. كتب السمية ديالو لفوق.":"Tu n’as encore aucun ami. Écris son nom en haut.","حيدو من الأصدقاء":"Retirer des amis","متصل دابا":"En ligne","ما بانش مزال":"Jamais vu","هادي السمية ديالك.":"C’est ton propre nom.","ديجا عندك فالأصدقاء.":"Déjà dans tes amis.","ما كاين حتى كونط بهاد السمية.":"Aucun compte avec ce nom.","نحيدو من الأصدقاء؟":"Retirer cet ami ?","مازال ما لعب حتى لعبة ولا ما دخلش من النسخة الجديدة.":"Pas encore de partie, ou pas encore connecté avec la nouvelle version.","ما قدرتش نقرا هاد التصويرة.":"Impossible de lire cette image.","الأدمين":"Admin","عندي كونط، بغيت ندخل":"J’ai déjà un compte, me connecter","مرحبا بيك! صاوب الكونط ديالك باش تلعب":"Bienvenue ! Crée ton compte pour jouer","، العب مع صحابك أونلاين":", joue en ligne avec tes amis","مرحبا":"Salut","كتب السمية و المود دو باس.":"Écris ton nom et ton mot de passe.",
 "كنتأكدو...":"Vérification...","الجيميل ولا المود دو باس غالطين.":"Gmail ou mot de passe incorrect.","المود دو باس غالط.":"Mot de passe incorrect.",
 "هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.":"Ce compte n'existe pas ou n'a pas encore été validé par l'admin.",
 "كونط جديد":"Nouveau compte","السمية (هي اللي غادي تبان فاللعبة)":"Nom (celui affiché dans le jeu)",
@@ -2560,36 +2563,49 @@ async function latestVersion(){
   }catch(e){}
   return await (await fetch("https://raw.githubusercontent.com/zaidamallah9-alt/tcsf-updates/main/mafia/version.json?t=" + Date.now(), {cache:"no-store"})).json();
 }
+// الأبديت كيجي غير ملي الواحد يبرك: 1) "شوف واش كاين أبديت"  2) "نزّل دابا"
+const kSay = t => { const el = document.getElementById("kmsg"); if(el) el.textContent = t; };
+const kInRoom = () => typeof ME !== "undefined" && !!ME;
 async function checkUpdatesNow(){
   if(kBusy) return; kBusy = true;
-  const say = t => { const el = document.getElementById("kmsg"); if(el) el.textContent = t; };
-  say("كنقلبو...");
+  kSay("كنقلبو...");
   try{
-    const v = await latestVersion();
-    if(!(v.build > BUILD)){ say("✅ عندك آخر نسخة."); return; }
-    const inRoom = typeof ME !== "undefined" && ME;
-    if((window.mafiaApp && mafiaApp.checkUpdate) || (window.AndroidApp && AndroidApp.checkUpdate)){   // PC / telephone
-      say("⬇️ كننزلو النسخة الجديدة...");
-      // GitHub كيخلي الملفات فالكاش شي دقايق: كنعاودو بوحدنا حتى توصل النسخة الجديدة
-      const until = Date.now() + 8 * 60 * 1000;
-      const tryNative = async () => {
-        let got = 0;
-        if(window.mafiaApp && mafiaApp.checkUpdate){ const r = await mafiaApp.checkUpdate().catch(()=>null); got = r && r.build || 0; }
-        else AndroidApp.checkUpdate();
-        if(got >= v.build){ say(inRoom ? "🎉 تنزلات. غادي تتبدل ملي تخرج من الروم." : "🎉 تنزلات."); return; }
-        if(Date.now() > until){ say("كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق."); return; }
-        say("⬇️ كتوصل... (GitHub كيوجدها، شي دقايق على الأكثر)");
-        setTimeout(tryNative, 20000);
-      };
-      await tryNative();
-    } else if(location.protocol === "https:"){              // site
-      if(inRoom){ say("كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم."); return; }
-      say("🎉 كنحلو النسخة الجديدة...");
-      location.replace(location.pathname + "?v=" + v.build);
-    } else {
-      say("كاينة نسخة جديدة. غادي تتنزل بوحدها فشي دقايق.");
+    let have = BUILD, v;
+    if(window.mafiaApp && mafiaApp.manual){                         // PC
+      const r = await mafiaApp.check();
+      if(!r || r.error) throw 0;
+      have = Math.max(have, r.have || 0); v = r;
+    } else if(window.AndroidApp && AndroidApp.manual){              // telephone
+      const r = JSON.parse(AndroidApp.checkInfo() || "null");
+      if(!r || !r.ver) throw 0;
+      have = Math.max(have, r.have || 0); v = r.ver;
+    } else v = await latestVersion();                               // site (ou ancienne app)
+    if(!(v.build > have)){
+      if(have > BUILD){ kSay(kInRoom() ? "🎉 تنزلات. غادي تتبدل ملي تخرج من الروم." : "🎉 تنزلات."); return; }
+      kSay("✅ عندك آخر نسخة."); return;
     }
-  }catch(e){ say("ما قدرتش نتصل بالأنترنيت. عاود."); }
+    const el = document.getElementById("kmsg");
+    el.innerHTML = `<span class="knew"><span>كاينة نسخة جديدة</span> <b dir="ltr">${v.version ? "v" + esc(v.version) : "#" + (+v.build)}</b></span>`
+      + (v.notes ? `<small class="knotes" dir="auto">${esc(v.notes)}</small>` : "")
+      + `<button type="button" class="btn kinst" onclick="installUpdateNow(${+v.build})">نزّل دابا</button>`;
+  }catch(e){ kSay("ما قدرتش نتصل بالأنترنيت. عاود."); }
+  finally{ kBusy = false; }
+}
+window.mafiaInstallDone = ok => kSay(ok ? (kInRoom() ? "🎉 تنزلات. غادي تتبدل ملي تخرج من الروم." : "🎉 تنزلات.") : "ما قدرتش ننزلها. عاود.");
+async function installUpdateNow(build){
+  if(kBusy) return; kBusy = true;
+  kSay("⬇️ كننزلو النسخة الجديدة...");
+  try{
+    if(window.mafiaApp && mafiaApp.manual){
+      const r = await mafiaApp.install();
+      mafiaInstallDone(!!(r && r.ok));
+    } else if(window.AndroidApp && AndroidApp.manual){
+      AndroidApp.install();                                          // la réponse arrive dans mafiaInstallDone
+    } else if(window.mafiaApp && mafiaApp.checkUpdate){ await mafiaApp.checkUpdate().catch(()=>{}); kSay("🎉 كتنزل. غادي تتبدل ملي تخرج من الروم."); }
+    else if(window.AndroidApp && AndroidApp.checkUpdate){ AndroidApp.checkUpdate(); kSay("🎉 كتنزل. غادي تتبدل ملي تخرج من الروم."); }
+    else if(kInRoom()) kSay("كاينة نسخة جديدة. غادي تتبدل ملي تخرج من الروم.");
+    else { kSay("🎉 كنحلو النسخة الجديدة..."); location.replace(location.pathname + "?v=" + build); }
+  }catch(e){ kSay("ما قدرتش ننزلها. عاود."); }
   finally{ kBusy = false; }
 }
 
@@ -2987,19 +3003,6 @@ function sndToggles(){
 }
 
 startApp();
-// web: kol 10 dqayq kanchoufo wach kayna version jdida f GitHub; kan3awdo ntal9o ghir ila ma kan 7ad f room
-if(location.protocol === "https:"){
-  const webUpd = () => fetch("https://raw.githubusercontent.com/zaidamallah9-alt/tcsf-updates/main/mafia/version.json?t=" + Date.now(), {cache:"no-store"})
-    .then(r => r.json()).then(v => { if(v.build > BUILD && (typeof ME === "undefined" || !ME)){
-      let tried = ""; try { tried = sessionStorage.getItem("updTried"); } catch(e){}
-      if(tried == v.build) return;
-      try { sessionStorage.setItem("updTried", v.build); } catch(e){}
-      location.replace(location.pathname + "?v=" + v.build);
-    } }).catch(()=>{});
-  setTimeout(webUpd, 8000); setInterval(webUpd, 10 * 60 * 1000);
-  // ila kan f room, kan3awdo nchoufo kol 15 tanya, o mli ykhrej katdar l update
-  setInterval(()=>{ if(typeof ME === "undefined" || !ME) webUpd(); }, 15000);
-}
 </script>
 </body>
 </html>
