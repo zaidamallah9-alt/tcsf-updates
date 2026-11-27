@@ -708,8 +708,8 @@ input[type=text]:focus,input[type=password]:focus,input[type=email]:focus,select
    MQTT 3.1.1 صغير فوق WebSocket (باش اللعبة تخدم أونلاين بلا سيرفر خاص)
    ===================================================================== */
 // رقم النسخة: كيتزاد بوحدو ملي كنشرو أبديت (tools/publish-mafia.ps1)
-const APP_VERSION = "1.4.3";
-const BUILD = 16;
+const APP_VERSION = "1.4.4";
+const BUILD = 17;
 const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
 const TOPIC_ROOT = "mafiadarija7/v1/";
 const enc = new TextEncoder(), dec = new TextDecoder();
@@ -1728,9 +1728,17 @@ async function sha256hex(s){ return hex(await crypto.subtle.digest("SHA-256", en
 const accHash = (n,p) => sha256hex("mafia-v1|"+accNorm(n)+"|"+p);
 const regCode = h => (h.slice(0,4)+"-"+h.slice(4,8)).toUpperCase();
 
+// GitHub API = بلا كاش (اللي قبلو الأدمين دابا يقدر يدخل فالحين). raw كيخلي نسخة قديمة حتى 5 دقايق: غير فالأخير.
+async function ghFresh(file){
+  try{
+    const r = await fetch(ACC_API + file + "?ref=main&t=" + Date.now(), {cache:"no-store", headers:{Accept:"application/vnd.github.raw"}});
+    if(r.ok || r.status === 404) return r;
+  }catch(e){}
+  return fetch(ACC_ROOT + file + "?t=" + Date.now(), {cache:"no-store"});
+}
 async function loadUsers(){
   try{
-    const r = await fetch(ACC_ROOT+"users.json?t="+Date.now(), {cache:"no-store"});
+    const r = await ghFresh("users.json");
     if(r.status === 404){ lsSet("mafia_users", {users:[]}); return {users:[]}; }
     const j = await r.json(); lsSet("mafia_users", j); return j;
   }catch(e){ return lsGet("mafia_users") || {users:[]}; }   // بلا أنترنيت: آخر لائحة عندنا
@@ -1752,7 +1760,7 @@ async function makeBox(pw, text){
 // undefined = ما عرفناش (بلا أنترنيت)، null = مازال ما كاينش أدمين
 async function loadAdmin(){
   try{
-    const r = await fetch(ACC_ROOT+"admin.json?t="+Date.now(), {cache:"no-store"});
+    const r = await ghFresh("admin.json");
     if(r.status === 404) return null;
     const j = await r.json(); lsSet("mafia_admin", j); return j;
   }catch(e){ return lsGet("mafia_admin") || undefined; }
@@ -1853,7 +1861,7 @@ async function doLogin(){
     if(isBlocked(all, accNorm(n))){ ui.err = "هاد الكونط تبلوكا من عند الأدمين."; return loginScreen(); }
     const u = list.find(x => x.n === accNorm(n));
     if(!u || u.h !== h){
-      ui.err = u ? "المود دو باس غالط." : "هاد الكونط ما كاينش ولا مازال الأدمين ما قبلوش.";
+      ui.err = u ? "المود دو باس غالط." : "مازال الأدمين ما قبلكش (ولا السمية غالطة). إلا قبلك دابا، عاود جرب.";
       return loginScreen();
     }
     ACC = {n: u.n, d: u.d || n.trim(), h};
